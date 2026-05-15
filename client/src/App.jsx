@@ -29,6 +29,13 @@ export default function App() {
     myCurrentRole: null,
   });
 
+  const [connectionLost, setConnectionLost] = useState(false);
+
+  const screenRef = useRef(screen);
+  const roomCodeRef = useRef(roomCode);
+  screenRef.current = screen;
+  roomCodeRef.current = roomCode;
+
   const audioInitialized = useRef(false);
 
   // Init audio on first user interaction
@@ -52,6 +59,43 @@ export default function App() {
 
   useEffect(() => {
     socket.connect();
+
+    socket.on('disconnect', () => {
+      if (screenRef.current !== 'home') setConnectionLost(true);
+    });
+
+    socket.on('connect', () => {
+      const savedName = sessionStorage.getItem('onw_name');
+      const savedRoom = sessionStorage.getItem('onw_room');
+      const code = roomCodeRef.current || savedRoom;
+
+      if (screenRef.current !== 'home' && code && savedName) {
+        socket.emit('rejoin_room', { code, name: savedName }, (res) => {
+          if (res?.ok) {
+            setConnectionLost(false);
+            setRoomCode(res.code);
+            setPlayers(res.players);
+            setHostId(res.hostId);
+            setSettings(res.settings);
+            if (res.roleId) {
+              setMyRole({ roleId: res.roleId, ...res.role });
+            }
+            if (res.state === 'day') {
+              setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players });
+              setScreen('day');
+            } else if (res.state === 'night' || res.state === 'role_reveal') {
+              setScreen(res.state === 'role_reveal' ? 'role_reveal' : 'night');
+            } else if (res.state === 'waiting') {
+              setScreen('lobby');
+            }
+          } else {
+            setConnectionLost(false);
+            setScreen('home');
+            setError('Mất kết nối. Vui lòng vào lại phòng.');
+          }
+        });
+      }
+    });
 
     socket.on('player_list', ({ players, hostId }) => {
       setPlayers(players);
@@ -183,6 +227,9 @@ export default function App() {
     setHostId(host);
     setScreen('lobby');
     setError('');
+    const me = ps.find(p => p.id === socket.id);
+    if (me) sessionStorage.setItem('onw_name', me.name);
+    sessionStorage.setItem('onw_room', code);
   }, []);
 
   // Track swap actions from client side for visual
@@ -212,11 +259,21 @@ export default function App() {
 
   const isHost = socket.id === hostId;
 
+  const connectionOverlay = connectionLost ? (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+      <div className="text-center p-6">
+        <div className="text-4xl mb-3 animate-pulse">📡</div>
+        <p className="text-moon-300 font-semibold mb-1">Đang kết nối lại...</p>
+        <p className="text-white/40 text-sm">Đừng tắt app, đợi vài giây</p>
+      </div>
+    </div>
+  ) : null;
+
   if (screen === 'home') {
     return <HomeScreen onJoin={handleJoinRoom} setError={setError} error={error} />;
   }
   if (screen === 'lobby') {
-    return (
+    return (<>{connectionOverlay}
       <LobbyScreen
         roomCode={roomCode}
         players={players}
@@ -226,13 +283,13 @@ export default function App() {
         onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
       />
-    );
+    </>);
   }
   if (screen === 'role_reveal') {
-    return <RoleRevealScreen myRole={myRole} />;
+    return <>{connectionOverlay}<RoleRevealScreen myRole={myRole} /></>;
   }
   if (screen === 'night') {
-    return (
+    return (<>{connectionOverlay}
       <NightScreen
         myRole={myRole}
         myId={socket.id}
@@ -241,10 +298,10 @@ export default function App() {
         onAction={handleNightAction}
         nightKnowledge={nightKnowledge}
       />
-    );
+    </>);
   }
   if (screen === 'day') {
-    return (
+    return (<>{connectionOverlay}
       <DayScreen
         dayState={dayState}
         myId={socket.id}
@@ -254,17 +311,17 @@ export default function App() {
         nightKnowledge={nightKnowledge}
         myRole={myRole}
       />
-    );
+    </>);
   }
   if (screen === 'results') {
-    return (
+    return (<>{connectionOverlay}
       <ResultsScreen
         results={results}
         myId={socket.id}
         isHost={isHost}
         onNewGame={() => socket.emit('new_game')}
       />
-    );
+    </>);
   }
   return null;
 }

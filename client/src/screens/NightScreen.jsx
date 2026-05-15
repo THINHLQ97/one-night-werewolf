@@ -15,8 +15,9 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [submitted, setSubmitted] = useState(false);
   const [submittedForRole, setSubmittedForRole] = useState(null);
   const [selected, setSelected] = useState([]);
-  const [actionMode, setActionMode] = useState(null); // 'player' | 'center' | 'both' | null
-  const [actionStep, setActionStep] = useState('choose'); // 'choose' | 'confirm' | 'done'
+  const [actionMode, setActionMode] = useState(null);
+  const [actionStep, setActionStep] = useState('choose');
+  const [roleHidden, setRoleHidden] = useState(false);
 
   // Reset when role changes
   if (currentRole !== submittedForRole && submitted) {
@@ -146,8 +147,15 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         <div className="flex items-center justify-center gap-2 mb-1">
           <span className="text-3xl pulse-moon">🌙</span>
           <h2 className="text-lg font-semibold text-moon-300">Ban đêm</h2>
+          <button
+            onClick={() => setRoleHidden(h => !h)}
+            className="ml-2 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+          >
+            {roleHidden ? '🙈' : '👁️'}
+          </button>
         </div>
-        {myRole && (
+        {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">
             <RoleIcon roleId={myRole.roleId} size={20} />
             <span className="text-white/50 text-sm">{myRole.name}</span>
@@ -333,7 +341,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         )}
 
         {/* Knowledge notebook — persistent info from earlier actions */}
-        {nightKnowledge && Object.keys(nightKnowledge).some(k => {
+        {!roleHidden && nightKnowledge && Object.keys(nightKnowledge).some(k => {
           const v = nightKnowledge[k];
           return (Array.isArray(v) ? v.length > 0 : v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v);
         }) && (

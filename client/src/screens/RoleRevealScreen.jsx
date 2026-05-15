@@ -9,6 +9,7 @@ const TEAM_STYLE = {
 
 export default function RoleRevealScreen({ myRole }) {
   const [revealed, setRevealed] = useState(false);
+  const [roleHidden, setRoleHidden] = useState(false);
 
   if (!myRole) {
     return (
@@ -25,9 +26,20 @@ export default function RoleRevealScreen({ myRole }) {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
-      <h2 className="text-moon-400 text-sm sm:text-lg mb-6 sm:mb-8 text-center">
-        🌙 Đêm xuống — Xem bài của bạn (chỉ mình bạn thấy)
-      </h2>
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <h2 className="text-moon-400 text-sm sm:text-lg text-center">
+          🌙 Đêm xuống — Xem bài của bạn
+        </h2>
+        {revealed && (
+          <button
+            onClick={() => setRoleHidden(h => !h)}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+          >
+            {roleHidden ? '🙈' : '👁️'}
+          </button>
+        )}
+      </div>
 
       {!revealed ? (
         <button
@@ -37,6 +49,11 @@ export default function RoleRevealScreen({ myRole }) {
           <span className="text-6xl">🃏</span>
           <span className="text-moon-400 font-semibold">Lật bài</span>
         </button>
+      ) : roleHidden ? (
+        <div className="w-48 h-64 rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4">
+          <span className="text-6xl">🙈</span>
+          <span className="text-white/40 font-semibold text-sm">Vai đã ẩn</span>
+        </div>
       ) : (
         <div className={`w-64 rounded-2xl border-2 ${style.bg} p-8 text-center fade-in`}>
           <div className="flex justify-center mb-4">

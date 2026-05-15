@@ -120,7 +120,11 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
 
   function handleRename() {
     if (!newName.trim()) return;
-    socket.emit('rename_player', { name: newName.trim() });
+    socket.emit('rename_player', { name: newName.trim() }, (res) => {
+      if (res?.ok) {
+        sessionStorage.setItem('onw_name', res.name);
+      }
+    });
     setEditingName(false);
     setNewName('');
   }

@@ -1,4 +1,5 @@
 const rooms = new Map();
+const disconnectedPlayers = new Map();
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -19,9 +20,8 @@ function createRoom(hostId, hostName) {
     settings: {
       selectedRoles: ['werewolf', 'werewolf', 'seer', 'robber', 'troublemaker', 'villager', 'villager'],
     },
-    // Set during game
-    originalCards: {},  // playerId/center0-2 -> roleId at game start
-    currentCards: {},   // playerId/center0-2 -> roleId after night actions
+    originalCards: {},
+    currentCards: {},
     nightPhase: null,
     dayPhase: null,
     results: null,
@@ -53,7 +53,6 @@ function removePlayer(room, playerId) {
     rooms.delete(room.code);
     return null;
   }
-  // Transfer host if host left
   if (room.hostId === playerId) {
     room.hostId = room.players[0].id;
     room.players[0].isHost = true;
@@ -61,8 +60,28 @@ function removePlayer(room, playerId) {
   return room;
 }
 
+function saveDisconnectedPlayer(oldSocketId, roomCode, playerName) {
+  disconnectedPlayers.set(`${roomCode}:${playerName}`, {
+    oldId: oldSocketId,
+    roomCode,
+    name: playerName,
+    disconnectedAt: Date.now(),
+  });
+  setTimeout(() => {
+    disconnectedPlayers.delete(`${roomCode}:${playerName}`);
+  }, 5 * 60 * 1000);
+}
+
+function findDisconnectedPlayer(roomCode, playerName) {
+  return disconnectedPlayers.get(`${roomCode}:${playerName}`) || null;
+}
+
+function clearDisconnectedPlayer(roomCode, playerName) {
+  disconnectedPlayers.delete(`${roomCode}:${playerName}`);
+}
+
 function deleteRoom(code) {
   rooms.delete(code);
 }
 
-module.exports = { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, deleteRoom };
+module.exports = { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, deleteRoom, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer };

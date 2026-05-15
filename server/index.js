@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const { ROLES, getNightOrder } = require('./roles');
-const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer } = require('./rooms');
+const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults } = require('./gameLogic');
 
 const app = express();
@@ -174,15 +174,72 @@ io.on('connection', socket => {
     });
   });
 
+  // ── Rejoin room (after disconnect/reconnect) ──
+  socket.on('rejoin_room', ({ code, name }, cb) => {
+    const room = getRoom(code?.toUpperCase());
+    if (!room) return cb?.({ error: 'Phòng không tồn tại' });
+
+    const dc = findDisconnectedPlayer(code, name);
+    if (dc) {
+      const oldId = dc.oldId;
+      clearDisconnectedPlayer(code, name);
+
+      const player = room.players.find(p => p.id === oldId);
+      if (player) {
+        player.id = socket.id;
+        if (room.hostId === oldId) room.hostId = socket.id;
+
+        if (room.originalCards[oldId] !== undefined) {
+          room.originalCards[socket.id] = room.originalCards[oldId];
+          delete room.originalCards[oldId];
+        }
+        if (room.currentCards[oldId] !== undefined) {
+          room.currentCards[socket.id] = room.currentCards[oldId];
+          delete room.currentCards[oldId];
+        }
+        if (room.dayPhase?.votes[oldId] !== undefined) {
+          room.dayPhase.votes[socket.id] = room.dayPhase.votes[oldId];
+          delete room.dayPhase.votes[oldId];
+        }
+
+        socket.join(room.code);
+        socket.roomCode = room.code;
+
+        const roleId = room.originalCards[socket.id];
+        const currentRoleId = room.currentCards[socket.id];
+
+        cb?.({
+          ok: true,
+          code: room.code,
+          state: room.state,
+          players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+          settings: room.settings,
+          hostId: room.hostId,
+          roleId,
+          role: roleId ? ROLES[roleId] : null,
+          currentRoleId,
+          votes: room.dayPhase?.votes || {},
+          timerEnd: room.dayPhase?.timerEnd || null,
+        });
+
+        broadcastPlayerList(room);
+        return;
+      }
+    }
+
+    cb?.({ error: 'Không tìm thấy phiên cũ' });
+  });
+
   // ── Rename player ──
-  socket.on('rename_player', ({ name }) => {
-    if (!name?.trim()) return;
+  socket.on('rename_player', ({ name }, cb) => {
+    if (!name?.trim()) return cb?.({ error: 'Tên không hợp lệ' });
     const room = getRoom(socket.roomCode);
-    if (!room) return;
+    if (!room) return cb?.({ error: 'Phòng không tồn tại' });
     const player = room.players.find(p => p.id === socket.id);
-    if (!player) return;
+    if (!player) return cb?.({ error: 'Không tìm thấy người chơi' });
     player.name = name.trim().slice(0, 20);
     broadcastPlayerList(room);
+    cb?.({ ok: true, name: player.name });
   });
 
   // ── Update settings (host only) ──
@@ -313,19 +370,26 @@ io.on('connection', socket => {
     const room = getRoomByPlayerId(socket.id);
     if (!room) return;
 
-    // If disconnecting during night, remove from pending actions to unblock
-    if (room.state === 'night' && room.nightPhase) {
-      const np = room.nightPhase;
-      const idx = np.pendingPlayerIds.indexOf(socket.id);
-      if (idx !== -1) {
-        np.pendingPlayerIds.splice(idx, 1);
-        if (np.pendingPlayerIds.length === 0 && np.resolver) {
-          clearTimeout(np.timer);
-          const resolve = np.resolver;
-          np.resolver = null;
-          resolve();
+    const player = room.players.find(p => p.id === socket.id);
+
+    if (room.state !== 'waiting' && player) {
+      saveDisconnectedPlayer(socket.id, room.code, player.name);
+      console.log(`Saved disconnect state for ${player.name} in room ${room.code}`);
+
+      if (room.state === 'night' && room.nightPhase) {
+        const np = room.nightPhase;
+        const idx = np.pendingPlayerIds.indexOf(socket.id);
+        if (idx !== -1) {
+          np.pendingPlayerIds.splice(idx, 1);
+          if (np.pendingPlayerIds.length === 0 && np.resolver) {
+            clearTimeout(np.timer);
+            const resolve = np.resolver;
+            np.resolver = null;
+            resolve();
+          }
         }
       }
+      return;
     }
 
     const updated = removePlayer(room, socket.id);
