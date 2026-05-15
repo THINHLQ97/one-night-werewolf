@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import RoleIcon from './RoleIcon';
 
 const ROLE_EMOJI = {
@@ -9,32 +10,49 @@ const ROLE_NAME_SHORT = {
   drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
 };
 
+function useContainerSize(ref) {
+  const [size, setSize] = useState(340);
+  useEffect(() => {
+    if (!ref.current) return;
+    const update = () => {
+      const w = ref.current.parentElement?.clientWidth || 340;
+      setSize(Math.min(380, Math.max(260, w - 16)));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [ref]);
+  return size;
+}
+
 export default function GameTable({
   players,
   myId,
-  // Night: which cards are revealed to THIS player
-  revealedPlayers = {},   // { playerId: roleId }
-  revealedCenter = {},    // { center0: roleId, ... }
-  knownWerewolves = [],   // [playerId, ...] glow red
-  swappedPairs = [],      // [[id1,id2], ...] show swap arrows
-  myCurrentRole = null,   // if player knows their new role
-  // Interaction
-  selectable = null,      // 'player' | 'center' | 'both' | null
-  selected = [],          // selected IDs
+  revealedPlayers = {},
+  revealedCenter = {},
+  knownWerewolves = [],
+  swappedPairs = [],
+  myCurrentRole = null,
+  selectable = null,
+  selected = [],
   onSelect = null,
-  // Day voting
-  votes = null,           // { voterId: targetId }
-  // Display
-  eliminated = [],        // eliminated player IDs (results)
-  winners = [],           // winner player IDs (results)
+  votes = null,
+  eliminated = [],
+  winners = [],
   isNight = false,
 }) {
-  const tableSize = 340;
+  const containerRef = useRef(null);
+  const tableSize = useContainerSize(containerRef);
+  const scale = tableSize / 340;
   const centerX = tableSize / 2;
   const centerY = tableSize / 2;
-  const playerRadius = tableSize / 2 - 35;
-  const cardW = 44;
-  const cardH = 60;
+  const playerRadius = tableSize / 2 - 35 * scale;
+  const cardW = Math.round(44 * scale);
+  const cardH = Math.round(60 * scale);
+  const avatarSize = Math.round(48 * scale);
+  const iconSize = Math.round(36 * scale);
+  const centerIconSize = Math.round(28 * scale);
+  const nodeWidth = Math.round(56 * scale);
 
   // Calculate vote counts for display
   const voteCounts = {};
@@ -48,7 +66,7 @@ export default function GameTable({
   const myVote = votes?.[myId];
 
   return (
-    <div className="game-table-container" style={{ width: tableSize, height: tableSize, position: 'relative', margin: '0 auto' }}>
+    <div ref={containerRef} className="game-table-container" style={{ width: tableSize, height: tableSize, position: 'relative', margin: '0 auto' }}>
       {/* Table surface */}
       <div className="game-table-surface" />
 
@@ -78,12 +96,12 @@ export default function GameTable({
             >
               {isRevealed ? (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <RoleIcon roleId={isRevealed} size={28} />
+                  <RoleIcon roleId={isRevealed} size={centerIconSize} />
                   <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <span className="text-lg">🃏</span>
+                  <span style={{ fontSize: 18 * scale }}>🃏</span>
                   <span className="text-[8px] text-white/40 mt-0.5">{i + 1}</span>
                 </div>
               )}
@@ -95,8 +113,9 @@ export default function GameTable({
       {/* Players in circle */}
       {players.map((p, i) => {
         const angle = (i / players.length) * 2 * Math.PI - Math.PI / 2;
-        const x = centerX + playerRadius * Math.cos(angle) - 28;
-        const y = centerY + playerRadius * Math.sin(angle) - 28;
+        const halfNode = nodeWidth / 2;
+        const x = centerX + playerRadius * Math.cos(angle) - halfNode;
+        const y = centerY + playerRadius * Math.sin(angle) - halfNode;
 
         const isMe = p.id === myId;
         const isRevealed = revealedPlayers[p.id];
@@ -116,6 +135,7 @@ export default function GameTable({
             <button
               disabled={!isClickable}
               onClick={() => isClickable && onSelect?.(p.id)}
+              style={{ width: nodeWidth }}
               className={`player-node transition-all duration-300
                 ${isMe ? 'player-me' : ''}
                 ${isWolf ? 'player-wolf' : ''}
@@ -127,11 +147,11 @@ export default function GameTable({
               `}
             >
               {/* Avatar circle */}
-              <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold relative">
+              <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
                 {isRevealed ? (
-                  <RoleIcon roleId={isRevealed} size={36} />
+                  <RoleIcon roleId={isRevealed} size={iconSize} />
                 ) : isMe && myCurrentRole ? (
-                  <RoleIcon roleId={myCurrentRole} size={36} />
+                  <RoleIcon roleId={myCurrentRole} size={iconSize} />
                 ) : (
                   <span>{p.name.charAt(0).toUpperCase()}</span>
                 )}
@@ -165,7 +185,7 @@ export default function GameTable({
               </div>
 
               {/* Name */}
-              <span className={`text-[10px] mt-0.5 max-w-[56px] truncate block text-center leading-tight ${
+              <span style={{ maxWidth: nodeWidth, fontSize: Math.max(9, 10 * scale) }} className={`mt-0.5 truncate block text-center leading-tight ${
                 isMe ? 'text-moon-300 font-bold' : 'text-white/70'
               }`}>
                 {isMe ? '(Bạn)' : p.name}

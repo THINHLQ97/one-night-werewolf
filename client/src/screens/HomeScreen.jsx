@@ -41,11 +41,11 @@ export default function HomeScreen({ onJoin, error, setError }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in">
-      <div className="text-center mb-10">
-        <div className="text-7xl mb-4">🐺</div>
-        <h1 className="text-4xl font-bold text-moon-300 tracking-tight">One Night</h1>
-        <p className="text-moon-400 text-lg mt-1">Ultimate Werewolf</p>
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
+      <div className="text-center mb-8 sm:mb-10">
+        <div className="text-5xl sm:text-7xl mb-3 sm:mb-4">🐺</div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-moon-300 tracking-tight">One Night</h1>
+        <p className="text-moon-400 text-base sm:text-lg mt-1">Ultimate Werewolf</p>
       </div>
 
       {!mode ? (

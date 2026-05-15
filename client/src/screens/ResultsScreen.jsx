@@ -41,10 +41,10 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   }
 
   return (
-    <div className="min-h-screen p-4 max-w-lg mx-auto fade-in">
+    <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in">
       {/* Win banner */}
-      <div className="text-center pt-8 pb-6">
-        <div className="text-6xl mb-3">{isWinner ? '🎉' : '😢'}</div>
+      <div className="text-center pt-6 sm:pt-8 pb-4 sm:pb-6">
+        <div className="text-5xl sm:text-6xl mb-3">{isWinner ? '🎉' : '😢'}</div>
         <h2 className={`text-3xl font-bold ${teamColor}`}>{teamLabel}</h2>
         <p className="text-white/50 mt-2">
           {isWinner ? 'Bạn nằm trong phe thắng!' : 'Bạn thua lần này...'}

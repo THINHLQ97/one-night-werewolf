@@ -138,7 +138,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], swappedPairs = [], myCurrentRole = null } = nightKnowledge || {};
 
   return (
-    <div className="min-h-screen flex flex-col p-4 max-w-lg mx-auto fade-in">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-lg mx-auto fade-in">
       {/* Header */}
       <div className="text-center pt-2 pb-3">
         <div className="flex items-center justify-center gap-2 mb-1">

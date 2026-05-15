@@ -126,13 +126,13 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
   const myPlayer = players.find(p => p.id === socket.id);
 
   return (
-    <div className="min-h-screen p-4 max-w-lg mx-auto fade-in">
+    <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in">
       {/* Room code */}
-      <div className="text-center pt-6 pb-4">
+      <div className="text-center pt-4 sm:pt-6 pb-3 sm:pb-4">
         <p className="text-white/50 text-sm mb-1">Mã phòng</p>
         <button
           onClick={copied}
-          className="text-5xl font-bold tracking-[0.3em] text-moon-300 hover:text-moon-200 transition-colors"
+          className="text-4xl sm:text-5xl font-bold tracking-[0.3em] text-moon-300 hover:text-moon-200 transition-colors"
           title="Nhấn để copy"
         >
           {roomCode}

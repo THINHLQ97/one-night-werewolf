@@ -24,8 +24,8 @@ export default function RoleRevealScreen({ myRole }) {
   const style = TEAM_STYLE[myRole.team] || TEAM_STYLE.village;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 fade-in">
-      <h2 className="text-moon-400 text-lg mb-8 text-center">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
+      <h2 className="text-moon-400 text-sm sm:text-lg mb-6 sm:mb-8 text-center">
         🌙 Đêm xuống — Xem bài của bạn (chỉ mình bạn thấy)
       </h2>
 
