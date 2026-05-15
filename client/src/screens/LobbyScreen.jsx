@@ -3,7 +3,7 @@ import socket from '../socket';
 import RoleIcon from '../components/RoleIcon';
 
 const ALL_ROLES = [
-  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 2 },
+  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5 },
   { id: 'minion',   name: 'Minion',   emoji: '🦹', team: 'werewolf', max: 1 },
   { id: 'seer',     name: 'Seer',     emoji: '🔮', team: 'village',  max: 1 },
   { id: 'robber',   name: 'Robber',   emoji: '🦝', team: 'village',  max: 1 },
@@ -12,7 +12,7 @@ const ALL_ROLES = [
   { id: 'insomniac',name: 'Insomniac',emoji: '👁️', team: 'village',  max: 1 },
   { id: 'hunter',   name: 'Hunter',   emoji: '🏹', team: 'village',  max: 1 },
   { id: 'tanner',   name: 'Tanner',   emoji: '💀', team: 'tanner',  max: 1 },
-  { id: 'villager', name: 'Villager', emoji: '👨‍🌾', team: 'village',  max: 3 },
+  { id: 'villager', name: 'Villager', emoji: '👨‍🌾', team: 'village',  max: 5 },
 ];
 
 const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400' };
