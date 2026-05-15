@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import GameTable from '../components/GameTable';
 import RoleIcon from '../components/RoleIcon';
+import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 
 function useCountdown(timerEnd) {
   const [remaining, setRemaining] = useState(0);
@@ -27,6 +28,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
   const remaining = useCountdown(timerEnd);
   const myVote = votes[myId];
   const [roleHidden, setRoleHidden] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
   const secs = String(remaining % 60).padStart(2, '0');
@@ -47,13 +49,16 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
               {mins}:{secs}
             </div>
           </div>
-          <button
-            onClick={() => setRoleHidden(h => !h)}
-            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
-            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
-          >
-            {roleHidden ? '🙈' : '👁️'}
-          </button>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setRoleHidden(h => !h)}
+              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+              title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+            >
+              {roleHidden ? '🙈' : '👁️'}
+            </button>
+            <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          </div>
         </div>
         <p className="text-white/40 text-xs mt-1">
           {votedCount}/{players.length} đã vote · Chạm vào người chơi để vote
@@ -106,6 +111,8 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
           </button>
         )}
       </div>
+
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
     </div>
   );
 }

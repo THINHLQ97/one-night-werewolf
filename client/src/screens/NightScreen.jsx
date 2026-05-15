@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import GameTable from '../components/GameTable';
 import RoleIcon from '../components/RoleIcon';
+import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import { sfxCardFlip, sfxReveal } from '../audio';
 
 const ROLE_NAMES = {
@@ -18,6 +19,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [actionMode, setActionMode] = useState(null);
   const [actionStep, setActionStep] = useState('choose');
   const [roleHidden, setRoleHidden] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   // Reset when role changes
   if (currentRole !== submittedForRole && submitted) {
@@ -147,13 +149,16 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         <div className="flex items-center justify-center gap-2 mb-1">
           <span className="text-3xl pulse-moon">🌙</span>
           <h2 className="text-lg font-semibold text-moon-300">Ban đêm</h2>
-          <button
-            onClick={() => setRoleHidden(h => !h)}
-            className="ml-2 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
-            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
-          >
-            {roleHidden ? '🙈' : '👁️'}
-          </button>
+          <div className="ml-2 flex gap-1.5">
+            <button
+              onClick={() => setRoleHidden(h => !h)}
+              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+              title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+            >
+              {roleHidden ? '🙈' : '👁️'}
+            </button>
+            <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          </div>
         </div>
         {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">
@@ -351,6 +356,8 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           </div>
         )}
       </div>
+
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={currentRole} />
     </div>
   );
 }

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import RoleIcon from '../components/RoleIcon';
+import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 
 const ROLE_NAMES = {
   werewolf: '🐺 Werewolf', minion: '🦹 Minion', seer: '🔮 Seer',
@@ -15,6 +17,8 @@ const TEAM_OF = {
 };
 
 export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
+  const [libraryOpen, setLibraryOpen] = useState(false);
+
   if (!results) return null;
 
   const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally } = results;
@@ -44,7 +48,8 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   return (
     <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in">
       {/* Win banner */}
-      <div className="text-center pt-6 sm:pt-8 pb-4 sm:pb-6">
+      <div className="text-center pt-6 sm:pt-8 pb-4 sm:pb-6 relative">
+        <RoleLibraryButton onClick={() => setLibraryOpen(true)} className="absolute top-6 right-0" />
         <div className="text-5xl sm:text-6xl mb-3">{isWinner ? '🎉' : '😢'}</div>
         <h2 className={`text-3xl font-bold ${teamColor}`}>{teamLabel}</h2>
         <p className="text-white/50 mt-2">
@@ -145,6 +150,8 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
       ) : (
         <p className="text-center text-white/40 text-sm py-4">Chờ host bắt đầu game mới...</p>
       )}
+
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
     </div>
   );
 }

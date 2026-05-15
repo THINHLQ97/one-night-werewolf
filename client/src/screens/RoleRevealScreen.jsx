@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RoleIcon from '../components/RoleIcon';
+import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 
 const TEAM_STYLE = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Werewolf Team' },
@@ -10,6 +11,7 @@ const TEAM_STYLE = {
 export default function RoleRevealScreen({ myRole }) {
   const [revealed, setRevealed] = useState(false);
   const [roleHidden, setRoleHidden] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   if (!myRole) {
     return (
@@ -30,15 +32,18 @@ export default function RoleRevealScreen({ myRole }) {
         <h2 className="text-moon-400 text-sm sm:text-lg text-center">
           🌙 Đêm xuống — Xem bài của bạn
         </h2>
-        {revealed && (
-          <button
-            onClick={() => setRoleHidden(h => !h)}
-            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
-            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
-          >
-            {roleHidden ? '🙈' : '👁️'}
-          </button>
-        )}
+        <div className="flex gap-1.5">
+          {revealed && (
+            <button
+              onClick={() => setRoleHidden(h => !h)}
+              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+              title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+            >
+              {roleHidden ? '🙈' : '👁️'}
+            </button>
+          )}
+          <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+        </div>
       </div>
 
       {!revealed ? (
@@ -76,6 +81,8 @@ export default function RoleRevealScreen({ myRole }) {
           <div key={i} className="w-2 h-2 rounded-full bg-white/20" />
         ))}
       </div>
+
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} />
     </div>
   );
 }
