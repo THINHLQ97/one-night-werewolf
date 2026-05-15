@@ -6,7 +6,24 @@
       "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\Program Files \\(x86\\)\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\GitHub CLI\" -ErrorAction SilentlyContinue)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "mcp__Claude_Preview__preview_start",
-      "PowerShell(Get-Process -Id \\(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; Write-Output \"done\")"
+      "PowerShell(Get-Process -Id \\(Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; Write-Output \"done\")",
+      "PowerShell(powershell -Command \"irm https://fly.io/install.ps1 | iex\" 2>&1)",
+      "PowerShell(& \"$env:USERPROFILE\\\\.fly\\\\bin\\\\flyctl.exe\" auth login 2>&1)",
+      "Bash(vercel env *)",
+      "Bash(vercel deploy *)",
+      "Bash(vercel project *)",
+      "Bash(vercel --help)",
+      "Bash(vercel protection *)",
+      "Read(//c/Users/thinhlq/.local/share/com.vercel.cli/**)",
+      "Bash(curl -s -X PATCH https://api.vercel.com/v9/projects/prj_pJt1ibv6f3hy2UtsHgkj4RbAazAd -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Read(//c/Users/thinhlq/**)",
+      "Read(//c/Users/thinhlq/.config/vercel/**)",
+      "Read(//c/Users/thinhlq/AppData/Roaming/com.vercel.cli/**)",
+      "PowerShell(Get-ChildItem -Path \"$env:APPDATA\" -Recurse -Filter \"auth.json\" -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match \"vercel\" } | Select-Object -ExpandProperty FullName)",
+      "Bash(curl -s -X PATCH https://api.vercel.com/v9/projects/prj_pJt1ibv6f3hy2UtsHgkj4RbAazAd -H 'Authorization: Bearer vca_457nvV3mg6Xcobcl5gjWmzv8FB1Cpy9Nal6MmkJSQXkRFTBWsL3ARWXs' -H 'Content-Type: application/json' -d '{\"ssoProtection\":null,\"passwordProtection\":null,\"vercelAuthentication\":{\"deploymentType\":\"none\"}}')",
+      "Bash(curl -s -X GET https://api.vercel.com/v9/projects/prj_pJt1ibv6f3hy2UtsHgkj4RbAazAd -H 'Authorization: Bearer vca_457nvV3mg6Xcobcl5gjWmzv8FB1Cpy9Nal6MmkJSQXkRFTBWsL3ARWXs')",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d.get\\(k\\) for k in ['ssoProtection','passwordProtection','protection','optionsAllowlist']}, indent=2\\)\\)\")",
+      "WebFetch(domain:bizweb.dktcdn.net)"
     ]
   }
 }

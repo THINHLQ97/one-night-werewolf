@@ -18,7 +18,7 @@ function useCountdown(timerEnd) {
 
 const ROLE_SHORT = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
-  drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
+  drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
@@ -32,7 +32,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
 
   const votedCount = Object.keys(votes).length;
 
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], swappedPairs = [], myCurrentRole } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = nightKnowledge || {};
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-lg mx-auto fade-in">
@@ -103,7 +103,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
 }
 
 function KnowledgeSummary({ knowledge, players }) {
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], swappedPairs = [], myCurrentRole } = knowledge;
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = knowledge;
   const nameMap = {};
   players.forEach(p => { nameMap[p.id] = p.name; });
 
@@ -111,6 +111,9 @@ function KnowledgeSummary({ knowledge, players }) {
 
   if (knownWerewolves.length > 0) {
     items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
+  }
+  if (knownMasons.length > 0) {
+    items.push(`🤝 Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
   }
   Object.entries(revealedPlayers).forEach(([id, role]) => {
     items.push(`👤 ${nameMap[id]}: ${ROLE_SHORT[role] || role}`);

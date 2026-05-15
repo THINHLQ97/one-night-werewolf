@@ -64,7 +64,7 @@ export default function App() {
 
     socket.on('game_started', () => {
       setScreen('role_reveal');
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], swappedPairs: [], myCurrentRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
     });
 
     socket.on('role_assigned', ({ roleId, role }) => {
@@ -97,6 +97,12 @@ export default function App() {
         setNightKnowledge(prev => ({
           ...prev,
           knownWerewolves: actionData.werewolves.map(w => w.id),
+        }));
+      }
+      if (role === 'mason' && actionData.masons) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownMasons: actionData.masons.map(m => m.id),
         }));
       }
     });
@@ -162,7 +168,7 @@ export default function App() {
       setHostId(hostId);
       setMyRole(null);
       setResults(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], swappedPairs: [], myCurrentRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
       setScreen('lobby');
       stopBGM();
     });

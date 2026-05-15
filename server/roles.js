@@ -25,12 +25,25 @@ const ROLES = {
     nightInstruction: 'Tay Sai, hãy mở mắt. Người Sói hãy giơ tay để Tay Sai nhận biết.',
     nightClose: 'Tay Sai, hãy nhắm mắt lại.',
   },
+  mason: {
+    id: 'mason',
+    name: 'Mason',
+    nameVi: 'Sinh Đôi',
+    team: 'village',
+    nightOrder: 4,
+    hasNightAction: true,
+    maxCount: 2,
+    emoji: '🤝',
+    description: 'Bạn là Sinh Đôi! Mở mắt và nhìn nhau để biết ai cùng phe.',
+    nightInstruction: 'Sinh Đôi, hãy mở mắt và nhìn nhau.',
+    nightClose: 'Sinh Đôi, hãy nhắm mắt lại.',
+  },
   seer: {
     id: 'seer',
     name: 'Seer',
     nameVi: 'Tiên tri',
     team: 'village',
-    nightOrder: 4,
+    nightOrder: 5,
     hasNightAction: true,
     maxCount: 1,
     emoji: '🔮',
@@ -43,7 +56,7 @@ const ROLES = {
     name: 'Robber',
     nameVi: 'Tên Trộm',
     team: 'village',
-    nightOrder: 5,
+    nightOrder: 6,
     hasNightAction: true,
     maxCount: 1,
     emoji: '🦝',
@@ -56,7 +69,7 @@ const ROLES = {
     name: 'Troublemaker',
     nameVi: 'Kẻ Quậy',
     team: 'village',
-    nightOrder: 6,
+    nightOrder: 7,
     hasNightAction: true,
     maxCount: 1,
     emoji: '😈',
@@ -69,7 +82,7 @@ const ROLES = {
     name: 'Drunk',
     nameVi: 'Người Say',
     team: 'village',
-    nightOrder: 7,
+    nightOrder: 8,
     hasNightAction: true,
     maxCount: 1,
     emoji: '🍺',
@@ -82,7 +95,7 @@ const ROLES = {
     name: 'Insomniac',
     nameVi: 'Mất Ngủ',
     team: 'village',
-    nightOrder: 8,
+    nightOrder: 9,
     hasNightAction: true,
     maxCount: 1,
     emoji: '👁️',
@@ -132,7 +145,7 @@ const ROLES = {
 };
 
 // Night order for roles that have actions (excluding passive roles)
-const ACTIVE_NIGHT_ROLES = ['werewolf', 'minion', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'];
+const ACTIVE_NIGHT_ROLES = ['werewolf', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'];
 
 function getNightOrder(selectedRoles) {
   const roleSet = new Set(selectedRoles);

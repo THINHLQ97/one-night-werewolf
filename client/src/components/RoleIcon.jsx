@@ -9,6 +9,7 @@ const ROLE_IMAGES = {
   villager: 'https://bizweb.dktcdn.net/100/316/286/files/villager.jpg?v=1671683855300',
   hunter: 'https://bizweb.dktcdn.net/100/316/286/files/hunter.jpg?v=1671683853690',
   tanner: 'https://bizweb.dktcdn.net/100/316/286/files/tanner.jpg?v=1671683854923',
+  mason: 'https://bizweb.dktcdn.net/100/316/286/files/mason.jpg',
 };
 
 export default function RoleIcon({ roleId, size = 80, className = '' }) {

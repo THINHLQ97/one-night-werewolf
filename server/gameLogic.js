@@ -61,6 +61,10 @@ function getNightActionData(room, role) {
       const werewolves = players.filter(p => room.originalCards[p.id] === 'werewolf').map(p => ({ id: p.id, name: p.name }));
       return { werewolves };
     }
+    case 'mason': {
+      const masons = players.filter(p => room.originalCards[p.id] === 'mason').map(p => ({ id: p.id, name: p.name }));
+      return { masons };
+    }
     case 'seer':
     case 'robber':
     case 'troublemaker': {
@@ -87,6 +91,9 @@ function processNightAction(room, playerId, role, action) {
     }
 
     case 'minion':
+      return {};
+
+    case 'mason':
       return {};
 
     case 'seer': {

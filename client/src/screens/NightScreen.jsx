@@ -7,6 +7,7 @@ const ROLE_NAMES = {
   werewolf: '🐺 Werewolf', minion: '🦹 Minion', seer: '🔮 Seer',
   robber: '🦝 Robber', troublemaker: '😈 Troublemaker', drunk: '🍺 Drunk',
   insomniac: '👁️ Insomniac', villager: '👨‍🌾 Villager', hunter: '🏹 Hunter', tanner: '💀 Tanner',
+  mason: '🤝 Mason',
 };
 
 export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge }) {
@@ -55,6 +56,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           setActionStep('done');
         }
         break;
+      case 'mason':
       case 'minion':
       case 'insomniac':
         setActionStep('done');
@@ -135,7 +137,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   })();
 
   // Build table props from accumulated knowledge
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], swappedPairs = [], myCurrentRole = null } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null } = nightKnowledge || {};
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-lg mx-auto fade-in">
@@ -274,6 +276,20 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
+            {/* Mason */}
+            {currentRole === 'mason' && (
+              <div className="text-center">
+                <div className="mb-3">
+                  {actionData?.masons?.length > 1 ? (
+                    <p className="text-white/60 text-sm">Đồng đội Sinh Đôi trên bàn đang sáng</p>
+                  ) : (
+                    <p className="text-white/50 text-sm">Bạn là Mason duy nhất! Bài còn lại ở giữa.</p>
+                  )}
+                </div>
+                <button className="btn-primary text-sm" onClick={handleAutoSubmit}>Xong ✓</button>
+              </div>
+            )}
+
             {/* Werewolf multi / Minion / Insomniac — auto-show info, just confirm */}
             {((currentRole === 'werewolf' && !actionData?.isSolo) ||
               currentRole === 'minion' || currentRole === 'insomniac') && (
@@ -337,7 +353,7 @@ function ActionResultInline({ role, result }) {
   if (!result) return null;
   const ROLE_SHORT = {
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
-    drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
+    drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
@@ -370,12 +386,12 @@ function ActionResultInline({ role, result }) {
 // ─── Knowledge summary ────────────────────────────────────────────────────────
 
 function KnowledgeSummary({ knowledge, players }) {
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], swappedPairs = [], myCurrentRole } = knowledge;
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = knowledge;
   const nameMap = {};
   players.forEach(p => { nameMap[p.id] = p.name; });
   const ROLE_SHORT = {
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
-    drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
+    drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
@@ -383,6 +399,10 @@ function KnowledgeSummary({ knowledge, players }) {
 
   if (knownWerewolves.length > 0) {
     items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
+  }
+
+  if (knownMasons.length > 0) {
+    items.push(`🤝 Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
   }
 
   Object.entries(revealedPlayers).forEach(([id, role]) => {

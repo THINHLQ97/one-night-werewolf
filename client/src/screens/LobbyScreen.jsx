@@ -5,6 +5,7 @@ import RoleIcon from '../components/RoleIcon';
 const ALL_ROLES = [
   { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5 },
   { id: 'minion',   name: 'Minion',   emoji: '🦹', team: 'werewolf', max: 1 },
+  { id: 'mason',    name: 'Mason',    emoji: '🤝', team: 'village',  max: 2 },
   { id: 'seer',     name: 'Seer',     emoji: '🔮', team: 'village',  max: 1 },
   { id: 'robber',   name: 'Robber',   emoji: '🦝', team: 'village',  max: 1 },
   { id: 'troublemaker', name: 'Troublemaker', emoji: '😈', team: 'village', max: 1 },
@@ -29,6 +30,11 @@ const ROLE_DETAILS = {
     nightAction: 'Mở mắt và biết ai là Sói. Nhưng Sói không biết bạn là Tay Sai.',
     winCondition: 'Thắng cùng phe Sói. Nếu bạn bị loại thay Sói, phe Sói vẫn thắng.',
     tips: 'Hãy thu hút sự nghi ngờ về phía mình để bảo vệ Sói. Có thể nhận mình là Sói giả.',
+  },
+  mason: {
+    nightAction: 'Mở mắt và nhìn nhau. Biết chắc ai cùng phe Dân.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Bạn biết chắc đồng đội — hãy tin tưởng nhau và phối hợp tìm Sói. Nếu chỉ có 1 Mason, bài còn lại ở giữa.',
   },
   seer: {
     nightAction: 'Chọn xem bài của 1 người chơi khác, HOẶC xem 2 bài ở giữa.',
