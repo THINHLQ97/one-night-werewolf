@@ -77,11 +77,11 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
       <GameTable
         players={players}
         myId={myId}
-        revealedPlayers={revealedPlayers}
-        revealedCenter={revealedCenter}
-        knownWerewolves={knownWerewolves}
-        swappedPairs={swappedPairs}
-        myCurrentRole={myCurrentRole || myRole?.roleId}
+        revealedPlayers={roleHidden ? {} : revealedPlayers}
+        revealedCenter={roleHidden ? {} : revealedCenter}
+        knownWerewolves={roleHidden ? [] : knownWerewolves}
+        swappedPairs={roleHidden ? [] : swappedPairs}
+        myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable="player"
         selected={myVote ? [myVote] : []}
         onSelect={onVote}
