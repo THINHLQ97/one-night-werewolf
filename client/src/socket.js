@@ -6,13 +6,22 @@ const socket = io(SERVER_URL, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  timeout: 20000,
+  reconnectionDelay: 300,
+  reconnectionDelayMax: 2000,
+  timeout: 8000,
+  transports: ['websocket', 'polling'],
 });
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !socket.connected) {
+    socket.disconnect();
+    socket.connect();
+  }
+});
+
+window.addEventListener('online', () => {
+  if (!socket.connected) {
+    socket.disconnect();
     socket.connect();
   }
 });
