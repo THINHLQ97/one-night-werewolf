@@ -70,30 +70,35 @@ export default function App() {
       const code = roomCodeRef.current || savedRoom;
 
       if (screenRef.current !== 'home' && code && savedName) {
-        socket.emit('rejoin_room', { code, name: savedName }, (res) => {
-          if (res?.ok) {
-            setConnectionLost(false);
-            setRoomCode(res.code);
-            setPlayers(res.players);
-            setHostId(res.hostId);
-            setSettings(res.settings);
-            if (res.roleId) {
-              setMyRole({ roleId: res.roleId, ...res.role });
+        const tryRejoin = (attempt) => {
+          socket.emit('rejoin_room', { code, name: savedName }, (res) => {
+            if (res?.ok) {
+              setConnectionLost(false);
+              setRoomCode(res.code);
+              setPlayers(res.players);
+              setHostId(res.hostId);
+              setSettings(res.settings);
+              if (res.roleId) {
+                setMyRole({ roleId: res.roleId, ...res.role });
+              }
+              if (res.state === 'day') {
+                setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players });
+                setScreen('day');
+              } else if (res.state === 'night' || res.state === 'role_reveal') {
+                setScreen(res.state === 'role_reveal' ? 'role_reveal' : 'night');
+              } else if (res.state === 'waiting') {
+                setScreen('lobby');
+              }
+            } else if (attempt < 3) {
+              setTimeout(() => tryRejoin(attempt + 1), 1000);
+            } else {
+              setConnectionLost(false);
+              setScreen('home');
+              setError('Mất kết nối. Vui lòng vào lại phòng.');
             }
-            if (res.state === 'day') {
-              setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players });
-              setScreen('day');
-            } else if (res.state === 'night' || res.state === 'role_reveal') {
-              setScreen(res.state === 'role_reveal' ? 'role_reveal' : 'night');
-            } else if (res.state === 'waiting') {
-              setScreen('lobby');
-            }
-          } else {
-            setConnectionLost(false);
-            setScreen('home');
-            setError('Mất kết nối. Vui lòng vào lại phòng.');
-          }
-        });
+          });
+        };
+        setTimeout(() => tryRejoin(1), 500);
       }
     });
 

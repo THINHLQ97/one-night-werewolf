@@ -181,55 +181,57 @@ io.on('connection', socket => {
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb?.({ error: 'Phòng không tồn tại' });
 
+    let oldId = null;
     const dc = findDisconnectedPlayer(code, name);
     if (dc) {
-      const oldId = dc.oldId;
+      oldId = dc.oldId;
       clearDisconnectedPlayer(code, name);
-
-      const player = room.players.find(p => p.id === oldId);
-      if (player) {
-        player.id = socket.id;
-        if (room.hostId === oldId) room.hostId = socket.id;
-
-        if (room.originalCards[oldId] !== undefined) {
-          room.originalCards[socket.id] = room.originalCards[oldId];
-          delete room.originalCards[oldId];
-        }
-        if (room.currentCards[oldId] !== undefined) {
-          room.currentCards[socket.id] = room.currentCards[oldId];
-          delete room.currentCards[oldId];
-        }
-        if (room.dayPhase?.votes[oldId] !== undefined) {
-          room.dayPhase.votes[socket.id] = room.dayPhase.votes[oldId];
-          delete room.dayPhase.votes[oldId];
-        }
-
-        socket.join(room.code);
-        socket.roomCode = room.code;
-
-        const roleId = room.originalCards[socket.id];
-        const currentRoleId = room.currentCards[socket.id];
-
-        cb?.({
-          ok: true,
-          code: room.code,
-          state: room.state,
-          players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
-          settings: room.settings,
-          hostId: room.hostId,
-          roleId,
-          role: roleId ? ROLES[roleId] : null,
-          currentRoleId,
-          votes: room.dayPhase?.votes || {},
-          timerEnd: room.dayPhase?.timerEnd || null,
-        });
-
-        broadcastPlayerList(room);
-        return;
-      }
     }
 
-    cb?.({ error: 'Không tìm thấy phiên cũ' });
+    const player = oldId
+      ? room.players.find(p => p.id === oldId)
+      : room.players.find(p => p.name === name && p.id !== socket.id);
+
+    if (!player) return cb?.({ error: 'Không tìm thấy phiên cũ' });
+
+    const prevId = player.id;
+    player.id = socket.id;
+    if (room.hostId === prevId) room.hostId = socket.id;
+
+    if (room.originalCards[prevId] !== undefined) {
+      room.originalCards[socket.id] = room.originalCards[prevId];
+      delete room.originalCards[prevId];
+    }
+    if (room.currentCards[prevId] !== undefined) {
+      room.currentCards[socket.id] = room.currentCards[prevId];
+      delete room.currentCards[prevId];
+    }
+    if (room.dayPhase?.votes[prevId] !== undefined) {
+      room.dayPhase.votes[socket.id] = room.dayPhase.votes[prevId];
+      delete room.dayPhase.votes[prevId];
+    }
+
+    socket.join(room.code);
+    socket.roomCode = room.code;
+
+    const roleId = room.originalCards[socket.id];
+    const currentRoleId = room.currentCards[socket.id];
+
+    cb?.({
+      ok: true,
+      code: room.code,
+      state: room.state,
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+      settings: room.settings,
+      hostId: room.hostId,
+      roleId,
+      role: roleId ? ROLES[roleId] : null,
+      currentRoleId,
+      votes: room.dayPhase?.votes || {},
+      timerEnd: room.dayPhase?.timerEnd || null,
+    });
+
+    broadcastPlayerList(room);
   });
 
   // ── Rename player ──
