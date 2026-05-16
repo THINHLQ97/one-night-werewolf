@@ -145,10 +145,9 @@ const ROLES = {
   },
   bodyguard: {
     id: 'bodyguard', name: 'Bodyguard', nameVi: 'Cận Vệ', team: 'village',
-    nightOrder: 10, hasNightAction: true, maxCount: 1, emoji: '💪', expansion: 'daybreak',
-    description: 'Cận Vệ! Bảo vệ 1 người. Nếu họ bị vote loại, họ sẽ được cứu.',
-    nightInstruction: 'Cận Vệ, hãy mở mắt và chọn 1 người để bảo vệ.',
-    nightClose: 'Cận Vệ, hãy nhắm mắt lại.',
+    nightOrder: 99, hasNightAction: false, maxCount: 1, emoji: '💪', expansion: 'daybreak',
+    description: 'Cận Vệ! Khi vote, bạn chỉ vào người muốn BẢO VỆ thay vì người muốn loại.',
+    nightInstruction: null, nightClose: null,
   },
 };
 
@@ -165,7 +164,7 @@ const ACTIVE_NIGHT_ROLES = [
   'apprenticeseer', 'seer', 'paranormalinvestigator',
   'robber', 'witch', 'troublemaker',
   'villageidiot', 'drunk',
-  'insomniac', 'revealer', 'bodyguard',
+  'insomniac', 'revealer',
 ];
 
 function getNightOrder(selectedRoles) {

@@ -50,7 +50,6 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'mysticwolf':
       case 'paranormalinvestigator':
       case 'revealer':
-      case 'bodyguard':
         setActionMode('player');
         setActionStep('choose');
         break;
@@ -162,9 +161,6 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         }
         break;
       case 'revealer':
-        if (selected.length === 1) action = { targetPlayer: selected[0] };
-        break;
-      case 'bodyguard':
         if (selected.length === 1) action = { targetPlayer: selected[0] };
         break;
       default:
@@ -464,17 +460,6 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {/* ─── Bodyguard ─── */}
-            {currentRole === 'bodyguard' && (
-              <div className="text-center">
-                <p className="text-white/60 text-sm mb-2">💪 Chạm vào người chơi để bảo vệ</p>
-                <p className="text-white/40 text-xs mb-2">Nếu họ bị vote loại → được cứu!</p>
-                <div className="flex gap-2 justify-center">
-                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
-                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Bảo vệ</button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -589,9 +574,6 @@ function ActionResultInline({ role, result, step }) {
     if (result.role) {
       return <p className="text-white/70 text-sm mt-1">🔦 Bài là Sói/Tanner — không công khai</p>;
     }
-  }
-  if (role === 'bodyguard') {
-    return <p className="text-white/70 text-sm mt-1">💪 Đã bảo vệ</p>;
   }
   return null;
 }

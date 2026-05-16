@@ -225,8 +225,8 @@ export default function App() {
       setTimeout(() => startDayBGM(), 500);
     });
 
-    socket.on('vote_update', ({ votes, players }) => {
-      setDayState(prev => ({ ...prev, votes, players }));
+    socket.on('vote_update', ({ votes, bodyguardProtect, players }) => {
+      setDayState(prev => ({ ...prev, votes, bodyguardProtect: bodyguardProtect || null, players }));
     });
 
     socket.on('game_over', ({ results, players }) => {
@@ -349,6 +349,7 @@ export default function App() {
         myId={socket.id}
         isHost={isHost}
         onVote={targetId => socket.emit('vote', { targetId })}
+        onBodyguardProtect={targetId => socket.emit('bodyguard_protect', { targetId })}
         onEndDay={() => socket.emit('end_day')}
         nightKnowledge={nightKnowledge}
         myRole={myRole}

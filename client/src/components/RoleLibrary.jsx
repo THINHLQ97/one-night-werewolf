@@ -185,13 +185,13 @@ const ROLES = [
     howToPlay: 'Ban đêm: Chọn 1 người chơi → lật bài của họ:\n• Nếu KHÔNG phải Sói/Tanner → bài được CÔNG KHAI cho TẤT CẢ mọi người!\n• Nếu là Sói hoặc Tanner → không công khai (chỉ bạn biết)\nBan ngày: Nếu lật thành công, mọi người đã biết vai đó → dễ dàng loại trừ.\nMục tiêu: Công khai càng nhiều vai Dân càng tốt để thu hẹp nghi phạm.',
   },
   {
-    id: 'bodyguard', name: 'Bodyguard', nameVi: 'Vệ Sĩ', emoji: '💪',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 10, expansion: 'daybreak',
-    nightAction: 'Chọn 1 người để bảo vệ. Nếu họ bị vote loại → được cứu!',
+    id: 'bodyguard', name: 'Bodyguard', nameVi: 'Cận Vệ', emoji: '💪',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'daybreak',
+    nightAction: 'Không thức dậy ban đêm. Khi vote: chỉ vào người muốn BẢO VỆ thay vì loại.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
-    tips: 'Bảo vệ người bạn tin là phe Dân. Nếu họ bị vote, họ sống sót!',
-    nightScript: '"Vệ Sĩ, hãy mở mắt. Chọn 1 người để bảo vệ." — Vệ Sĩ chỉ vào 1 người. Nếu người đó bị vote loại, họ được cứu. "Vệ Sĩ, hãy nhắm mắt lại."',
-    howToPlay: 'Ban đêm: Thức dậy CUỐI CÙNG. Chọn 1 người chơi để bảo vệ.\n💪 Nếu người đó bị vote loại ban ngày → họ được CỨU SỐNG!\nBan ngày: Bạn không nên tiết lộ mình là Vệ Sĩ (Sói sẽ tránh vote người được bảo vệ).\nMục tiêu: Bảo vệ đúng người phe Dân khỏi bị vote nhầm.',
+    tips: 'Đừng tiết lộ mình là Cận Vệ. Bảo vệ người bạn tin là Dân!',
+    nightScript: 'Cận Vệ không thức dậy ban đêm.',
+    howToPlay: 'Ban đêm: Không có hành động.\nBan ngày: Khi bỏ phiếu, thay vì chọn người để LOẠI, bạn chọn người để BẢO VỆ.\n💪 Người được bạn chỉ vào sẽ KHÔNG THỂ bị treo cổ!\n⚠️ Nếu người được bảo vệ bị vote nhiều nhất, người có phiếu cao thứ 2 (≥2 phiếu) sẽ bị loại thay.\nMục tiêu: Bảo vệ đúng người phe Dân. Đừng tiết lộ mình là Cận Vệ — Sói sẽ tránh vote người được bảo vệ.',
   },
 ];
 

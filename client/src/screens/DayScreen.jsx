@@ -26,17 +26,19 @@ const ROLE_SHORT = {
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, nightKnowledge, myRole }) {
-  const { timerEnd, votes, players } = dayState;
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole }) {
+  const { timerEnd, votes, bodyguardProtect, players } = dayState;
   const remaining = useCountdown(timerEnd);
-  const myVote = votes[myId];
+  const isBodyguard = myRole?.roleId === 'bodyguard';
+  const myVote = isBodyguard ? null : votes[myId];
+  const myProtect = isBodyguard ? bodyguardProtect?.targetId : null;
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
 
   const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
   const secs = String(remaining % 60).padStart(2, '0');
 
-  const votedCount = Object.keys(votes).length;
+  const votedCount = Object.keys(votes).length + (bodyguardProtect ? 1 : 0);
 
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = nightKnowledge || {};
 
@@ -64,7 +66,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
           </div>
         </div>
         <p className="text-white/40 text-xs mt-1">
-          {votedCount}/{players.length} đã vote · Chạm vào người chơi để vote
+          {votedCount}/{players.length} đã vote · {isBodyguard ? '💪 Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}
         </p>
       </div>
 
@@ -86,15 +88,20 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onEndDay, ni
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable="player"
-        selected={myVote ? [myVote] : []}
-        onSelect={onVote}
+        selected={isBodyguard ? (myProtect ? [myProtect] : []) : (myVote ? [myVote] : [])}
+        onSelect={isBodyguard ? onBodyguardProtect : onVote}
         votes={votes}
         isNight={false}
       />
 
       {/* Vote status */}
       <div className="mt-3 flex-1">
-        {myVote && (
+        {isBodyguard && myProtect && (
+          <p className="text-center text-village-400/60 text-xs mb-2">
+            💪 Bạn đang bảo vệ người này. Chạm người khác để đổi.
+          </p>
+        )}
+        {!isBodyguard && myVote && (
           <p className="text-center text-white/40 text-xs mb-2">
             Bạn đã vote. Chạm vào người khác để đổi ý.
           </p>

@@ -134,9 +134,9 @@ const ROLE_DETAILS = {
     tips: 'Lật được Dân → thu hẹp nghi phạm Sói.',
   },
   bodyguard: {
-    nightAction: 'Chọn 1 người bảo vệ. Nếu họ bị vote loại → được cứu!',
+    nightAction: 'Không thức dậy ban đêm. Khi vote: chỉ vào người BẢO VỆ thay vì loại.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
-    tips: 'Bảo vệ người bạn tin là Dân. Đừng tiết lộ mình là Vệ Sĩ.',
+    tips: 'Đừng tiết lộ mình là Cận Vệ. Bảo vệ người bạn tin là Dân!',
   },
 };
 

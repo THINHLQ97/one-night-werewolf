@@ -38,7 +38,6 @@ function startGame(room) {
   room.currentCards = { ...cards };
   room.state = 'role_reveal';
   room.shieldedPlayer = null;
-  room.bodyguardProtected = null;
   room.revealedToAll = {};
   room.piTransformed = {};
   room.nightPhase = {
@@ -104,10 +103,6 @@ function getNightActionData(room, role) {
     case 'revealer': {
       const otherPlayers = players.map(p => ({ id: p.id, name: p.name }));
       return { otherPlayers, shieldedPlayer: room.shieldedPlayer };
-    }
-    case 'bodyguard': {
-      const otherPlayers = players.map(p => ({ id: p.id, name: p.name }));
-      return { otherPlayers };
     }
     case 'drunk':
     case 'insomniac':
@@ -305,13 +300,6 @@ function processNightAction(room, playerId, role, action) {
       return { revealed: !isHidden, targetPlayer: action.targetPlayer, role: isHidden ? null : targetRole };
     }
 
-    case 'bodyguard': {
-      if (!action.targetPlayer || !isValidPlayerId(room, action.targetPlayer)) return {};
-      if (action.targetPlayer === playerId) return {};
-      room.bodyguardProtected = action.targetPlayer;
-      return {};
-    }
-
     default:
       return {};
   }
@@ -338,8 +326,9 @@ function tallyVotes(room) {
 }
 
 function applyBodyguard(room, eliminated) {
-  if (!room.bodyguardProtected) return eliminated;
-  return eliminated.filter(id => id !== room.bodyguardProtected);
+  const protectTarget = room.dayPhase?.bodyguardProtect?.targetId;
+  if (!protectTarget) return eliminated;
+  return eliminated.filter(id => id !== protectTarget);
 }
 
 function applyHunterEffect(room, eliminated) {
@@ -416,7 +405,7 @@ function computeResults(room) {
     tally,
     eliminated,
     initialEliminated,
-    bodyguardSaved: room.bodyguardProtected && initialEliminated.includes(room.bodyguardProtected) ? room.bodyguardProtected : null,
+    bodyguardSaved: room.dayPhase?.bodyguardProtect?.targetId && initialEliminated.includes(room.dayPhase.bodyguardProtect.targetId) ? room.dayPhase.bodyguardProtect.targetId : null,
     winners,
     finalCards: { ...room.currentCards },
     originalCards: { ...room.originalCards },

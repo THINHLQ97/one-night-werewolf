@@ -125,6 +125,14 @@ function startDayPhase(room) {
   }, 5 * 60 * 1000);
 }
 
+function checkAllVoted(room) {
+  const voted = Object.keys(room.dayPhase.votes).length;
+  const hasBodyguard = room.dayPhase.bodyguardProtect ? 1 : 0;
+  if (voted + hasBodyguard >= room.players.length) {
+    endGame(room);
+  }
+}
+
 function endGame(room) {
   if (room.dayPhase?.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
   const results = computeResults(room);
@@ -368,14 +376,29 @@ io.on('connection', socket => {
 
     io.to(room.code).emit('vote_update', {
       votes: room.dayPhase.votes,
+      bodyguardProtect: room.dayPhase.bodyguardProtect || null,
       players: room.players.map(p => ({ id: p.id, name: p.name })),
     });
 
-    // Auto-end when everyone voted
-    const voted = Object.keys(room.dayPhase.votes).length;
-    if (voted >= room.players.length) {
-      endGame(room);
-    }
+    checkAllVoted(room);
+  });
+
+  // ── Bodyguard protect (instead of vote) ──
+  socket.on('bodyguard_protect', ({ targetId }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.state !== 'day') return;
+    if (!room.players.some(p => p.id === targetId)) return;
+    if (socket.id === targetId) return;
+
+    room.dayPhase.bodyguardProtect = { protectorId: socket.id, targetId };
+
+    io.to(room.code).emit('vote_update', {
+      votes: room.dayPhase.votes,
+      bodyguardProtect: room.dayPhase.bodyguardProtect,
+      players: room.players.map(p => ({ id: p.id, name: p.name })),
+    });
+
+    checkAllVoted(room);
   });
 
   // ── Force end day (host only) ──
