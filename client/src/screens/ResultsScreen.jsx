@@ -124,6 +124,11 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
                 Giữa {i + 1}: {ROLE_NAMES[finalCards[slot]]}
               </span>
             ))}
+            {finalCards['centerWolf'] && (
+              <span className="text-xs px-2 py-1 bg-wolf-500/20 rounded-lg text-wolf-300 border border-wolf-500/30">
+                🐺 Alpha: {ROLE_NAMES[finalCards['centerWolf']]}
+              </span>
+            )}
           </div>
         </div>
       </div>

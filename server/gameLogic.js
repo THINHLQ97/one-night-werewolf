@@ -34,11 +34,15 @@ function startGame(room) {
   cards['center1'] = roles[players.length + 1];
   cards['center2'] = roles[players.length + 2];
 
+  if (settings.selectedRoles.includes('alphawolf')) {
+    cards['centerWolf'] = 'werewolf';
+  }
+
   room.originalCards = { ...cards };
   room.currentCards = { ...cards };
   room.state = 'role_reveal';
   room.shieldedPlayer = null;
-  room.alphaWerewolfCard = settings.selectedRoles.includes('alphawolf') ? 'werewolf' : null;
+  room.hasAlphaWolf = settings.selectedRoles.includes('alphawolf');
   room.revealedToAll = {};
   room.piTransformed = {};
   room.nightPhase = {
@@ -136,8 +140,8 @@ function processNightAction(room, playerId, role, action) {
       if (action.targetPlayer === playerId) return {};
       if (isShielded(room, action.targetPlayer)) return { blocked: true };
       const oldCard = currentCards[action.targetPlayer];
-      currentCards[action.targetPlayer] = room.alphaWerewolfCard;
-      room.alphaWerewolfCard = oldCard;
+      currentCards[action.targetPlayer] = currentCards['centerWolf'];
+      currentCards['centerWolf'] = oldCard;
       return {};
     }
 

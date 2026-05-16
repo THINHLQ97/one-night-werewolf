@@ -26,7 +26,7 @@ const ROLE_SHORT = {
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf }) {
   const { timerEnd, votes, bodyguardProtect, players } = dayState;
   const remaining = useCountdown(timerEnd);
   const isBodyguard = myRole?.roleId === 'bodyguard';
@@ -92,6 +92,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         onSelect={isBodyguard ? onBodyguardProtect : onVote}
         votes={votes}
         isNight={false}
+        hasAlphaWolf={hasAlphaWolf}
       />
 
       {/* Vote status */}

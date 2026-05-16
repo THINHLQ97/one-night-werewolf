@@ -15,7 +15,7 @@ const ROLE_NAMES = {
   revealer: '🔦 Revealer', bodyguard: '💪 Bodyguard',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf }) {
   const { currentRole, isMyTurn, actionData, result } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -243,6 +243,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         selected={selected}
         onSelect={handleSelect}
         isNight={true}
+        hasAlphaWolf={hasAlphaWolf}
       />
 
       {/* Action Panel */}

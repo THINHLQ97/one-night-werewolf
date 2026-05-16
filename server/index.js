@@ -241,6 +241,7 @@ io.on('connection', socket => {
       currentRoleId,
       votes: room.dayPhase?.votes || {},
       timerEnd: room.dayPhase?.timerEnd || null,
+      hasAlphaWolf: room.hasAlphaWolf || false,
     });
 
     broadcastPlayerList(room);
@@ -290,6 +291,7 @@ io.on('connection', socket => {
     io.to(room.code).emit('game_started', {
       state: 'role_reveal',
       playerCount: room.players.length,
+      hasAlphaWolf: room.hasAlphaWolf || false,
     });
 
     cb?.({ ok: true });

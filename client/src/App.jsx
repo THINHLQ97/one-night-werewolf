@@ -19,6 +19,7 @@ export default function App() {
   const [dayState, setDayState] = useState({ timerEnd: null, votes: {}, players: [] });
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const [hasAlphaWolf, setHasAlphaWolf] = useState(false);
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -78,6 +79,7 @@ export default function App() {
               setPlayers(res.players);
               setHostId(res.hostId);
               setSettings(res.settings);
+              setHasAlphaWolf(res.hasAlphaWolf || false);
               if (res.roleId) {
                 setMyRole({ roleId: res.roleId, ...res.role });
               }
@@ -111,8 +113,9 @@ export default function App() {
       setSettings(settings);
     });
 
-    socket.on('game_started', () => {
+    socket.on('game_started', (data) => {
       setScreen('role_reveal');
+      setHasAlphaWolf(data?.hasAlphaWolf || false);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
     });
 
@@ -339,6 +342,7 @@ export default function App() {
         players={players}
         onAction={handleNightAction}
         nightKnowledge={nightKnowledge}
+        hasAlphaWolf={hasAlphaWolf}
       />
     </>);
   }
@@ -353,6 +357,7 @@ export default function App() {
         onEndDay={() => socket.emit('end_day')}
         nightKnowledge={nightKnowledge}
         myRole={myRole}
+        hasAlphaWolf={hasAlphaWolf}
       />
     </>);
   }
