@@ -3,17 +3,29 @@ import socket from '../socket';
 import RoleIcon from '../components/RoleIcon';
 
 const ALL_ROLES = [
-  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5 },
-  { id: 'minion',   name: 'Minion',   emoji: '🦹', team: 'werewolf', max: 1 },
-  { id: 'mason',    name: 'Mason',    emoji: '🤝', team: 'village',  max: 2 },
-  { id: 'seer',     name: 'Seer',     emoji: '🔮', team: 'village',  max: 1 },
-  { id: 'robber',   name: 'Robber',   emoji: '🦝', team: 'village',  max: 1 },
-  { id: 'troublemaker', name: 'Troublemaker', emoji: '😈', team: 'village', max: 1 },
-  { id: 'drunk',    name: 'Drunk',    emoji: '🍺', team: 'village',  max: 1 },
-  { id: 'insomniac',name: 'Insomniac',emoji: '👁️', team: 'village',  max: 1 },
-  { id: 'hunter',   name: 'Hunter',   emoji: '🏹', team: 'village',  max: 1 },
-  { id: 'tanner',   name: 'Tanner',   emoji: '💀', team: 'tanner',  max: 1 },
-  { id: 'villager', name: 'Villager', emoji: '👨‍🌾', team: 'village',  max: 5 },
+  // Base
+  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5, expansion: 'base' },
+  { id: 'minion',   name: 'Minion',   emoji: '🦹', team: 'werewolf', max: 1, expansion: 'base' },
+  { id: 'mason',    name: 'Mason',    emoji: '🤝', team: 'village',  max: 2, expansion: 'base' },
+  { id: 'seer',     name: 'Seer',     emoji: '🔮', team: 'village',  max: 1, expansion: 'base' },
+  { id: 'robber',   name: 'Robber',   emoji: '🦝', team: 'village',  max: 1, expansion: 'base' },
+  { id: 'troublemaker', name: 'Troublemaker', emoji: '😈', team: 'village', max: 1, expansion: 'base' },
+  { id: 'drunk',    name: 'Drunk',    emoji: '🍺', team: 'village',  max: 1, expansion: 'base' },
+  { id: 'insomniac',name: 'Insomniac',emoji: '👁️', team: 'village',  max: 1, expansion: 'base' },
+  { id: 'hunter',   name: 'Hunter',   emoji: '🏹', team: 'village',  max: 1, expansion: 'base' },
+  { id: 'tanner',   name: 'Tanner',   emoji: '💀', team: 'tanner',  max: 1, expansion: 'base' },
+  { id: 'villager', name: 'Villager', emoji: '👨‍🌾', team: 'village',  max: 5, expansion: 'base' },
+  // Daybreak
+  { id: 'sentinel',  name: 'Sentinel',  emoji: '🛡️', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'alphawolf', name: 'Alpha Wolf', emoji: '🐺', team: 'werewolf', max: 1, expansion: 'daybreak' },
+  { id: 'mysticwolf',name: 'Mystic Wolf',emoji: '🐺', team: 'werewolf', max: 1, expansion: 'daybreak' },
+  { id: 'dreamwolf', name: 'Dream Wolf', emoji: '🐺', team: 'werewolf', max: 1, expansion: 'daybreak' },
+  { id: 'apprenticeseer', name: 'Apprentice Seer', emoji: '🔮', team: 'village', max: 1, expansion: 'daybreak' },
+  { id: 'paranormalinvestigator', name: 'P.I.', emoji: '🕵️', team: 'village', max: 1, expansion: 'daybreak' },
+  { id: 'witch',     name: 'Witch',     emoji: '🧙', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'villageidiot', name: 'Village Idiot', emoji: '🤪', team: 'village', max: 1, expansion: 'daybreak' },
+  { id: 'revealer',  name: 'Revealer',  emoji: '🔦', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'bodyguard', name: 'Bodyguard', emoji: '💪', team: 'village',  max: 1, expansion: 'daybreak' },
 ];
 
 const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400' };
@@ -76,17 +88,69 @@ const ROLE_DETAILS = {
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Lắng nghe, phân tích và tìm mâu thuẫn trong lời khai của mọi người.',
   },
+  sentinel: {
+    nightAction: 'Đặt khiên bảo vệ 1 người. Người đó không bị xem/đổi bài trong đêm.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Bảo vệ vai quan trọng (Tiên Tri, Người Mất Ngủ) khỏi bị can thiệp.',
+  },
+  alphawolf: {
+    nightAction: 'Thức dậy cùng Sói. Sau đó đổi 1 bài giữa với bài 1 người khác.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Đổi bài cho người được Dân tin tưởng nhất — biến họ thành Sói.',
+  },
+  mysticwolf: {
+    nightAction: 'Thức dậy cùng Sói. Sau đó xem bài 1 người chơi.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Xem bài người nguy hiểm nhất để chuẩn bị đối phó ban ngày.',
+  },
+  dreamwolf: {
+    nightAction: 'Thuộc phe Sói nhưng KHÔNG thức dậy. Sói khác không biết bạn.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Đóng vai Dân thuyết phục nhất — không ai biết bạn là Sói.',
+  },
+  apprenticeseer: {
+    nightAction: 'Xem 1 bài ở giữa bàn.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Biết 1 bài ở giữa giúp loại trừ vai nào không ai giữ.',
+  },
+  paranormalinvestigator: {
+    nightAction: 'Xem bài tối đa 2 người. Nếu thấy Sói/Tanner → biến thành vai đó!',
+    winCondition: 'Thắng theo phe mới nếu bị biến đổi.',
+    tips: 'Rủi ro cao! Cân nhắc kỹ trước khi xem.',
+  },
+  witch: {
+    nightAction: 'Xem 1 bài giữa, có thể đổi bài đó với bài 1 người chơi.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Thấy bài Sói ở giữa? Đổi cho người đáng ngờ!',
+  },
+  villageidiot: {
+    nightAction: 'Xoay bài tất cả người khác sang trái/phải (không xem).',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Khai báo hướng xoay giúp mọi người suy luận.',
+  },
+  revealer: {
+    nightAction: 'Lật bài 1 người. Nếu không phải Sói/Tanner → công khai cho tất cả!',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Lật được Dân → thu hẹp nghi phạm Sói.',
+  },
+  bodyguard: {
+    nightAction: 'Chọn 1 người bảo vệ. Nếu họ bị vote loại → được cứu!',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Bảo vệ người bạn tin là Dân. Đừng tiết lộ mình là Vệ Sĩ.',
+  },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onStartGame }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState('');
 
+  const gameMode = settings.gameMode || 'base';
   const selected = settings.selectedRoles || [];
   const needed = players.length + 3;
+  const filteredRoles = ALL_ROLES.filter(r => gameMode === 'combined' || r.expansion === gameMode);
 
   function countRole(id) {
     return selected.filter(r => r === id).length;
@@ -204,12 +268,34 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           </span>
         </div>
 
+        {/* Mode selector */}
+        <div className="flex gap-2 mb-3">
+          {[
+            { mode: 'base', label: '🎯 Cơ bản' },
+            { mode: 'daybreak', label: '🌅 Daybreak' },
+            { mode: 'combined', label: '⚡ Kết hợp' },
+          ].map(m => (
+            <button
+              key={m.mode}
+              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+                gameMode === m.mode
+                  ? 'bg-moon-400/20 text-moon-300 border border-moon-400/40'
+                  : 'bg-white/5 text-white/40 border border-transparent'
+              } ${isHost ? 'hover:bg-white/10' : 'opacity-60'}`}
+              onClick={() => isHost && onModeChange?.(m.mode)}
+              disabled={!isHost}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
         {!isHost && (
           <p className="text-white/40 text-sm mb-3">Chỉ host mới có thể chọn bài</p>
         )}
 
         <div className="space-y-1">
-          {ALL_ROLES.map(role => {
+          {filteredRoles.map(role => {
             const count = countRole(role.id);
             const details = ROLE_DETAILS[role.id];
             const isExpanded = expandedRole === role.id;

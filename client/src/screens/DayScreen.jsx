@@ -20,6 +20,9 @@ function useCountdown(timerEnd) {
 const ROLE_SHORT = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
   drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
+  sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
+  apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
+  villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 

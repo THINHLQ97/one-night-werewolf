@@ -4,10 +4,16 @@ import RoleIcon from './RoleIcon';
 const ROLE_EMOJI = {
   werewolf: '🐺', minion: '🦹', seer: '🔮', robber: '🦝', troublemaker: '😈',
   drunk: '🍺', insomniac: '👁️', villager: '👨‍🌾', hunter: '🏹', tanner: '💀', mason: '🤝',
+  sentinel: '🛡️', alphawolf: '🐺', mysticwolf: '🐺', dreamwolf: '🐺',
+  apprenticeseer: '🔮', paranormalinvestigator: '🕵️', witch: '🧙',
+  villageidiot: '🤪', revealer: '🔦', bodyguard: '💪',
 };
 const ROLE_NAME_SHORT = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
   drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
+  sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
+  apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
+  villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
 };
 
 function useContainerSize(ref) {

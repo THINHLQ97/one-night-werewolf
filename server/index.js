@@ -4,7 +4,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
-const { ROLES, getNightOrder } = require('./roles');
+const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults } = require('./gameLogic');
 
@@ -66,20 +66,25 @@ async function runNightPhase(room) {
     });
 
     // Find players whose ORIGINAL role matches (before any swaps)
-    const actingPlayers = players.filter(p => room.originalCards[p.id] === role);
+    let actingPlayers = players.filter(p => room.originalCards[p.id] === role);
+
+    // Werewolf phase: include alphawolf & mysticwolf but exclude dreamwolf
+    if (role === 'werewolf') {
+      actingPlayers = players.filter(p => {
+        const r = room.originalCards[p.id];
+        return r === 'werewolf' || r === 'alphawolf' || r === 'mysticwolf';
+      });
+    }
 
     if (actingPlayers.length > 0) {
-      // Send action request to each acting player
       actingPlayers.forEach(p => {
         const actionData = getNightActionData(room, role);
-        // Filter otherPlayers to exclude self
         if (actionData.otherPlayers) {
           actionData.otherPlayers = actionData.otherPlayers.filter(op => op.id !== p.id);
         }
         io.to(p.id).emit('night_action_request', { role, ...actionData });
       });
 
-      // Wait for all actions (30s timeout)
       await new Promise(resolve => {
         nightPhase.pendingPlayerIds = actingPlayers.map(p => p.id);
         nightPhase.pendingActions = [];
@@ -91,7 +96,6 @@ async function runNightPhase(room) {
         }, 30000);
       });
     } else {
-      // Brief pause for narration even if no one acts
       await new Promise(r => setTimeout(r, 3000));
     }
 
@@ -247,10 +251,11 @@ io.on('connection', socket => {
   });
 
   // ── Update settings (host only) ──
-  socket.on('update_settings', ({ selectedRoles }) => {
+  socket.on('update_settings', ({ selectedRoles, gameMode }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id) return;
-    room.settings.selectedRoles = selectedRoles;
+    if (selectedRoles) room.settings.selectedRoles = selectedRoles;
+    if (gameMode) room.settings.gameMode = gameMode;
     broadcastSettings(room);
   });
 
@@ -298,15 +303,44 @@ io.on('connection', socket => {
     const idx = nightPhase.pendingPlayerIds.indexOf(socket.id);
     if (idx === -1) return;
 
-    // Process the action
     const result = processNightAction(room, socket.id, role, action);
 
-    // Send private result to this player
     if (Object.keys(result).length > 0) {
       socket.emit('night_action_result', { role, result });
     }
 
-    // Mark as done
+    // Revealer public broadcast
+    if (role === 'revealer' && result.revealed && result.targetPlayer) {
+      io.to(room.code).emit('night_public_reveal', {
+        playerId: result.targetPlayer,
+        role: result.role,
+      });
+    }
+
+    // Multi-step roles: keep player pending if they can continue
+    const ms = nightPhase.multiStepState?.[socket.id];
+    if (role === 'paranormalinvestigator' && result.canContinue) {
+      socket.emit('night_action_request', {
+        role,
+        ...getNightActionData(room, role),
+        otherPlayers: room.players.filter(p => p.id !== socket.id).map(p => ({ id: p.id, name: p.name })),
+        step: 2,
+        shieldedPlayer: room.shieldedPlayer,
+      });
+      return;
+    }
+    if (role === 'witch' && result.step === 1 && result.canSwap) {
+      socket.emit('night_action_request', {
+        role,
+        step: 2,
+        centerSlot: action.centerSlot,
+        centerRole: result.seen.role,
+        otherPlayers: room.players.filter(p => p.id !== socket.id).map(p => ({ id: p.id, name: p.name })),
+        shieldedPlayer: room.shieldedPlayer,
+      });
+      return;
+    }
+
     nightPhase.pendingPlayerIds.splice(idx, 1);
     nightPhase.pendingActions.push({ playerId: socket.id, role, action });
 

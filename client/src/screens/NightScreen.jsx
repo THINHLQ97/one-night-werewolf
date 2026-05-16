@@ -9,37 +9,48 @@ const ROLE_NAMES = {
   robber: '🦝 Robber', troublemaker: '😈 Troublemaker', drunk: '🍺 Drunk',
   insomniac: '👁️ Insomniac', villager: '👨‍🌾 Villager', hunter: '🏹 Hunter', tanner: '💀 Tanner',
   mason: '🤝 Mason',
+  sentinel: '🛡️ Sentinel', alphawolf: '🐺 Alpha Wolf', mysticwolf: '🐺 Mystic Wolf',
+  dreamwolf: '🐺 Dream Wolf', apprenticeseer: '🔮 Apprentice Seer',
+  paranormalinvestigator: '🕵️ P.I.', witch: '🧙 Witch', villageidiot: '🤪 Village Idiot',
+  revealer: '🔦 Revealer', bodyguard: '💪 Bodyguard',
 };
 
 export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge }) {
   const { currentRole, isMyTurn, actionData, result } = nightState;
   const [submitted, setSubmitted] = useState(false);
-  const [submittedForRole, setSubmittedForRole] = useState(null);
+  const [submittedKey, setSubmittedKey] = useState(null);
   const [selected, setSelected] = useState([]);
   const [actionMode, setActionMode] = useState(null);
   const [actionStep, setActionStep] = useState('choose');
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
 
-  // Reset when role changes
-  if (currentRole !== submittedForRole && submitted) {
+  const step = actionData?.step || 1;
+  const actionKey = `${currentRole}-${step}`;
+
+  if (submitted && actionKey !== submittedKey) {
     setSubmitted(false);
-    setSubmittedForRole(null);
+    setSubmittedKey(null);
     setSelected([]);
     setActionMode(null);
     setActionStep('choose');
   }
 
-  // Set up action mode when it's our turn
   useEffect(() => {
     if (!isMyTurn || submitted) return;
 
     switch (currentRole) {
       case 'seer':
-        setActionMode(null); // Player picks mode first
+        setActionMode(null);
         setActionStep('choose');
         break;
       case 'robber':
+      case 'sentinel':
+      case 'alphawolf':
+      case 'mysticwolf':
+      case 'paranormalinvestigator':
+      case 'revealer':
+      case 'bodyguard':
         setActionMode('player');
         setActionStep('choose');
         break;
@@ -48,7 +59,21 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         setActionStep('choose');
         break;
       case 'drunk':
+      case 'apprenticeseer':
         setActionMode('center');
+        setActionStep('choose');
+        break;
+      case 'witch':
+        if (step === 1) {
+          setActionMode('center');
+          setActionStep('choose');
+        } else {
+          setActionMode('player');
+          setActionStep('choose');
+        }
+        break;
+      case 'villageidiot':
+        setActionMode(null);
         setActionStep('choose');
         break;
       case 'werewolf':
@@ -68,7 +93,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         setActionStep('done');
     }
     setSelected([]);
-  }, [isMyTurn, currentRole, submitted, actionData]);
+  }, [isMyTurn, currentRole, submitted, actionData, step]);
 
   function handleSelect(id) {
     sfxCardFlip();
@@ -114,21 +139,49 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'drunk':
         if (selected.length === 1) action = { centerSlot: selected[0] };
         break;
+      case 'sentinel':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'alphawolf':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'mysticwolf':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'apprenticeseer':
+        if (selected.length === 1) action = { centerSlot: selected[0] };
+        break;
+      case 'paranormalinvestigator':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'witch':
+        if (step === 1 && selected.length === 1) {
+          action = { centerSlot: selected[0] };
+        } else if (step === 2 && selected.length === 1) {
+          action = { swap: true, targetPlayer: selected[0] };
+        }
+        break;
+      case 'revealer':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'bodyguard':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
       default:
         break;
     }
 
     onAction(currentRole, action);
     setSubmitted(true);
-    setSubmittedForRole(currentRole);
+    setSubmittedKey(actionKey);
     setActionStep('done');
     sfxReveal();
   }
 
-  function handleAutoSubmit() {
-    onAction(currentRole, {});
+  function handleAutoSubmit(extraAction = {}) {
+    onAction(currentRole, extraAction);
     setSubmitted(true);
-    setSubmittedForRole(currentRole);
+    setSubmittedKey(actionKey);
     setActionStep('done');
   }
 
@@ -139,7 +192,6 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     return selected.length === 1;
   })();
 
-  // Build table props from accumulated knowledge
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null } = nightKnowledge || {};
 
   return (
@@ -201,95 +253,75 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       <div className="mt-3 flex-1">
         {isMyTurn && !submitted && (
           <div className="card fade-in">
-            {/* Seer: choose mode */}
+            {/* ─── Seer ─── */}
             {currentRole === 'seer' && !actionMode && (
               <div className="text-center">
                 <p className="text-white/70 text-sm mb-3">Bạn muốn xem gì?</p>
                 <div className="flex gap-3 justify-center">
-                  <button className="btn-ghost text-sm" onClick={() => setActionMode('player')}>
-                    👤 Bài 1 người chơi
-                  </button>
-                  <button className="btn-ghost text-sm" onClick={() => setActionMode('center')}>
-                    🃏 2 bài ở giữa
-                  </button>
+                  <button className="btn-ghost text-sm" onClick={() => setActionMode('player')}>👤 Bài 1 người chơi</button>
+                  <button className="btn-ghost text-sm" onClick={() => setActionMode('center')}>🃏 2 bài ở giữa</button>
                 </div>
               </div>
             )}
-
-            {/* Seer: player mode */}
             {currentRole === 'seer' && actionMode === 'player' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi trên bàn để xem bài</p>
                 <div className="flex gap-2 justify-center">
                   <button className="btn-ghost text-xs" onClick={() => { setActionMode(null); setSelected([]); }}>← Đổi ý</button>
-                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                    Xem bài
-                  </button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
                 </div>
               </div>
             )}
-
-            {/* Seer: center mode */}
             {currentRole === 'seer' && actionMode === 'center' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 2 bài ở giữa bàn ({selected.length}/2)</p>
                 <div className="flex gap-2 justify-center">
                   <button className="btn-ghost text-xs" onClick={() => { setActionMode(null); setSelected([]); }}>← Đổi ý</button>
-                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                    Xem bài
-                  </button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
                 </div>
               </div>
             )}
 
-            {/* Robber */}
+            {/* ─── Robber ─── */}
             {currentRole === 'robber' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để đổi bài</p>
                 <div className="flex gap-2 justify-center">
-                  <button className="btn-ghost text-xs" onClick={handleAutoSubmit}>Bỏ qua</button>
-                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                    Đổi bài
-                  </button>
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
                 </div>
               </div>
             )}
 
-            {/* Troublemaker */}
+            {/* ─── Troublemaker ─── */}
             {currentRole === 'troublemaker' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 2 người để hoán đổi bài ({selected.length}/2)</p>
                 <div className="flex gap-2 justify-center">
-                  <button className="btn-ghost text-xs" onClick={handleAutoSubmit}>Bỏ qua</button>
-                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                    Hoán đổi
-                  </button>
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Hoán đổi</button>
                 </div>
               </div>
             )}
 
-            {/* Drunk */}
+            {/* ─── Drunk ─── */}
             {currentRole === 'drunk' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để đổi (bạn sẽ không biết bài mới)</p>
-                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                  Đổi bài
-                </button>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
               </div>
             )}
 
-            {/* Werewolf solo */}
+            {/* ─── Werewolf solo ─── */}
             {currentRole === 'werewolf' && actionData?.isSolo && actionStep === 'choose' && (
               <div className="text-center">
                 <p className="text-wolf-400 text-sm font-semibold mb-1">Bạn là Sói duy nhất!</p>
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
-                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>
-                  Xem bài
-                </button>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
               </div>
             )}
 
-            {/* Mason */}
+            {/* ─── Mason ─── */}
             {currentRole === 'mason' && (
               <div className="text-center">
                 <div className="mb-3">
@@ -299,18 +331,16 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                     <p className="text-white/50 text-sm">Bạn là Mason duy nhất! Bài còn lại ở giữa.</p>
                   )}
                 </div>
-                <button className="btn-primary text-sm" onClick={handleAutoSubmit}>Xong ✓</button>
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong ✓</button>
               </div>
             )}
 
-            {/* Werewolf multi / Minion / Insomniac — auto-show info, just confirm */}
+            {/* ─── Werewolf multi / Minion / Insomniac ─── */}
             {((currentRole === 'werewolf' && !actionData?.isSolo) ||
               currentRole === 'minion' || currentRole === 'insomniac') && (
               <div className="text-center">
                 {currentRole === 'werewolf' && actionData?.werewolves?.length > 1 && (
-                  <div className="mb-3">
-                    <p className="text-white/60 text-sm mb-2">Đồng bọn trên bàn đang sáng đỏ</p>
-                  </div>
+                  <p className="text-white/60 text-sm mb-3">Đồng bọn trên bàn đang sáng đỏ</p>
                 )}
                 {currentRole === 'minion' && (
                   <div className="mb-3">
@@ -324,7 +354,125 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 {currentRole === 'insomniac' && (
                   <p className="text-white/60 text-sm mb-2">Bài hiện tại của bạn hiện trên bàn</p>
                 )}
-                <button className="btn-primary text-sm" onClick={handleAutoSubmit}>Xong ✓</button>
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong ✓</button>
+              </div>
+            )}
+
+            {/* ─── Sentinel ─── */}
+            {currentRole === 'sentinel' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">🛡️ Chạm vào người chơi để đặt khiên bảo vệ</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Bảo vệ</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Alpha Wolf ─── */}
+            {currentRole === 'alphawolf' && (
+              <div className="text-center">
+                <p className="text-wolf-400 text-sm font-semibold mb-1">Sói Đầu Đàn</p>
+                <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để đổi bài giữa với bài của họ</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Mystic Wolf ─── */}
+            {currentRole === 'mysticwolf' && (
+              <div className="text-center">
+                <p className="text-wolf-400 text-sm font-semibold mb-1">Sói Thần Bí</p>
+                <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài của họ</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Apprentice Seer ─── */}
+            {currentRole === 'apprenticeseer' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+              </div>
+            )}
+
+            {/* ─── Paranormal Investigator ─── */}
+            {currentRole === 'paranormalinvestigator' && (
+              <div className="text-center">
+                <p className="text-purple-400 text-sm font-semibold mb-1">
+                  🕵️ Thám Tử {step === 2 ? '(lượt 2)' : '(lượt 1)'}
+                </p>
+                <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài</p>
+                <p className="text-white/40 text-xs mb-2">⚠️ Nếu thấy Sói/Tanner, bạn sẽ biến thành vai đó!</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Witch ─── */}
+            {currentRole === 'witch' && step === 1 && (
+              <div className="text-center">
+                <p className="text-purple-400 text-sm font-semibold mb-1">🧙 Phù Thủy (bước 1)</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+              </div>
+            )}
+            {currentRole === 'witch' && step === 2 && (
+              <div className="text-center">
+                <p className="text-purple-400 text-sm font-semibold mb-1">🧙 Phù Thủy (bước 2)</p>
+                {actionData?.centerRole && (
+                  <p className="text-moon-300 text-sm mb-2">
+                    Bài vừa xem: <strong>{ROLE_NAMES[actionData.centerRole]}</strong>
+                  </p>
+                )}
+                <p className="text-white/60 text-sm mb-2">Chạm người chơi để đổi bài giữa với bài của họ</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit({ swap: false })}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Village Idiot ─── */}
+            {currentRole === 'villageidiot' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-3">Chọn hướng xoay bài của tất cả người khác:</p>
+                <div className="flex gap-3 justify-center">
+                  <button className="btn-ghost text-sm" onClick={() => handleAutoSubmit({ direction: 'left' })}>⬅️ Sang trái</button>
+                  <button className="btn-ghost text-sm" onClick={() => handleAutoSubmit({ direction: 'right' })}>Sang phải ➡️</button>
+                </div>
+                <button className="btn-ghost text-xs mt-2 text-white/30" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+              </div>
+            )}
+
+            {/* ─── Revealer ─── */}
+            {currentRole === 'revealer' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">🔦 Chạm vào người chơi để lật bài</p>
+                <p className="text-white/40 text-xs mb-2">Nếu không phải Sói/Tanner → công khai cho tất cả!</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Lật bài</button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Bodyguard ─── */}
+            {currentRole === 'bodyguard' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">💪 Chạm vào người chơi để bảo vệ</p>
+                <p className="text-white/40 text-xs mb-2">Nếu họ bị vote loại → được cứu!</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Bảo vệ</button>
+                </div>
               </div>
             )}
           </div>
@@ -334,7 +482,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         {isMyTurn && submitted && (
           <div className="card fade-in text-center">
             <p className="text-village-400 text-sm font-semibold">✓ Đã hoàn thành</p>
-            {result && <ActionResultInline role={currentRole} result={result} />}
+            {result && <ActionResultInline role={currentRole} result={result} step={step} />}
           </div>
         )}
 
@@ -345,7 +493,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           </div>
         )}
 
-        {/* Knowledge notebook — persistent info from earlier actions */}
+        {/* Knowledge notebook */}
         {!roleHidden && nightKnowledge && Object.keys(nightKnowledge).some(k => {
           const v = nightKnowledge[k];
           return (Array.isArray(v) ? v.length > 0 : v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v);
@@ -364,11 +512,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
 // ─── Inline result display ────────────────────────────────────────────────────
 
-function ActionResultInline({ role, result }) {
+function ActionResultInline({ role, result, step }) {
   if (!result) return null;
   const ROLE_SHORT = {
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
     drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
+    sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
+    apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
+    villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
@@ -395,6 +546,53 @@ function ActionResultInline({ role, result }) {
   if (role === 'insomniac' && result.currentRole) {
     return <p className="text-white/70 text-sm mt-1">Bài hiện tại: <strong className="text-moon-300">{ROLE_SHORT[result.currentRole]}</strong></p>;
   }
+  if (role === 'sentinel' && result.shielded) {
+    return <p className="text-white/70 text-sm mt-1">🛡️ Đã đặt khiên bảo vệ</p>;
+  }
+  if (role === 'mysticwolf' && result.seen) {
+    return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
+  }
+  if (role === 'apprenticeseer' && result.seen) {
+    const idx = parseInt(result.seen.slot.replace('center', ''));
+    return <p className="text-white/70 text-sm mt-1">{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
+  }
+  if (role === 'paranormalinvestigator' && result.seen) {
+    return (
+      <div className="text-white/70 text-sm mt-1">
+        <p>Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>
+        {result.transformed && <p className="text-wolf-400 text-xs mt-1">⚠️ Bạn đã biến thành {ROLE_SHORT[result.seen.role]}!</p>}
+        {result.canContinue && <p className="text-white/40 text-xs mt-1">Đợi xem thêm 1 người...</p>}
+      </div>
+    );
+  }
+  if (role === 'witch') {
+    if (result.seen && result.step === 1) {
+      const idx = parseInt(result.seen.slot.replace('center', ''));
+      return (
+        <div className="text-white/70 text-sm mt-1">
+          <p>{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>
+          {result.canSwap && <p className="text-white/40 text-xs mt-1">Đợi chọn có đổi bài không...</p>}
+        </div>
+      );
+    }
+    if (result.swapped) {
+      return <p className="text-white/70 text-sm mt-1">✓ Đã đổi bài</p>;
+    }
+  }
+  if (role === 'villageidiot' && result.rotated) {
+    return <p className="text-white/70 text-sm mt-1">🔄 Đã xoay bài sang {result.direction === 'left' ? 'trái' : 'phải'}</p>;
+  }
+  if (role === 'revealer') {
+    if (result.revealed) {
+      return <p className="text-white/70 text-sm mt-1">🔦 Đã lật: <strong className="text-moon-300">{ROLE_SHORT[result.role]}</strong> (công khai!)</p>;
+    }
+    if (result.role) {
+      return <p className="text-white/70 text-sm mt-1">🔦 Bài là Sói/Tanner — không công khai</p>;
+    }
+  }
+  if (role === 'bodyguard') {
+    return <p className="text-white/70 text-sm mt-1">💪 Đã bảo vệ</p>;
+  }
   return null;
 }
 
@@ -407,6 +605,9 @@ function KnowledgeSummary({ knowledge, players }) {
   const ROLE_SHORT = {
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
     drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
+    sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
+    apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
+    villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 
@@ -415,26 +616,21 @@ function KnowledgeSummary({ knowledge, players }) {
   if (knownWerewolves.length > 0) {
     items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   }
-
   if (knownMasons.length > 0) {
     items.push(`🤝 Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
   }
-
   Object.entries(revealedPlayers).forEach(([id, role]) => {
-    items.push(`👤 ${nameMap[id]}: ${ROLE_SHORT[role] || role}`);
+    items.push(`👤 ${nameMap[id] || id}: ${ROLE_SHORT[role] || role}`);
   });
-
   Object.entries(revealedCenter).forEach(([slot, role]) => {
     const idx = parseInt(slot.replace('center', ''));
     items.push(`🃏 ${CENTER[idx]}: ${ROLE_SHORT[role] || role}`);
   });
-
   swappedPairs.forEach(([a, b]) => {
-    const nameA = a.startsWith('center') ? CENTER[parseInt(a.replace('center', ''))] : nameMap[a] || '?';
-    const nameB = b.startsWith('center') ? CENTER[parseInt(b.replace('center', ''))] : nameMap[b] || '?';
+    const nameA = a === 'center' ? 'Bài giữa' : a.startsWith('center') ? CENTER[parseInt(a.replace('center', ''))] : nameMap[a] || '?';
+    const nameB = b === 'center' ? 'Bài giữa' : b.startsWith('center') ? CENTER[parseInt(b.replace('center', ''))] : nameMap[b] || '?';
     items.push(`🔄 ${nameA} ↔ ${nameB}`);
   });
-
   if (myCurrentRole) {
     items.push(`📋 Bài hiện tại của bạn: ${ROLE_SHORT[myCurrentRole] || myCurrentRole}`);
   }

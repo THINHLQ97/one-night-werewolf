@@ -129,13 +129,12 @@ export default function App() {
 
     socket.on('night_role_called', ({ role, roleName, instruction }) => {
       setNightState(prev => ({ ...prev, currentRole: role, isMyTurn: false, actionData: null, result: null }));
-      if (role === 'werewolf') sfxWolfHowl();
+      if (role === 'werewolf' || role === 'alphawolf' || role === 'mysticwolf') sfxWolfHowl();
     });
 
     socket.on('night_action_request', ({ role, ...actionData }) => {
-      setNightState(prev => ({ ...prev, isMyTurn: true, actionData }));
+      setNightState(prev => ({ ...prev, isMyTurn: true, actionData, result: null }));
 
-      // Auto-populate knowledge for werewolf/minion
       if (role === 'werewolf' && actionData.werewolves) {
         setNightKnowledge(prev => ({
           ...prev,
@@ -156,10 +155,16 @@ export default function App() {
       }
     });
 
-    socket.on('night_action_result', ({ role, result }) => {
-      setNightState(prev => ({ ...prev, isMyTurn: false, result }));
+    socket.on('night_public_reveal', ({ playerId, role }) => {
+      setNightKnowledge(prev => ({
+        ...prev,
+        revealedPlayers: { ...prev.revealedPlayers, [playerId]: role },
+      }));
+    });
 
-      // Accumulate knowledge
+    socket.on('night_action_result', ({ role, result }) => {
+      setNightState(prev => ({ ...prev, result }));
+
       setNightKnowledge(prev => {
         const next = { ...prev };
 
@@ -183,6 +188,26 @@ export default function App() {
 
         if (role === 'insomniac' && result.currentRole) {
           next.myCurrentRole = result.currentRole;
+        }
+
+        if (role === 'mysticwolf' && result.seen) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+        }
+
+        if (role === 'apprenticeseer' && result.seen) {
+          next.revealedCenter = { ...prev.revealedCenter, [result.seen.slot]: result.seen.role };
+        }
+
+        if (role === 'paranormalinvestigator' && result.seen) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+        }
+
+        if (role === 'witch' && result.seen) {
+          next.revealedCenter = { ...prev.revealedCenter, [result.seen.slot]: result.seen.role };
+        }
+
+        if (role === 'revealer' && result.revealed) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.targetPlayer]: result.role };
         }
 
         return next;
@@ -241,7 +266,6 @@ export default function App() {
   const handleNightAction = useCallback((role, action) => {
     socket.emit('night_action', { role, action });
 
-    // Track swaps for visual feedback
     if (role === 'troublemaker' && action.target1 && action.target2) {
       setNightKnowledge(prev => ({
         ...prev,
@@ -258,6 +282,18 @@ export default function App() {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, [socket.id, action.centerSlot]],
+      }));
+    }
+    if (role === 'alphawolf' && action.targetPlayer) {
+      setNightKnowledge(prev => ({
+        ...prev,
+        swappedPairs: [...prev.swappedPairs, ['center', action.targetPlayer]],
+      }));
+    }
+    if (role === 'witch' && action.swap && action.targetPlayer) {
+      setNightKnowledge(prev => ({
+        ...prev,
+        swappedPairs: [...prev.swappedPairs, ['center', action.targetPlayer]],
       }));
     }
   }, []);
@@ -286,6 +322,7 @@ export default function App() {
         isHost={isHost}
         settings={settings}
         onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
+        onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
       />
     </>);

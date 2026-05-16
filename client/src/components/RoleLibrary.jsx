@@ -2,9 +2,10 @@ import { useState } from 'react';
 import RoleIcon from './RoleIcon';
 
 const ROLES = [
+  // ─── Base ───
   {
     id: 'werewolf', name: 'Werewolf', nameVi: 'Ma Sói', emoji: '🐺',
-    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2,
+    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2, expansion: 'base',
     nightAction: 'Mở mắt và nhìn đồng bọn Sói. Nếu là Sói đơn độc, được xem 1 bài ở giữa.',
     winCondition: 'Thắng nếu không có Sói nào bị loại.',
     tips: 'Hãy tỏ ra vô tội và đổ lỗi cho người khác. Nếu là Sói đơn, dùng thông tin bài giữa để tạo alibi.',
@@ -13,7 +14,7 @@ const ROLES = [
   },
   {
     id: 'minion', name: 'Minion', nameVi: 'Tay Sai', emoji: '🦹',
-    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 3,
+    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 3, expansion: 'base',
     nightAction: 'Mở mắt và biết ai là Sói. Nhưng Sói không biết bạn là Tay Sai.',
     winCondition: 'Thắng cùng phe Sói. Nếu bạn bị loại thay Sói, phe Sói vẫn thắng.',
     tips: 'Hãy thu hút sự nghi ngờ về phía mình để bảo vệ Sói. Có thể nhận mình là Sói giả.',
@@ -22,7 +23,7 @@ const ROLES = [
   },
   {
     id: 'mason', name: 'Mason', nameVi: 'Sinh Đôi', emoji: '🤝',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 4,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 4, expansion: 'base',
     nightAction: 'Mở mắt và nhìn nhau. Biết chắc ai cùng phe Dân.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Bạn biết chắc đồng đội — hãy tin tưởng nhau và phối hợp tìm Sói. Nếu chỉ có 1 Mason, bài còn lại ở giữa.',
@@ -31,7 +32,7 @@ const ROLES = [
   },
   {
     id: 'seer', name: 'Seer', nameVi: 'Tiên Tri', emoji: '🔮',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 5,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 5, expansion: 'base',
     nightAction: 'Chọn xem bài của 1 người chơi khác, HOẶC xem 2 bài ở giữa.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Chia sẻ thông tin bạn biết nhưng cẩn thận — Sói có thể giả danh Tiên Tri.',
@@ -40,7 +41,7 @@ const ROLES = [
   },
   {
     id: 'robber', name: 'Robber', nameVi: 'Kẻ Cướp', emoji: '🦝',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 6,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 6, expansion: 'base',
     nightAction: 'Đổi bài của bạn với bài của 1 người khác, sau đó xem bài mới của mình.',
     winCondition: 'Bạn thuộc phe của bài MỚI. Nếu lấy được bài Sói, bạn là Sói.',
     tips: 'Nếu lấy được vai tốt, hãy khai báo. Nếu lấy Sói... hãy im lặng và đánh lạc hướng.',
@@ -49,7 +50,7 @@ const ROLES = [
   },
   {
     id: 'troublemaker', name: 'Troublemaker', nameVi: 'Kẻ Gây Rối', emoji: '😈',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 7,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 7, expansion: 'base',
     nightAction: 'Hoán đổi bài của 2 người khác (không xem bài).',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Khai báo bạn đã đổi ai. Điều này giúp xác định ai đang nắm bài gì.',
@@ -58,7 +59,7 @@ const ROLES = [
   },
   {
     id: 'drunk', name: 'Drunk', nameVi: 'Kẻ Say', emoji: '🍺',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 8,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 8, expansion: 'base',
     nightAction: 'Đổi bài của bạn với 1 bài ở giữa (không được xem bài mới).',
     winCondition: 'Bạn thuộc phe của bài MỚI, nhưng bạn không biết đó là bài gì.',
     tips: 'Bạn không biết vai mới — hãy lắng nghe và suy luận từ thông tin người khác.',
@@ -67,7 +68,7 @@ const ROLES = [
   },
   {
     id: 'insomniac', name: 'Insomniac', nameVi: 'Người Mất Ngủ', emoji: '👁️',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: 9,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 9, expansion: 'base',
     nightAction: 'Thức dậy cuối cùng và xem bài hiện tại của mình (sau khi có thể bị đổi).',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Nếu bài bạn bị đổi, ai đó đã lấy vai cũ của bạn — hãy tìm ra ai.',
@@ -76,7 +77,7 @@ const ROLES = [
   },
   {
     id: 'hunter', name: 'Hunter', nameVi: 'Thợ Săn', emoji: '🏹',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: null,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'base',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng cùng phe Dân. Nếu bạn bị loại, người bạn vote cũng bị loại theo.',
     tips: 'Hãy vote cẩn thận! Nếu bạn bị loại, vote của bạn sẽ kéo theo 1 người nữa.',
@@ -85,7 +86,7 @@ const ROLES = [
   },
   {
     id: 'tanner', name: 'Tanner', nameVi: 'Thợ Thuộc Da', emoji: '💀',
-    team: 'tanner', teamLabel: 'Phe Riêng', nightOrder: null,
+    team: 'tanner', teamLabel: 'Phe Riêng', nightOrder: null, expansion: 'base',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng nếu bạn bị loại. Phe Sói và Dân đều thua nếu Tanner thắng.',
     tips: 'Hành xử đáng ngờ vừa đủ để bị vote, nhưng đừng lộ liễu quá.',
@@ -94,12 +95,103 @@ const ROLES = [
   },
   {
     id: 'villager', name: 'Villager', nameVi: 'Dân Làng', emoji: '👨‍🌾',
-    team: 'village', teamLabel: 'Phe Dân', nightOrder: null,
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'base',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Lắng nghe, phân tích và tìm mâu thuẫn trong lời khai của mọi người.',
     nightScript: 'Dân Làng không thức dậy ban đêm.',
     howToPlay: 'Ban đêm: Không có hành động.\nBan ngày: Lắng nghe mọi người khai báo, phân tích mâu thuẫn.\n• Ai nói dối? Ai che giấu thông tin?\n• Đối chiếu lời khai của Tiên Tri, Kẻ Cướp, Kẻ Gây Rối\n• Đừng ngại hỏi thẳng\nMục tiêu: Tìm và vote loại Sói.',
+  },
+  // ─── Daybreak ───
+  {
+    id: 'sentinel', name: 'Sentinel', nameVi: 'Lính Canh', emoji: '🛡️',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 1, expansion: 'daybreak',
+    nightAction: 'Đặt khiên bảo vệ 1 người chơi. Người đó không thể bị xem hoặc đổi bài trong đêm.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Hãy bảo vệ người mà bạn nghĩ là vai quan trọng (Tiên Tri, Người Mất Ngủ...).',
+    nightScript: '"Lính Canh, hãy mở mắt. Chọn 1 người để đặt khiên bảo vệ." — Lính Canh chỉ vào 1 người. Người đó không thể bị xem hoặc đổi bài. "Lính Canh, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Thức dậy ĐẦU TIÊN. Chọn 1 người chơi khác để đặt khiên.\n🛡️ Khiên ngăn MỌI hành động đêm lên người đó: xem bài, đổi bài, lật bài.\nBan ngày: Khai báo bạn đã bảo vệ ai — thông tin này rất hữu ích cho phe Dân.\nMục tiêu: Bảo vệ vai quan trọng khỏi bị Sói hoặc vai khác can thiệp.',
+  },
+  {
+    id: 'alphawolf', name: 'Alpha Wolf', nameVi: 'Sói Đầu Đàn', emoji: '🐺',
+    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2.1, expansion: 'daybreak',
+    nightAction: 'Thức dậy cùng Sói. Sau đó đổi 1 bài ở giữa với bài của 1 người khác.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Đổi bài cho người được phe Dân tin tưởng nhất — biến họ thành Sói.',
+    nightScript: '"Sói Đầu Đàn, hãy mở mắt. Chọn 1 người để đổi bài giữa với bài của họ." — Sói Đầu Đàn đánh tráo bài. "Sói Đầu Đàn, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Trước tiên thức dậy cùng tất cả Sói. Sau đó CÓ THÊM lượt riêng:\n• Đổi 1 bài ở giữa bàn với bài của 1 người chơi khác\n• Người đó giờ có bài ở giữa (có thể là Sói!) mà không biết\nBan ngày: Bạn biết ai vừa bị đổi bài — dùng thông tin này có lợi cho phe Sói.\nMục tiêu: Tạo thêm Sói hoặc gây rối cho phe Dân.',
+  },
+  {
+    id: 'mysticwolf', name: 'Mystic Wolf', nameVi: 'Sói Thần Bí', emoji: '🐺',
+    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2.2, expansion: 'daybreak',
+    nightAction: 'Thức dậy cùng Sói. Sau đó được xem bài của 1 người chơi.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Xem bài ai nguy hiểm nhất (Tiên Tri?) để chuẩn bị đối phó ban ngày.',
+    nightScript: '"Sói Thần Bí, hãy mở mắt. Chọn 1 người để xem bài." — Sói Thần Bí xem bài. "Sói Thần Bí, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Trước tiên thức dậy cùng tất cả Sói. Sau đó CÓ THÊM lượt riêng:\n• Xem bài của 1 người chơi khác\n• Giống khả năng của Tiên Tri nhưng dành cho phe Sói!\nBan ngày: Dùng thông tin xem bài để biết ai nguy hiểm và cần đánh lạc hướng.\nMục tiêu: Thông tin là sức mạnh — biết vai đối thủ giúp phe Sói phòng thủ tốt hơn.',
+  },
+  {
+    id: 'dreamwolf', name: 'Dream Wolf', nameVi: 'Sói Mộng Du', emoji: '🐺',
+    team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: null, expansion: 'daybreak',
+    nightAction: 'Thuộc phe Sói nhưng KHÔNG thức dậy. Sói khác không biết bạn.',
+    winCondition: 'Thắng nếu không có Sói nào bị loại.',
+    tips: 'Bạn không biết ai là Sói và họ không biết bạn. Đóng vai Dân thuyết phục nhất!',
+    nightScript: 'Sói Mộng Du không thức dậy ban đêm. Sói khác không biết bạn tồn tại.',
+    howToPlay: 'Ban đêm: Không có hành động. Bạn KHÔNG thức dậy cùng các Sói khác.\n⚠️ Các Sói khác không biết bạn là Sói!\nBan ngày: Bạn không có thông tin gì — hãy đóng vai Dân thuyết phục.\n• Nếu bị Tiên Tri xem → họ sẽ thấy bạn là Sói\n• Bạn cần tìm cách sống sót mà không có đồng minh\nMục tiêu: Không để ai bị loại trong phe Sói (kể cả chính bạn).',
+  },
+  {
+    id: 'apprenticeseer', name: 'Apprentice Seer', nameVi: 'Tiên Tri Học Việc', emoji: '🔮',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 4.5, expansion: 'daybreak',
+    nightAction: 'Xem 1 bài ở giữa bàn.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Biết 1 bài ở giữa giúp loại trừ — vai đó không ai giữ!',
+    nightScript: '"Tiên Tri Học Việc, hãy mở mắt. Xem 1 bài ở giữa." — Tiên Tri Học Việc chọn 1 bài. "Tiên Tri Học Việc, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Chọn 1 bài ở giữa bàn → xem vai của nó.\nBan ngày: Bạn biết 1 vai không ai giữ → dùng để loại trừ khi phân tích.\n• Nếu thấy Sói ở giữa → tốt! Ít Sói hơn trong game\n• Nếu thấy vai Dân ở giữa → ai nhận vai đó đang nói dối!\nMục tiêu: Dùng thông tin bài giữa để hỗ trợ phe Dân.',
+  },
+  {
+    id: 'paranormalinvestigator', name: 'P.I.', nameVi: 'Thám Tử', emoji: '🕵️',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 5.5, expansion: 'daybreak',
+    nightAction: 'Xem bài tối đa 2 người. Nếu thấy Sói/Tanner → biến thành vai đó!',
+    winCondition: 'Nếu thấy Sói → bạn là Sói. Thấy Tanner → bạn là Tanner. Còn lại → phe Dân.',
+    tips: 'Rủi ro cao! Xem bài có thể biến bạn thành phe khác. Cân nhắc kỹ.',
+    nightScript: '"Thám Tử, hãy mở mắt. Xem bài của 1 người." — Nếu không phải Sói/Tanner, được xem thêm 1 người nữa. Nếu thấy Sói hoặc Tanner, bạn trở thành vai đó! "Thám Tử, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Xem bài của 1 người chơi:\n• Nếu KHÔNG phải Sói/Tanner → được xem thêm 1 người nữa\n• Nếu thấy Sói → BẠN TRỞ THÀNH SÓI và dừng xem\n• Nếu thấy Tanner → BẠN TRỞ THÀNH TANNER và dừng xem\n⚠️ Đây là vai rủi ro nhất trong game!\nBan ngày: Hành xử theo phe MỚI nếu bị biến đổi.\nMục tiêu: Thắng theo phe hiện tại sau đêm.',
+  },
+  {
+    id: 'witch', name: 'Witch', nameVi: 'Phù Thủy', emoji: '🧙',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 6.5, expansion: 'daybreak',
+    nightAction: 'Xem 1 bài ở giữa, có thể đổi bài đó với bài của 1 người chơi.',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Nếu thấy bài Sói ở giữa, đổi cho người đáng ngờ để xác nhận hoặc gây rối.',
+    nightScript: '"Phù Thủy, hãy mở mắt. Xem 1 bài ở giữa." — Phù Thủy xem bài. "Bạn có muốn đổi bài này với bài của 1 người chơi không?" — Nếu có, chỉ vào người đó. "Phù Thủy, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: 2 bước:\n1️⃣ Xem 1 bài ở giữa bàn\n2️⃣ Có thể đổi bài đó với bài của 1 người chơi (hoặc bỏ qua)\nBan ngày: Nếu đổi bài → bạn biết người đó giờ có bài gì.\n• Đổi bài Sói cho ai đó = biến họ thành Sói!\n• Đổi bài tốt cho đồng minh = giúp phe Dân\nMục tiêu: Dùng khả năng đổi bài một cách chiến lược.',
+  },
+  {
+    id: 'villageidiot', name: 'Village Idiot', nameVi: 'Ngốc Làng', emoji: '🤪',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 7.5, expansion: 'daybreak',
+    nightAction: 'Xoay bài của tất cả người khác sang trái hoặc phải (không xem).',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Khai báo hướng xoay giúp mọi người suy luận ai đang giữ bài gì.',
+    nightScript: '"Ngốc Làng, hãy mở mắt. Bạn có thể xoay bài của tất cả người chơi khác sang trái hoặc phải." — Ngốc Làng chọn hướng. "Ngốc Làng, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Chọn 1 hướng (trái hoặc phải) → bài của TẤT CẢ người chơi khác dịch chuyển theo hướng đó.\n• Bài của bạn KHÔNG bị ảnh hưởng\n• Người bị Lính Canh bảo vệ cũng không bị ảnh hưởng\nBan ngày: Khai báo hướng xoay để mọi người biết bài đã dịch chuyển.\nMục tiêu: Tạo thêm thông tin cho phe Dân phân tích.',
+  },
+  {
+    id: 'revealer', name: 'Revealer', nameVi: 'Người Lật Bài', emoji: '🔦',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 9.5, expansion: 'daybreak',
+    nightAction: 'Lật bài 1 người. Nếu không phải Sói/Tanner → công khai cho tất cả!',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Nếu lật được Dân → tất cả biết → thu hẹp nghi phạm Sói.',
+    nightScript: '"Người Lật Bài, hãy mở mắt. Lật bài của 1 người." — Nếu không phải Sói/Tanner, bài được công khai. "Người Lật Bài, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Chọn 1 người chơi → lật bài của họ:\n• Nếu KHÔNG phải Sói/Tanner → bài được CÔNG KHAI cho TẤT CẢ mọi người!\n• Nếu là Sói hoặc Tanner → không công khai (chỉ bạn biết)\nBan ngày: Nếu lật thành công, mọi người đã biết vai đó → dễ dàng loại trừ.\nMục tiêu: Công khai càng nhiều vai Dân càng tốt để thu hẹp nghi phạm.',
+  },
+  {
+    id: 'bodyguard', name: 'Bodyguard', nameVi: 'Vệ Sĩ', emoji: '💪',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 10, expansion: 'daybreak',
+    nightAction: 'Chọn 1 người để bảo vệ. Nếu họ bị vote loại → được cứu!',
+    winCondition: 'Thắng nếu phe Dân loại được Sói.',
+    tips: 'Bảo vệ người bạn tin là phe Dân. Nếu họ bị vote, họ sống sót!',
+    nightScript: '"Vệ Sĩ, hãy mở mắt. Chọn 1 người để bảo vệ." — Vệ Sĩ chỉ vào 1 người. Nếu người đó bị vote loại, họ được cứu. "Vệ Sĩ, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Thức dậy CUỐI CÙNG. Chọn 1 người chơi để bảo vệ.\n💪 Nếu người đó bị vote loại ban ngày → họ được CỨU SỐNG!\nBan ngày: Bạn không nên tiết lộ mình là Vệ Sĩ (Sói sẽ tránh vote người được bảo vệ).\nMục tiêu: Bảo vệ đúng người phe Dân khỏi bị vote nhầm.',
   },
 ];
 

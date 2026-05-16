@@ -7,12 +7,18 @@ const ROLE_NAMES = {
   robber: '🦝 Robber', troublemaker: '😈 Troublemaker', drunk: '🍺 Drunk',
   insomniac: '👁️ Insomniac', villager: '👨‍🌾 Villager', hunter: '🏹 Hunter', tanner: '💀 Tanner',
   mason: '🤝 Mason',
+  sentinel: '🛡️ Sentinel', alphawolf: '🐺 Alpha Wolf', mysticwolf: '🐺 Mystic Wolf',
+  dreamwolf: '🐺 Dream Wolf', apprenticeseer: '🔮 Apprentice Seer',
+  paranormalinvestigator: '🕵️ P.I.', witch: '🧙 Witch', villageidiot: '🤪 Village Idiot',
+  revealer: '🔦 Revealer', bodyguard: '💪 Bodyguard',
 };
 
 const TEAM_OF = {
-  werewolf: 'werewolf', minion: 'werewolf',
+  werewolf: 'werewolf', minion: 'werewolf', alphawolf: 'werewolf', mysticwolf: 'werewolf', dreamwolf: 'werewolf',
   seer: 'village', robber: 'village', troublemaker: 'village',
   drunk: 'village', insomniac: 'village', villager: 'village', hunter: 'village', mason: 'village',
+  sentinel: 'village', apprenticeseer: 'village', paranormalinvestigator: 'village',
+  witch: 'village', villageidiot: 'village', revealer: 'village', bodyguard: 'village',
   tanner: 'tanner',
 };
 
