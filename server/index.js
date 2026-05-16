@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
-const { startGame, getNightActionData, processNightAction, computeResults } = require('./gameLogic');
+const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters } = require('./gameLogic');
 
 const app = express();
 app.use(cors());
@@ -135,10 +135,42 @@ function checkAllVoted(room) {
 
 function endGame(room) {
   if (room.dayPhase?.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
-  const results = computeResults(room);
 
-  const playerMap = {};
-  room.players.forEach(p => { playerMap[p.id] = p.name; });
+  const { hunters } = getEliminatedHunters(room);
+
+  if (hunters.length > 0 && !room.dayPhase.hunterTarget) {
+    room.state = 'hunter_phase';
+    room.dayPhase.hunterTarget = {};
+    room.dayPhase.pendingHunters = [...hunters];
+
+    const otherPlayers = room.players.map(p => ({ id: p.id, name: p.name }));
+
+    hunters.forEach(hunterId => {
+      io.to(hunterId).emit('hunter_shoot_request', {
+        otherPlayers: otherPlayers.filter(p => p.id !== hunterId),
+      });
+    });
+
+    io.to(room.code).emit('hunter_phase_start', {
+      hunters: hunters.map(id => {
+        const p = room.players.find(pp => pp.id === id);
+        return { id, name: p?.name };
+      }),
+    });
+
+    room.dayPhase.hunterTimer = setTimeout(() => {
+      finishGame(room);
+    }, 15000);
+
+    return;
+  }
+
+  finishGame(room);
+}
+
+function finishGame(room) {
+  if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
+  const results = computeResults(room);
 
   io.to(room.code).emit('game_over', {
     results,
@@ -152,28 +184,28 @@ io.on('connection', socket => {
   console.log('Connected:', socket.id);
 
   // ── Create room ──
-  socket.on('create_room', ({ name }, cb) => {
+  socket.on('create_room', ({ name, token }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
-    const room = createRoom(socket.id, name.trim());
+    const room = createRoom(socket.id, name.trim(), token);
     socket.join(room.code);
     socket.roomCode = room.code;
     cb({
       code: room.code,
-      players: room.players,
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
       settings: room.settings,
       hostId: room.hostId,
     });
   });
 
   // ── Join room ──
-  socket.on('join_room', ({ code, name }, cb) => {
+  socket.on('join_room', ({ code, name, token }, cb) => {
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb({ error: 'Không tìm thấy phòng' });
     if (room.state !== 'waiting') return cb({ error: 'Game đã bắt đầu' });
     if (room.players.length >= 10) return cb({ error: 'Phòng đã đầy (tối đa 10 người)' });
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
 
-    const added = addPlayer(room, socket.id, name.trim());
+    const added = addPlayer(room, socket.id, name.trim(), token);
     if (!added) return cb({ error: 'Bạn đã trong phòng này' });
 
     socket.join(room.code);
@@ -189,7 +221,7 @@ io.on('connection', socket => {
   });
 
   // ── Rejoin room (after disconnect/reconnect) ──
-  socket.on('rejoin_room', ({ code, name }, cb) => {
+  socket.on('rejoin_room', ({ code, name, token }, cb) => {
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb?.({ error: 'Phòng không tồn tại' });
 
@@ -200,11 +232,20 @@ io.on('connection', socket => {
       clearDisconnectedPlayer(code, name);
     }
 
-    const player = oldId
-      ? room.players.find(p => p.id === oldId)
-      : room.players.find(p => p.name === name && p.id !== socket.id);
+    let player = null;
+    if (token) {
+      player = room.players.find(p => p.token === token && p.id !== socket.id);
+    }
+    if (!player && oldId) {
+      player = room.players.find(p => p.id === oldId);
+    }
+    if (!player) {
+      player = room.players.find(p => p.name === name && p.id !== socket.id);
+    }
 
     if (!player) return cb?.({ error: 'Không tìm thấy phiên cũ' });
+
+    if (token) player.token = token;
 
     const prevId = player.id;
     player.id = socket.id;
@@ -401,6 +442,27 @@ io.on('connection', socket => {
     });
 
     checkAllVoted(room);
+  });
+
+  // ── Hunter shoot (after being eliminated) ──
+  socket.on('hunter_shoot', ({ targetId }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.state !== 'hunter_phase') return;
+    if (!room.dayPhase.pendingHunters?.includes(socket.id)) return;
+    if (!room.players.some(p => p.id === targetId)) return;
+    if (socket.id === targetId) return;
+
+    room.dayPhase.hunterTarget[socket.id] = targetId;
+    room.dayPhase.pendingHunters = room.dayPhase.pendingHunters.filter(id => id !== socket.id);
+
+    io.to(room.code).emit('hunter_shoot_update', {
+      hunterId: socket.id,
+      hunterName: room.players.find(p => p.id === socket.id)?.name,
+    });
+
+    if (room.dayPhase.pendingHunters.length === 0) {
+      finishGame(room);
+    }
   });
 
   // ── Force end day (host only) ──

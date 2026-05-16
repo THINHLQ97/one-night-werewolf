@@ -508,10 +508,13 @@ function ActionResultInline({ role, result, step }) {
     villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
+  function cLabel(slot) {
+    if (slot === 'centerWolf') return '🐺 Alpha';
+    return CENTER[parseInt(slot.replace('center', ''))] || slot;
+  }
 
   if (role === 'werewolf' && result.peeked) {
-    const idx = parseInt(result.peeked.slot.replace('center', ''));
-    return <p className="text-white/70 text-sm mt-1">{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[result.peeked.role]}</strong></p>;
+    return <p className="text-white/70 text-sm mt-1">{cLabel(result.peeked.slot)}: <strong className="text-moon-300">{ROLE_SHORT[result.peeked.role]}</strong></p>;
   }
   if (role === 'seer' && result.seen) {
     if (result.seen.type === 'player') {
@@ -519,10 +522,9 @@ function ActionResultInline({ role, result, step }) {
     }
     return (
       <div className="text-white/70 text-sm mt-1">
-        {result.seen.slots.map((s, i) => {
-          const idx = parseInt(s.slot.replace('center', ''));
-          return <p key={i}>{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[s.role]}</strong></p>;
-        })}
+        {result.seen.slots.map((s, i) => (
+          <p key={i}>{cLabel(s.slot)}: <strong className="text-moon-300">{ROLE_SHORT[s.role]}</strong></p>
+        ))}
       </div>
     );
   }
@@ -538,9 +540,10 @@ function ActionResultInline({ role, result, step }) {
   if (role === 'mysticwolf' && result.seen) {
     return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
   }
-  if (role === 'apprenticeseer' && result.seen) {
-    const idx = parseInt(result.seen.slot.replace('center', ''));
-    return <p className="text-white/70 text-sm mt-1">{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
+  if (role === 'apprenticeseer' && result.seen?.slots) {
+    const s = result.seen.slots[0];
+    const label = s.slot === 'centerWolf' ? '🐺 Alpha' : CENTER[parseInt(s.slot.replace('center', ''))];
+    return <p className="text-white/70 text-sm mt-1">{label}: <strong className="text-moon-300">{ROLE_SHORT[s.role]}</strong></p>;
   }
   if (role === 'paranormalinvestigator' && result.seen) {
     return (
@@ -553,10 +556,9 @@ function ActionResultInline({ role, result, step }) {
   }
   if (role === 'witch') {
     if (result.seen && result.step === 1) {
-      const idx = parseInt(result.seen.slot.replace('center', ''));
       return (
         <div className="text-white/70 text-sm mt-1">
-          <p>{CENTER[idx]}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>
+          <p>{cLabel(result.seen.slot)}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>
           {result.canSwap && <p className="text-white/40 text-xs mt-1">Đợi chọn có đổi bài không...</p>}
         </div>
       );
@@ -593,6 +595,11 @@ function KnowledgeSummary({ knowledge, players }) {
     villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
+  function cName(slot) {
+    if (slot === 'centerWolf') return '🐺 Alpha';
+    const idx = parseInt(slot.replace('center', ''));
+    return CENTER[idx] || slot;
+  }
 
   const items = [];
 
@@ -606,12 +613,11 @@ function KnowledgeSummary({ knowledge, players }) {
     items.push(`👤 ${nameMap[id] || id}: ${ROLE_SHORT[role] || role}`);
   });
   Object.entries(revealedCenter).forEach(([slot, role]) => {
-    const idx = parseInt(slot.replace('center', ''));
-    items.push(`🃏 ${CENTER[idx]}: ${ROLE_SHORT[role] || role}`);
+    items.push(`🃏 ${cName(slot)}: ${ROLE_SHORT[role] || role}`);
   });
   swappedPairs.forEach(([a, b]) => {
-    const nameA = a === 'center' ? 'Bài giữa' : a.startsWith('center') ? CENTER[parseInt(a.replace('center', ''))] : nameMap[a] || '?';
-    const nameB = b === 'center' ? 'Bài giữa' : b.startsWith('center') ? CENTER[parseInt(b.replace('center', ''))] : nameMap[b] || '?';
+    const nameA = a === 'center' ? 'Bài giữa' : a.startsWith('center') ? cName(a) : nameMap[a] || '?';
+    const nameB = b === 'center' ? 'Bài giữa' : b.startsWith('center') ? cName(b) : nameMap[b] || '?';
     items.push(`🔄 ${nameA} ↔ ${nameB}`);
   });
   if (myCurrentRole) {

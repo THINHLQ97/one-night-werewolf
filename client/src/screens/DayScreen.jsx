@@ -25,8 +25,13 @@ const ROLE_SHORT = {
   villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
+function centerName(slot) {
+  if (slot === 'centerWolf') return '🐺 Alpha';
+  const idx = parseInt(slot.replace('center', ''));
+  return CENTER[idx] || slot;
+}
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot }) {
   const { timerEnd, votes, bodyguardProtect, players } = dayState;
   const remaining = useCountdown(timerEnd);
   const isBodyguard = myRole?.roleId === 'bodyguard';
@@ -123,7 +128,72 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         )}
       </div>
 
+      {hunterPhase && (
+        <HunterPhaseOverlay
+          hunterPhase={hunterPhase}
+          myId={myId}
+          players={players}
+          onShoot={onHunterShoot}
+        />
+      )}
+
       <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
+    </div>
+  );
+}
+
+function HunterPhaseOverlay({ hunterPhase, myId, players, onShoot }) {
+  const [selected, setSelected] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const isMyTurn = hunterPhase.isMyTurn && !submitted;
+
+  const hunterNames = hunterPhase.hunters?.map(h => h.name).join(', ') || '';
+
+  return (
+    <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center px-4">
+      <div className="card max-w-sm w-full text-center">
+        <div className="text-4xl mb-3">🏹</div>
+        <h2 className="text-xl font-bold text-wolf-400 mb-2">Thợ Săn bị loại!</h2>
+        <p className="text-white/60 text-sm mb-4">
+          {isMyTurn
+            ? 'Bạn là Thợ Săn! Chọn 1 người để bắn theo.'
+            : `${hunterNames} là Thợ Săn và đang chọn người để bắn...`
+          }
+        </p>
+
+        {isMyTurn && (
+          <div className="space-y-2 mb-4">
+            {hunterPhase.otherPlayers.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                className={`w-full py-2 px-4 rounded-lg text-sm transition-all ${
+                  selected === p.id
+                    ? 'bg-wolf-500 text-white'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isMyTurn && selected && (
+          <button
+            className="btn-primary w-full"
+            onClick={() => { setSubmitted(true); onShoot(selected); }}
+          >
+            🏹 Bắn {hunterPhase.otherPlayers.find(p => p.id === selected)?.name}
+          </button>
+        )}
+
+        {!isMyTurn && (
+          <div className="animate-pulse text-white/40 text-sm">
+            Đang chờ Thợ Săn chọn mục tiêu...
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -145,12 +215,11 @@ function KnowledgeSummary({ knowledge, players }) {
     items.push(`👤 ${nameMap[id]}: ${ROLE_SHORT[role] || role}`);
   });
   Object.entries(revealedCenter).forEach(([slot, role]) => {
-    const idx = parseInt(slot.replace('center', ''));
-    items.push(`🃏 ${CENTER[idx]}: ${ROLE_SHORT[role] || role}`);
+    items.push(`🃏 ${centerName(slot)}: ${ROLE_SHORT[role] || role}`);
   });
   swappedPairs.forEach(([a, b]) => {
-    const nameA = a.startsWith('center') ? CENTER[parseInt(a.replace('center', ''))] : nameMap[a] || '?';
-    const nameB = b.startsWith('center') ? CENTER[parseInt(b.replace('center', ''))] : nameMap[b] || '?';
+    const nameA = a.startsWith('center') ? centerName(a) : nameMap[a] || '?';
+    const nameB = b.startsWith('center') ? centerName(b) : nameMap[b] || '?';
     items.push(`🔄 ${nameA} ↔ ${nameB}`);
   });
   if (myCurrentRole) {

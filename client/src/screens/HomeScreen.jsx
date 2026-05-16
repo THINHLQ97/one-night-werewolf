@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import socket from '../socket';
+import socket, { playerToken } from '../socket';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -21,7 +21,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
     e.preventDefault();
     if (!name.trim()) return setError('Nhập tên của bạn');
     setLoading(true);
-    socket.emit('create_room', { name: name.trim() }, (res) => {
+    socket.emit('create_room', { name: name.trim(), token: playerToken }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
       onJoin(res.code, res.players, res.settings, res.hostId);
@@ -33,10 +33,19 @@ export default function HomeScreen({ onJoin, error, setError }) {
     if (!name.trim()) return setError('Nhập tên của bạn');
     if (!code.trim()) return setError('Nhập mã phòng');
     setLoading(true);
-    socket.emit('join_room', { name: name.trim(), code: code.trim().toUpperCase() }, (res) => {
-      setLoading(false);
-      if (res.error) return setError(res.error);
-      onJoin(res.code, res.players, res.settings, res.hostId);
+    const roomCode = code.trim().toUpperCase();
+
+    socket.emit('rejoin_room', { code: roomCode, name: name.trim(), token: playerToken }, (res) => {
+      if (res?.ok) {
+        setLoading(false);
+        onJoin(res.code, res.players, res.settings, res.hostId, res.state, res);
+        return;
+      }
+      socket.emit('join_room', { name: name.trim(), code: roomCode, token: playerToken }, (res2) => {
+        setLoading(false);
+        if (res2.error) return setError(res2.error);
+        onJoin(res2.code, res2.players, res2.settings, res2.hostId);
+      });
     });
   }
 

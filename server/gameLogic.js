@@ -9,6 +9,11 @@ function shuffle(arr) {
 }
 
 const VALID_CENTER_SLOTS = ['center0', 'center1', 'center2'];
+const ALL_CENTER_SLOTS = ['center0', 'center1', 'center2', 'centerWolf'];
+
+function getValidCenterSlots(room) {
+  return room.hasAlphaWolf ? ALL_CENTER_SLOTS : VALID_CENTER_SLOTS;
+}
 
 function isValidPlayerId(room, id) {
   return room.players.some(p => p.id === id);
@@ -129,7 +134,7 @@ function processNightAction(room, playerId, role, action) {
 
     case 'werewolf': {
       if (action.peekCenter !== undefined) {
-        if (!VALID_CENTER_SLOTS.includes(action.peekCenter)) return {};
+        if (!getValidCenterSlots(room).includes(action.peekCenter)) return {};
         return { peeked: { slot: action.peekCenter, role: currentCards[action.peekCenter] } };
       }
       return {};
@@ -157,7 +162,7 @@ function processNightAction(room, playerId, role, action) {
       return {};
 
     case 'apprenticeseer': {
-      if (!action.centerSlot || !VALID_CENTER_SLOTS.includes(action.centerSlot)) return {};
+      if (!action.centerSlot || !getValidCenterSlots(room).includes(action.centerSlot)) return {};
       return { seen: { type: 'center', slots: [{ slot: action.centerSlot, role: currentCards[action.centerSlot] }] } };
     }
 
@@ -168,7 +173,7 @@ function processNightAction(room, playerId, role, action) {
         return { seen: { type: 'player', id: action.targetPlayer, role: currentCards[action.targetPlayer] } };
       }
       if (action.centerSlots && Array.isArray(action.centerSlots) && action.centerSlots.length === 2) {
-        if (!action.centerSlots.every(s => VALID_CENTER_SLOTS.includes(s))) return {};
+        if (!action.centerSlots.every(s => getValidCenterSlots(room).includes(s))) return {};
         return {
           seen: { type: 'center', slots: action.centerSlots.map(s => ({ slot: s, role: currentCards[s] })) },
         };
@@ -211,7 +216,7 @@ function processNightAction(room, playerId, role, action) {
       if (!ms[playerId]) ms[playerId] = {};
 
       if (step === 1) {
-        if (!action.centerSlot || !VALID_CENTER_SLOTS.includes(action.centerSlot)) return {};
+        if (!action.centerSlot || !getValidCenterSlots(room).includes(action.centerSlot)) return {};
         ms[playerId].witchSlot = action.centerSlot;
         ms[playerId].witchStep = 1;
         return {
@@ -280,7 +285,7 @@ function processNightAction(room, playerId, role, action) {
     }
 
     case 'drunk': {
-      if (!action.centerSlot || !VALID_CENTER_SLOTS.includes(action.centerSlot)) return {};
+      if (!action.centerSlot || !getValidCenterSlots(room).includes(action.centerSlot)) return {};
       const myRole = currentCards[playerId];
       const centerRole = currentCards[action.centerSlot];
       currentCards[playerId] = centerRole;
@@ -340,8 +345,8 @@ function applyHunterEffect(room, eliminated) {
   const hunterKills = [];
 
   for (const id of eliminated) {
-    if (currentCards[id] === 'hunter' && dayPhase.votes[id]) {
-      const target = dayPhase.votes[id];
+    if (currentCards[id] === 'hunter' && dayPhase.hunterTarget?.[id]) {
+      const target = dayPhase.hunterTarget[id];
       if (!eliminated.includes(target) && !hunterKills.includes(target)) {
         hunterKills.push(target);
       }
@@ -349,6 +354,13 @@ function applyHunterEffect(room, eliminated) {
   }
 
   return [...eliminated, ...hunterKills];
+}
+
+function getEliminatedHunters(room) {
+  const { tally, eliminated } = tallyVotes(room);
+  const afterBodyguard = applyBodyguard(room, eliminated);
+  const hunters = afterBodyguard.filter(id => room.currentCards[id] === 'hunter');
+  return { tally, eliminated: afterBodyguard, hunters };
 }
 
 function determineWinners(room, eliminated) {
@@ -418,4 +430,4 @@ function computeResults(room) {
   return room.results;
 }
 
-module.exports = { startGame, getNightActionData, processNightAction, computeResults };
+module.exports = { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters };

@@ -10,13 +10,13 @@ function generateCode() {
   return code;
 }
 
-function createRoom(hostId, hostName) {
+function createRoom(hostId, hostName, token) {
   const code = generateCode();
   const room = {
     code,
     hostId,
     state: 'waiting',
-    players: [{ id: hostId, name: hostName, isHost: true }],
+    players: [{ id: hostId, name: hostName, isHost: true, token: token || null }],
     settings: {
       selectedRoles: ['werewolf', 'werewolf', 'seer', 'robber', 'troublemaker', 'villager', 'villager'],
     },
@@ -41,9 +41,9 @@ function getRoomByPlayerId(playerId) {
   return null;
 }
 
-function addPlayer(room, playerId, playerName) {
+function addPlayer(room, playerId, playerName, token) {
   if (room.players.some(p => p.id === playerId)) return false;
-  room.players.push({ id: playerId, name: playerName, isHost: false });
+  room.players.push({ id: playerId, name: playerName, isHost: false, token: token || null });
   return true;
 }
 
@@ -69,7 +69,7 @@ function saveDisconnectedPlayer(oldSocketId, roomCode, playerName) {
   });
   setTimeout(() => {
     disconnectedPlayers.delete(`${roomCode}:${playerName}`);
-  }, 5 * 60 * 1000);
+  }, 30 * 60 * 1000);
 }
 
 function findDisconnectedPlayer(roomCode, playerName) {

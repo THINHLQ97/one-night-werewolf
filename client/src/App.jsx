@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import socket from './socket';
+import socket, { playerToken } from './socket';
 import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxGameOver } from './audio';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
@@ -20,6 +20,7 @@ export default function App() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [hasAlphaWolf, setHasAlphaWolf] = useState(false);
+  const [hunterPhase, setHunterPhase] = useState(null);
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -66,13 +67,13 @@ export default function App() {
     });
 
     socket.on('connect', () => {
-      const savedName = sessionStorage.getItem('onw_name');
-      const savedRoom = sessionStorage.getItem('onw_room');
+      const savedName = localStorage.getItem('onw_name');
+      const savedRoom = localStorage.getItem('onw_room');
       const code = roomCodeRef.current || savedRoom;
 
       if (screenRef.current !== 'home' && code && savedName) {
         const tryRejoin = (attempt) => {
-          socket.emit('rejoin_room', { code, name: savedName }, (res) => {
+          socket.emit('rejoin_room', { code, name: savedName, token: playerToken }, (res) => {
             if (res?.ok) {
               setConnectionLost(false);
               setRoomCode(res.code);
@@ -198,7 +199,9 @@ export default function App() {
         }
 
         if (role === 'apprenticeseer' && result.seen) {
-          next.revealedCenter = { ...prev.revealedCenter, [result.seen.slot]: result.seen.role };
+          const rc = { ...prev.revealedCenter };
+          result.seen.slots.forEach(s => { rc[s.slot] = s.role; });
+          next.revealedCenter = rc;
         }
 
         if (role === 'paranormalinvestigator' && result.seen) {
@@ -232,7 +235,20 @@ export default function App() {
       setDayState(prev => ({ ...prev, votes, bodyguardProtect: bodyguardProtect || null, players }));
     });
 
+    socket.on('hunter_phase_start', ({ hunters }) => {
+      setHunterPhase({ hunters, isMyTurn: false, otherPlayers: [] });
+    });
+
+    socket.on('hunter_shoot_request', ({ otherPlayers }) => {
+      setHunterPhase(prev => ({ ...prev, isMyTurn: true, otherPlayers }));
+    });
+
+    socket.on('hunter_shoot_update', ({ hunterId, hunterName }) => {
+      setHunterPhase(prev => prev ? { ...prev, shotFired: hunterName } : prev);
+    });
+
     socket.on('game_over', ({ results, players }) => {
+      setHunterPhase(null);
       setResults({ ...results, players });
       setScreen('results');
       stopBGM();
@@ -253,16 +269,28 @@ export default function App() {
     return () => socket.disconnect();
   }, [ensureAudio]);
 
-  const handleJoinRoom = useCallback((code, ps, cfg, host) => {
+  const handleJoinRoom = useCallback((code, ps, cfg, host, state, extraData) => {
     setRoomCode(code);
     setPlayers(ps);
     setSettings(cfg);
     setHostId(host);
-    setScreen('lobby');
     setError('');
     const me = ps.find(p => p.id === socket.id);
-    if (me) sessionStorage.setItem('onw_name', me.name);
-    sessionStorage.setItem('onw_room', code);
+    if (me) localStorage.setItem('onw_name', me.name);
+    localStorage.setItem('onw_room', code);
+
+    if (extraData?.hasAlphaWolf) setHasAlphaWolf(true);
+
+    if (state === 'day' && extraData) {
+      setDayState({ timerEnd: extraData.timerEnd, votes: extraData.votes || {}, players: ps });
+      if (extraData.roleId) setMyRole({ roleId: extraData.roleId, ...extraData.role });
+      setScreen('day');
+    } else if (state === 'night' || state === 'role_reveal') {
+      if (extraData?.roleId) setMyRole({ roleId: extraData.roleId, ...extraData.role });
+      setScreen(state === 'role_reveal' ? 'role_reveal' : 'night');
+    } else {
+      setScreen('lobby');
+    }
   }, []);
 
   // Track swap actions from client side for visual
@@ -358,6 +386,8 @@ export default function App() {
         nightKnowledge={nightKnowledge}
         myRole={myRole}
         hasAlphaWolf={hasAlphaWolf}
+        hunterPhase={hunterPhase}
+        onHunterShoot={targetId => socket.emit('hunter_shoot', { targetId })}
       />
     </>);
   }
