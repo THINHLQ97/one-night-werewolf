@@ -38,6 +38,7 @@ function startGame(room) {
   room.currentCards = { ...cards };
   room.state = 'role_reveal';
   room.shieldedPlayer = null;
+  room.alphaWerewolfCard = settings.selectedRoles.includes('alphawolf') ? 'werewolf' : null;
   room.revealedToAll = {};
   room.piTransformed = {};
   room.nightPhase = {
@@ -65,7 +66,7 @@ function getNightActionData(room, role) {
       return { werewolves, isSolo: werewolves.length === 1 };
     }
     case 'alphawolf': {
-      const otherPlayers = players.map(p => ({ id: p.id, name: p.name }));
+      const otherPlayers = players.filter(p => p.id !== undefined).map(p => ({ id: p.id, name: p.name }));
       return { otherPlayers, shieldedPlayer: room.shieldedPlayer };
     }
     case 'mysticwolf': {
@@ -131,13 +132,12 @@ function processNightAction(room, playerId, role, action) {
     }
 
     case 'alphawolf': {
-      if (!action.centerSlot || !action.targetPlayer) return {};
-      if (!VALID_CENTER_SLOTS.includes(action.centerSlot)) return {};
-      if (!isValidPlayerId(room, action.targetPlayer) || action.targetPlayer === playerId) return {};
+      if (!action.targetPlayer || !isValidPlayerId(room, action.targetPlayer)) return {};
+      if (action.targetPlayer === playerId) return {};
       if (isShielded(room, action.targetPlayer)) return { blocked: true };
-      const targetOldRole = currentCards[action.targetPlayer];
-      currentCards[action.targetPlayer] = currentCards[action.centerSlot];
-      currentCards[action.centerSlot] = targetOldRole;
+      const oldCard = currentCards[action.targetPlayer];
+      currentCards[action.targetPlayer] = room.alphaWerewolfCard;
+      room.alphaWerewolfCard = oldCard;
       return {};
     }
 
