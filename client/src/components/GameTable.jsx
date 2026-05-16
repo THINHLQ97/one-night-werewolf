@@ -78,78 +78,57 @@ export default function GameTable({
       <div className="game-table-surface" />
 
       {/* Center cards */}
-      <div className="flex flex-col items-center" style={{
-        position: 'absolute',
-        left: centerX - (cardW * 3 + 16) / 2,
-        top: centerY - cardH / 2 - (hasAlphaWolf ? 8 * scale : 0),
-      }}>
-        <div className="flex gap-2 items-center justify-center">
-          {['center0', 'center1', 'center2'].map((slot, i) => {
-            const isRevealed = revealedCenter[slot];
-            const isSelected = selected.includes(slot);
-            const isClickable = selectable === 'center' || selectable === 'both';
+      {(() => {
+        const centerSlots = hasAlphaWolf
+          ? ['center0', 'center1', 'center2', 'centerWolf']
+          : ['center0', 'center1', 'center2'];
+        const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
+        return (
+          <div className="flex gap-2 items-center justify-center" style={{
+            position: 'absolute',
+            left: centerX - totalW / 2,
+            top: centerY - cardH / 2,
+            zIndex: 5,
+          }}>
+            {centerSlots.map((slot, i) => {
+              const isWolf = slot === 'centerWolf';
+              const isRevealed = revealedCenter[slot];
+              const isSelected = selected.includes(slot);
+              const isClickable = selectable === 'center' || selectable === 'both';
 
-            return (
-              <button
-                key={slot}
-                disabled={!isClickable}
-                onClick={() => isClickable && onSelect?.(slot)}
-                className={`center-card transition-all duration-300 ${
-                  isRevealed ? 'center-card-revealed' : ''
-                } ${isSelected ? 'center-card-selected' : ''} ${
-                  isClickable ? 'center-card-clickable' : ''
-                }`}
-                style={{ width: cardW, height: cardH }}
-                title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : `Giữa ${i + 1}`}
-              >
-                {isRevealed ? (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <RoleIcon roleId={isRevealed} size={centerIconSize} />
-                    <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <span style={{ fontSize: 18 * scale }}>🃏</span>
-                    <span className="text-[8px] text-white/40 mt-0.5">{i + 1}</span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {hasAlphaWolf && (() => {
-          const isWolfRevealed = revealedCenter['centerWolf'];
-          const isWolfSelected = selected.includes('centerWolf');
-          const isWolfClickable = selectable === 'center' || selectable === 'both';
-          return (
-            <div className="mt-1 flex items-center justify-center">
-              <button
-                disabled={!isWolfClickable}
-                onClick={() => isWolfClickable && onSelect?.('centerWolf')}
-                className={`center-card transition-all duration-300 ${
-                  isWolfRevealed ? 'center-card-revealed' : ''
-                } ${isWolfSelected ? 'center-card-selected' : ''} ${
-                  isWolfClickable ? 'center-card-clickable' : ''
-                }`}
-                style={{ width: cardH, height: cardW, transform: 'rotate(90deg)' }}
-                title={isWolfRevealed ? `${ROLE_EMOJI[isWolfRevealed]} ${ROLE_NAME_SHORT[isWolfRevealed]}` : '🐺 Alpha Wolf Card'}
-              >
-                {isWolfRevealed ? (
-                  <div className="flex flex-col items-center justify-center h-full" style={{ transform: 'rotate(-90deg)' }}>
-                    <RoleIcon roleId={isWolfRevealed} size={centerIconSize} />
-                    <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isWolfRevealed]}</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full" style={{ transform: 'rotate(-90deg)' }}>
-                    <span style={{ fontSize: 14 * scale }}>🐺</span>
-                    <span className="text-[7px] text-wolf-400 mt-0.5">Alpha</span>
-                  </div>
-                )}
-              </button>
-            </div>
-          );
-        })()}
-      </div>
+              return (
+                <button
+                  key={slot}
+                  disabled={!isClickable}
+                  onClick={() => isClickable && onSelect?.(slot)}
+                  className={`center-card transition-all duration-300 ${
+                    isRevealed ? 'center-card-revealed' : ''
+                  } ${isSelected ? 'center-card-selected' : ''} ${
+                    isClickable ? 'center-card-clickable' : ''
+                  }`}
+                  style={isWolf
+                    ? { width: cardW, height: cardH, border: '1px solid rgba(239,68,68,0.4)' }
+                    : { width: cardW, height: cardH }
+                  }
+                  title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : (isWolf ? '🐺 Alpha' : `Giữa ${i + 1}`)}
+                >
+                  {isRevealed ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <RoleIcon roleId={isRevealed} size={centerIconSize} />
+                      <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <span style={{ fontSize: isWolf ? 14 * scale : 18 * scale }}>{isWolf ? '🐺' : '🃏'}</span>
+                      <span className={`text-[8px] mt-0.5 ${isWolf ? 'text-wolf-400' : 'text-white/40'}`}>{isWolf ? 'Alpha' : i + 1}</span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Players in circle */}
       {players.map((p, i) => {
