@@ -327,6 +327,8 @@ io.on('connection', socket => {
       currentRoleId,
       votes: room.dayPhase?.votes || {},
       timerEnd: room.dayPhase?.timerEnd || null,
+      timerPaused: room.dayPhase?.paused || false,
+      timerPausedRemaining: room.dayPhase?.pausedRemaining || null,
       hasAlphaWolf: room.hasAlphaWolf || false,
       tokenClaims: tc ? sanitizeTokenClaims(tc, room) : null,
     });
@@ -504,6 +506,19 @@ io.on('connection', socket => {
     const isValidPos = room.players.some(p => p.id === position) || validCenters.includes(position);
     if (!isValidPos) return;
 
+    // Enforce pool limit: count how many times this player already assigned this role
+    const myRow = tc.deductions[socket.id] || {};
+    const poolFreq = {};
+    tc.pool.forEach(r => { poolFreq[r] = (poolFreq[r] || 0) + 1; });
+    const maxAllowed = poolFreq[roleId] || 0;
+
+    // Count current usage of this role in player's row (exclude the cell being set)
+    let currentUsage = 0;
+    Object.entries(myRow).forEach(([pos, rid]) => {
+      if (rid === roleId && pos !== position) currentUsage++;
+    });
+    if (currentUsage >= maxAllowed) return; // Block: would exceed pool count
+
     if (!tc.deductions[socket.id]) tc.deductions[socket.id] = {};
     tc.deductions[socket.id][position] = roleId;
     tc.conflicts = computeDeductionConflicts(tc);
@@ -542,6 +557,62 @@ io.on('connection', socket => {
 
     if (room.dayPhase.pendingHunters.length === 0) {
       finishGame(room);
+    }
+  });
+
+  // ── Timer controls (host only) ──
+  socket.on('timer_pause', () => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id || room.state !== 'day') return;
+    if (room.dayPhase.paused) return;
+
+    // Store remaining time and clear auto-end timer
+    const remaining = Math.max(0, room.dayPhase.timerEnd - Date.now());
+    room.dayPhase.paused = true;
+    room.dayPhase.pausedRemaining = remaining;
+    if (room.dayPhase.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
+
+    io.to(room.code).emit('timer_update', { paused: true, remaining });
+  });
+
+  socket.on('timer_resume', () => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id || room.state !== 'day') return;
+    if (!room.dayPhase.paused) return;
+
+    const remaining = room.dayPhase.pausedRemaining || 0;
+    room.dayPhase.paused = false;
+    room.dayPhase.pausedRemaining = null;
+    room.dayPhase.timerEnd = Date.now() + remaining;
+
+    // Restart auto-end timer
+    room.dayPhase.autoEndTimer = setTimeout(() => {
+      if (room.state === 'day') endGame(room);
+    }, remaining);
+
+    io.to(room.code).emit('timer_update', { paused: false, timerEnd: room.dayPhase.timerEnd });
+  });
+
+  socket.on('timer_adjust', ({ seconds }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id || room.state !== 'day') return;
+    const delta = parseInt(seconds);
+    if (isNaN(delta)) return;
+
+    if (room.dayPhase.paused) {
+      // Adjust paused remaining
+      room.dayPhase.pausedRemaining = Math.max(0, (room.dayPhase.pausedRemaining || 0) + delta * 1000);
+      io.to(room.code).emit('timer_update', { paused: true, remaining: room.dayPhase.pausedRemaining });
+    } else {
+      // Adjust live timer
+      room.dayPhase.timerEnd = Math.max(Date.now(), room.dayPhase.timerEnd + delta * 1000);
+      if (room.dayPhase.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
+      const remaining = room.dayPhase.timerEnd - Date.now();
+      room.dayPhase.autoEndTimer = setTimeout(() => {
+        if (room.state === 'day') endGame(room);
+      }, remaining);
+
+      io.to(room.code).emit('timer_update', { paused: false, timerEnd: room.dayPhase.timerEnd });
     }
   });
 

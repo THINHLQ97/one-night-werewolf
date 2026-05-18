@@ -4,16 +4,20 @@ import RoleIcon from '../components/RoleIcon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import TokenClaimBoard from '../components/TokenClaimBoard';
 
-function useCountdown(timerEnd) {
+function useCountdown(timerEnd, paused, pausedRemaining) {
   const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
+    if (paused && pausedRemaining != null) {
+      setRemaining(Math.max(0, Math.ceil(pausedRemaining / 1000)));
+      return;
+    }
     if (!timerEnd) return;
     const tick = () => setRemaining(Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000)));
     tick();
     const id = setInterval(tick, 500);
     return () => clearInterval(id);
-  }, [timerEnd]);
+  }, [timerEnd, paused, pausedRemaining]);
 
   return remaining;
 }
@@ -32,9 +36,9 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear }) {
-  const { timerEnd, votes, bodyguardProtect, players } = dayState;
-  const remaining = useCountdown(timerEnd);
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear }) {
+  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining } = dayState;
+  const remaining = useCountdown(timerEnd, paused, pausedRemaining);
   const isBodyguard = myRole?.roleId === 'bodyguard';
   const myVote = isBodyguard ? null : votes[myId];
   const myProtect = isBodyguard ? bodyguardProtect?.targetId : null;
@@ -56,7 +60,8 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
           <span className="text-3xl">☀️</span>
           <div>
             <h2 className="text-lg font-bold text-moon-300">Thảo luận & Bỏ phiếu</h2>
-            <div className={`text-2xl font-mono font-bold ${remaining < 60 ? 'text-wolf-400' : 'text-white/80'}`}>
+            <div className={`text-2xl font-mono font-bold ${paused ? 'text-yellow-400 animate-pulse' : remaining < 60 ? 'text-wolf-400' : 'text-white/80'}`}>
+              {paused && <span className="text-sm mr-1">⏸</span>}
               {mins}:{secs}
             </div>
           </div>
@@ -137,9 +142,42 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         )}
 
         {isHost && (
-          <button className="btn-danger w-full text-sm" onClick={onEndDay}>
-            ⚡ Kết thúc bỏ phiếu ngay
-          </button>
+          <div className="space-y-2">
+            {/* Timer controls */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={paused ? onTimerResume : onTimerPause}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  paused
+                    ? 'bg-village-500/20 border border-village-400/30 text-village-300'
+                    : 'bg-yellow-500/20 border border-yellow-400/30 text-yellow-300'
+                }`}
+              >
+                {paused ? '▶ Tiếp tục' : '⏸ Tạm dừng'}
+              </button>
+              <button
+                onClick={() => onTimerAdjust(-30)}
+                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+              >
+                −30s
+              </button>
+              <button
+                onClick={() => onTimerAdjust(30)}
+                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+              >
+                +30s
+              </button>
+              <button
+                onClick={() => onTimerAdjust(60)}
+                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+              >
+                +1m
+              </button>
+            </div>
+            <button className="btn-danger w-full text-sm" onClick={onEndDay}>
+              ⚡ Kết thúc bỏ phiếu ngay
+            </button>
+          </div>
         )}
       </div>
 

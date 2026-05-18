@@ -45,12 +45,18 @@ export default function TokenClaimBoard({
   const poolFreq = {};
   pool.forEach(r => { poolFreq[r] = (poolFreq[r] || 0) + 1; });
 
+  // Count how many times I used each role in my row
+  const myUsage = {};
+  Object.values(myRow).forEach(rid => {
+    if (rid) myUsage[rid] = (myUsage[rid] || 0) + 1;
+  });
+
   // Conflict sets for styling
   const selfConflictRoles = new Set(
     conflicts.filter(c => c.type === 'selfClaimConflict').map(c => c.roleId)
   );
 
-  // Count how many deduction cells each player filled
+  // Count self-claims
   const selfClaimCount = Object.keys(deductions).filter(pid => deductions[pid]?.[pid]).length;
 
   function getColLabel(pos) {
@@ -76,16 +82,23 @@ export default function TokenClaimBoard({
   } else if (focusPlayer) {
     rowsToShow = [focusPlayer];
   } else {
-    // My row first, then others
     rowsToShow = [myId, ...players.filter(p => p.id !== myId).map(p => p.id)];
   }
 
   function getRowConflictRoles(pid) {
     return new Set(
-      conflicts
-        .filter(c => c.type === 'rowLogicConflict' && c.playerId === pid)
-        .map(c => c.roleId)
+      conflicts.filter(c => c.type === 'rowLogicConflict' && c.playerId === pid).map(c => c.roleId)
     );
+  }
+
+  // Compute remaining for role picker (exclude current cell being edited)
+  function getRoleRemaining(roleId, excludePosition) {
+    const max = poolFreq[roleId] || 0;
+    let used = 0;
+    Object.entries(myRow).forEach(([pos, rid]) => {
+      if (rid === roleId && pos !== excludePosition) used++;
+    });
+    return max - used;
   }
 
   return (
@@ -144,11 +157,9 @@ export default function TokenClaimBoard({
           {/* Deduction Table */}
           <div className="overflow-x-auto scrollbar-thin rounded-lg border border-white/5">
             <table className="border-collapse" style={{ minWidth: allPositions.length * 50 + 60 }}>
-              {/* Column headers: player names + center cards */}
               <thead>
                 <tr className="bg-night-900/80">
                   <th className="sticky left-0 z-10 bg-night-900 w-[56px] min-w-[56px]" />
-                  {/* Player columns header */}
                   {playerPositions.length > 0 && (
                     <th
                       colSpan={playerPositions.length}
@@ -157,7 +168,6 @@ export default function TokenClaimBoard({
                       PLAYERS
                     </th>
                   )}
-                  {/* Center columns header */}
                   <th
                     colSpan={centerSlots.length}
                     className="text-[8px] text-white/20 font-normal py-0.5 border-b border-white/5 border-l border-white/10 text-center"
@@ -206,7 +216,6 @@ export default function TokenClaimBoard({
                       key={pid}
                       className={`${isMe ? 'bg-moon-400/5' : 'hover:bg-white/[0.02]'} border-t border-white/5`}
                     >
-                      {/* Row label */}
                       <td className={`sticky left-0 z-10 px-1.5 py-1 min-w-[56px] ${
                         isMe ? 'bg-night-800' : 'bg-night-900'
                       }`}>
@@ -222,11 +231,9 @@ export default function TokenClaimBoard({
                         </div>
                       </td>
 
-                      {/* Cells */}
                       {allPositions.map((pos, i) => {
                         const roleId = row[pos];
                         const isSelf = pos === pid;
-                        const isCenter = pos.startsWith('center');
                         const firstCenter = i === playerPositions.length;
                         const hasSelfConflict = isSelf && roleId && selfConflictRoles.has(roleId);
                         const hasRowConflict = roleId && rowConflicts.has(roleId);
@@ -298,14 +305,6 @@ export default function TokenClaimBoard({
                   </span>
                 </div>
               ))}
-              {conflicts.filter(c => c.type === 'rowLogicConflict').map((c, i) => (
-                <div key={`rl-${i}`} className="flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-400/20 rounded-lg">
-                  <RoleIcon roleId={c.roleId} size={14} />
-                  <span className="text-yellow-300/80 text-[10px] flex-1">
-                    ⚡ {c.playerName || '?'}: assigned {ROLE_NAME[c.roleId]} ×{c.assigned} (pool has {c.available})
-                  </span>
-                </div>
-              ))}
             </div>
           )}
         </div>
@@ -319,6 +318,7 @@ export default function TokenClaimBoard({
           currentRole={myRow[pickerTarget]}
           positionLabel={getFullLabel(pickerTarget)}
           isSelfClaim={pickerTarget === myId}
+          getRoleRemaining={(roleId) => getRoleRemaining(roleId, pickerTarget)}
           onSelect={(roleId) => {
             onDeductionSet(pickerTarget, roleId);
             setPickerTarget(null);
@@ -336,7 +336,7 @@ export default function TokenClaimBoard({
 
 /* ─── Bottom Sheet Role Picker ──────────────────────────────────────────────── */
 
-function RolePickerSheet({ pool, poolFreq, currentRole, positionLabel, isSelfClaim, onSelect, onClear, onClose }) {
+function RolePickerSheet({ pool, poolFreq, currentRole, positionLabel, isSelfClaim, getRoleRemaining, onSelect, onClear, onClose }) {
   const uniqueRoles = [...new Set(pool)];
 
   return (
@@ -356,7 +356,7 @@ function RolePickerSheet({ pool, poolFreq, currentRole, positionLabel, isSelfCla
               <p className="text-white/80 text-sm font-semibold">
                 {isSelfClaim ? '🎭 Claim your role' : `Assign role → ${positionLabel}`}
               </p>
-              <p className="text-white/30 text-[10px]">Tap a role to assign</p>
+              <p className="text-white/30 text-[10px]">Tap a role · grayed = all used in your board</p>
             </div>
             {currentRole && (
               <button
@@ -371,28 +371,39 @@ function RolePickerSheet({ pool, poolFreq, currentRole, positionLabel, isSelfCla
           {/* Role grid */}
           <div className="grid grid-cols-4 gap-1.5">
             {uniqueRoles.map(roleId => {
-              const count = poolFreq[roleId] || 0;
+              const totalInPool = poolFreq[roleId] || 0;
+              const remaining = getRoleRemaining(roleId);
               const isSelected = currentRole === roleId;
+              // Exhausted = no remaining AND this isn't the currently selected role for this cell
+              const isExhausted = remaining <= 0 && !isSelected;
 
               return (
                 <button
                   key={roleId}
-                  onClick={() => onSelect(roleId)}
+                  disabled={isExhausted}
+                  onClick={() => !isExhausted && onSelect(roleId)}
                   className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'border-moon-400 bg-moon-400/20 scale-105'
-                      : 'border-white/10 bg-white/5 active:bg-white/15'
+                    isExhausted
+                      ? 'border-white/5 bg-white/[0.02] opacity-30 cursor-not-allowed'
+                      : isSelected
+                        ? 'border-moon-400 bg-moon-400/20 scale-105'
+                        : 'border-white/10 bg-white/5 active:bg-white/15'
                   }`}
                 >
                   <RoleIcon roleId={roleId} size={26} />
                   <span className={`text-[8px] leading-tight text-center ${
-                    isSelected ? 'text-moon-300 font-bold' : 'text-white/60'
+                    isExhausted ? 'text-white/20'
+                    : isSelected ? 'text-moon-300 font-bold'
+                    : 'text-white/60'
                   }`}>
                     {ROLE_NAME[roleId]}
                   </span>
-                  {count > 1 && (
-                    <span className="text-[7px] text-white/25">×{count}</span>
-                  )}
+                  {/* Show remaining / total count */}
+                  <span className={`text-[7px] ${
+                    isExhausted ? 'text-wolf-400/50' : remaining <= 1 && totalInPool > 1 ? 'text-yellow-400/60' : 'text-white/20'
+                  }`}>
+                    {isExhausted ? `0/${totalInPool}` : `${remaining}/${totalInPool}`}
+                  </span>
                 </button>
               );
             })}

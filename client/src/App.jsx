@@ -86,7 +86,7 @@ export default function App() {
                 setMyRole({ roleId: res.roleId, ...res.role });
               }
               if (res.state === 'day') {
-                setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players });
+                setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players, paused: res.timerPaused || false, pausedRemaining: res.timerPausedRemaining || null });
                 if (res.tokenClaims) setTokenClaims(res.tokenClaims);
                 setScreen('day');
               } else if (res.state === 'night' || res.state === 'role_reveal') {
@@ -229,14 +229,23 @@ export default function App() {
 
     socket.on('day_start', ({ timerEnd, players, tokenPool }) => {
       setScreen('day');
-      setDayState({ timerEnd, votes: {}, players });
-      setTokenClaims(tokenPool ? { pool: tokenPool, playerClaims: {}, centerClaims: {}, conflicts: [] } : null);
+      setDayState({ timerEnd, votes: {}, players, paused: false });
+      setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
     });
 
     socket.on('vote_update', ({ votes, bodyguardProtect, players }) => {
       setDayState(prev => ({ ...prev, votes, bodyguardProtect: bodyguardProtect || null, players }));
+    });
+
+    socket.on('timer_update', ({ paused, timerEnd: newTimerEnd, remaining }) => {
+      setDayState(prev => ({
+        ...prev,
+        paused,
+        timerEnd: paused ? prev.timerEnd : newTimerEnd,
+        pausedRemaining: paused ? remaining : null,
+      }));
     });
 
     socket.on('token_claims_update', (data) => {
@@ -392,6 +401,9 @@ export default function App() {
         onVote={targetId => socket.emit('vote', { targetId })}
         onBodyguardProtect={targetId => socket.emit('bodyguard_protect', { targetId })}
         onEndDay={() => socket.emit('end_day')}
+        onTimerPause={() => socket.emit('timer_pause')}
+        onTimerResume={() => socket.emit('timer_resume')}
+        onTimerAdjust={seconds => socket.emit('timer_adjust', { seconds })}
         nightKnowledge={nightKnowledge}
         myRole={myRole}
         hasAlphaWolf={hasAlphaWolf}
