@@ -430,43 +430,67 @@ function computeResults(room) {
   return room.results;
 }
 
-// ─── Token Claims ────────────────────────────────────────────────────────────
+// ─── Deduction Board ─────────────────────────────────────────────────────────
 
-function computeTokenConflicts(tc) {
+function computeDeductionConflicts(tc) {
   const conflicts = [];
+  const { pool, deductions } = tc;
 
   // Pool frequency: how many of each role exist
   const poolFreq = {};
-  tc.pool.forEach(r => { poolFreq[r] = (poolFreq[r] || 0) + 1; });
+  pool.forEach(r => { poolFreq[r] = (poolFreq[r] || 0) + 1; });
 
-  // Claim frequency with claimer details
-  const claimMap = {};
-  Object.entries(tc.playerClaims).forEach(([pid, roleId]) => {
-    if (!claimMap[roleId]) claimMap[roleId] = [];
-    claimMap[roleId].push({ type: 'player', id: pid });
-  });
-  Object.entries(tc.centerClaims).forEach(([slot, { roleId, claimedBy }]) => {
-    if (!claimMap[roleId]) claimMap[roleId] = [];
-    claimMap[roleId].push({ type: 'center', slot, claimedBy });
+  // 1. Self-claim conflicts (red): multiple players claim same role for themselves
+  const selfClaims = {};
+  Object.entries(deductions).forEach(([pid, row]) => {
+    const selfRole = row[pid]; // diagonal cell = self-claim
+    if (selfRole) {
+      if (!selfClaims[selfRole]) selfClaims[selfRole] = [];
+      selfClaims[selfRole].push(pid);
+    }
   });
 
-  // Detect overclaims
-  Object.entries(claimMap).forEach(([roleId, claimers]) => {
+  Object.entries(selfClaims).forEach(([roleId, claimers]) => {
     const available = poolFreq[roleId] || 0;
     if (claimers.length > available) {
-      const roleName = ROLES[roleId]?.nameVi || ROLES[roleId]?.name || roleId;
+      const roleName = ROLES[roleId]?.name || roleId;
       conflicts.push({
-        type: 'overclaim',
+        type: 'selfClaimConflict',
         roleId,
         available,
         claimed: claimers.length,
         claimers,
-        reasoning: `${roleName} chỉ có ${available} lá trong game, nhưng đã có ${claimers.length} người nhận.`,
+        severity: 'error',
+        reasoning: `${roleName}: ${claimers.length} players claimed it but only ${available} in pool.`,
       });
     }
+  });
+
+  // 2. Row logic conflicts (yellow): one player assigns same role more times than pool allows
+  Object.entries(deductions).forEach(([pid, row]) => {
+    const roleCounts = {};
+    Object.values(row).forEach(roleId => {
+      if (roleId) roleCounts[roleId] = (roleCounts[roleId] || 0) + 1;
+    });
+
+    Object.entries(roleCounts).forEach(([roleId, count]) => {
+      const available = poolFreq[roleId] || 0;
+      if (count > available) {
+        const roleName = ROLES[roleId]?.name || roleId;
+        conflicts.push({
+          type: 'rowLogicConflict',
+          playerId: pid,
+          roleId,
+          available,
+          assigned: count,
+          severity: 'warning',
+          reasoning: `${roleName} assigned ${count}× but only ${available} in pool.`,
+        });
+      }
+    });
   });
 
   return conflicts;
 }
 
-module.exports = { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeTokenConflicts };
+module.exports = { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts };

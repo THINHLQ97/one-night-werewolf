@@ -398,9 +398,8 @@ export default function App() {
         hunterPhase={hunterPhase}
         onHunterShoot={targetId => socket.emit('hunter_shoot', { targetId })}
         tokenClaims={tokenClaims}
-        onTokenClaimPlayer={roleId => socket.emit('token_claim_player', { roleId })}
-        onTokenClaimCenter={(roleId, slot) => socket.emit('token_claim_center', { roleId, slot })}
-        onTokenUnclaim={target => socket.emit('token_unclaim', { target })}
+        onDeductionSet={(position, roleId) => socket.emit('deduction_set', { position, roleId })}
+        onDeductionClear={position => socket.emit('deduction_clear', { position })}
       />
     </>);
   }

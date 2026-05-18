@@ -32,7 +32,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onTokenClaimPlayer, onTokenClaimCenter, onTokenUnclaim }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear }) {
   const { timerEnd, votes, bodyguardProtect, players } = dayState;
   const remaining = useCountdown(timerEnd);
   const isBodyguard = myRole?.roleId === 'bodyguard';
@@ -109,9 +109,8 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
             hasAlphaWolf={hasAlphaWolf}
             myId={myId}
             players={players}
-            onClaimPlayer={onTokenClaimPlayer}
-            onClaimCenter={onTokenClaimCenter}
-            onUnclaim={onTokenUnclaim}
+            onDeductionSet={onDeductionSet}
+            onDeductionClear={onDeductionClear}
           />
         </div>
       )}

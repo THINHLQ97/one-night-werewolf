@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
-const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeTokenConflicts } = require('./gameLogic');
+const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
 
 const app = express();
 app.use(cors());
@@ -118,8 +118,7 @@ function startDayPhase(room) {
     timerEnd: Date.now() + 5 * 60 * 1000,
     tokenClaims: {
       pool,
-      playerClaims: {},
-      centerClaims: {},
+      deductions: {},  // { playerId: { position: roleId, ... } }
       conflicts: [],
     },
   };
@@ -140,25 +139,19 @@ function sanitizeTokenClaims(tc, room) {
   const nameMap = {};
   room.players.forEach(p => { nameMap[p.id] = p.name; });
 
-  const playerClaims = {};
-  Object.entries(tc.playerClaims).forEach(([pid, roleId]) => {
-    playerClaims[pid] = { roleId, playerName: nameMap[pid] || '?' };
+  // Resolve player names in conflict claimers
+  const conflicts = (tc.conflicts || []).map(c => {
+    const base = { ...c };
+    if (c.claimers) {
+      base.claimers = c.claimers.map(pid => ({ id: pid, name: nameMap[pid] || '?' }));
+    }
+    if (c.playerId) {
+      base.playerName = nameMap[c.playerId] || '?';
+    }
+    return base;
   });
 
-  const centerClaims = {};
-  Object.entries(tc.centerClaims).forEach(([slot, { roleId, claimedBy }]) => {
-    centerClaims[slot] = { roleId, claimedBy, claimerName: nameMap[claimedBy] || '?' };
-  });
-
-  const conflicts = (tc.conflicts || []).map(c => ({
-    ...c,
-    claimers: c.claimers.map(cl => ({
-      ...cl,
-      name: cl.type === 'player' ? nameMap[cl.id] : nameMap[cl.claimedBy],
-    })),
-  }));
-
-  return { pool: tc.pool, playerClaims, centerClaims, conflicts };
+  return { pool: tc.pool, deductions: tc.deductions, conflicts };
 }
 
 function checkAllVoted(room) {
@@ -299,15 +292,20 @@ io.on('connection', socket => {
       room.dayPhase.votes[socket.id] = room.dayPhase.votes[prevId];
       delete room.dayPhase.votes[prevId];
     }
-    // Remap token claims
+    // Remap deduction board
     const tc = room.dayPhase?.tokenClaims;
     if (tc) {
-      if (tc.playerClaims[prevId] !== undefined) {
-        tc.playerClaims[socket.id] = tc.playerClaims[prevId];
-        delete tc.playerClaims[prevId];
+      // Remap this player's deduction row
+      if (tc.deductions[prevId]) {
+        tc.deductions[socket.id] = tc.deductions[prevId];
+        delete tc.deductions[prevId];
       }
-      Object.values(tc.centerClaims).forEach(cc => {
-        if (cc.claimedBy === prevId) cc.claimedBy = socket.id;
+      // Remap references to this player in other players' deductions
+      Object.entries(tc.deductions).forEach(([pid, row]) => {
+        if (row[prevId] !== undefined) {
+          row[socket.id] = row[prevId];
+          delete row[prevId];
+        }
       });
     }
 
@@ -492,47 +490,37 @@ io.on('connection', socket => {
     checkAllVoted(room);
   });
 
-  // ── Token claims ──
-  socket.on('token_claim_player', ({ roleId }) => {
+  // ── Deduction board ──
+  socket.on('deduction_set', ({ position, roleId }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.state !== 'day') return;
     const tc = room.dayPhase?.tokenClaims;
     if (!tc || !tc.pool.includes(roleId)) return;
 
-    tc.playerClaims[socket.id] = roleId;
-    tc.conflicts = computeTokenConflicts(tc);
-    io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
-  });
-
-  socket.on('token_claim_center', ({ roleId, slot }) => {
-    const room = getRoom(socket.roomCode);
-    if (!room || room.state !== 'day') return;
-    const tc = room.dayPhase?.tokenClaims;
-    if (!tc || !tc.pool.includes(roleId)) return;
-
-    const validSlots = room.hasAlphaWolf
+    // Validate position is a valid player ID or center slot
+    const validCenters = room.hasAlphaWolf
       ? ['center0', 'center1', 'center2', 'centerWolf']
       : ['center0', 'center1', 'center2'];
-    if (!validSlots.includes(slot)) return;
+    const isValidPos = room.players.some(p => p.id === position) || validCenters.includes(position);
+    if (!isValidPos) return;
 
-    tc.centerClaims[slot] = { roleId, claimedBy: socket.id };
-    tc.conflicts = computeTokenConflicts(tc);
+    if (!tc.deductions[socket.id]) tc.deductions[socket.id] = {};
+    tc.deductions[socket.id][position] = roleId;
+    tc.conflicts = computeDeductionConflicts(tc);
     io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
   });
 
-  socket.on('token_unclaim', ({ target }) => {
+  socket.on('deduction_clear', ({ position }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.state !== 'day') return;
     const tc = room.dayPhase?.tokenClaims;
-    if (!tc) return;
+    if (!tc || !tc.deductions[socket.id]) return;
 
-    if (target === 'self') {
-      delete tc.playerClaims[socket.id];
-    } else if (tc.centerClaims[target]?.claimedBy === socket.id) {
-      delete tc.centerClaims[target];
+    delete tc.deductions[socket.id][position];
+    if (Object.keys(tc.deductions[socket.id]).length === 0) {
+      delete tc.deductions[socket.id];
     }
-
-    tc.conflicts = computeTokenConflicts(tc);
+    tc.conflicts = computeDeductionConflicts(tc);
     io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
   });
 
