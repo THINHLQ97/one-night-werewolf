@@ -1,18 +1,12 @@
 services:
   server:
-    build: ./server
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "80:3001"
     environment:
       - NODE_ENV=production
-    restart: unless-stopped
-
-  client:
-    build: ./client
-    ports:
-      - "80:80"
-    depends_on:
-      - server
     restart: unless-stopped
 
 networks:
