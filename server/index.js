@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
-const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters } = require('./gameLogic');
+const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeTokenConflicts } = require('./gameLogic');
 
 const app = express();
 app.use(cors());
@@ -109,20 +109,56 @@ async function runNightPhase(room) {
 
 function startDayPhase(room) {
   room.state = 'day';
+
+  const pool = [...room.settings.selectedRoles];
+  if (room.hasAlphaWolf) pool.push('werewolf');
+
   room.dayPhase = {
     votes: {},
     timerEnd: Date.now() + 5 * 60 * 1000,
+    tokenClaims: {
+      pool,
+      playerClaims: {},
+      centerClaims: {},
+      conflicts: [],
+    },
   };
 
   io.to(room.code).emit('day_start', {
     timerEnd: room.dayPhase.timerEnd,
     players: room.players.map(p => ({ id: p.id, name: p.name })),
+    tokenPool: pool,
   });
 
   // Auto-end after 5 minutes
   room.dayPhase.autoEndTimer = setTimeout(() => {
     if (room.state === 'day') endGame(room);
   }, 5 * 60 * 1000);
+}
+
+function sanitizeTokenClaims(tc, room) {
+  const nameMap = {};
+  room.players.forEach(p => { nameMap[p.id] = p.name; });
+
+  const playerClaims = {};
+  Object.entries(tc.playerClaims).forEach(([pid, roleId]) => {
+    playerClaims[pid] = { roleId, playerName: nameMap[pid] || '?' };
+  });
+
+  const centerClaims = {};
+  Object.entries(tc.centerClaims).forEach(([slot, { roleId, claimedBy }]) => {
+    centerClaims[slot] = { roleId, claimedBy, claimerName: nameMap[claimedBy] || '?' };
+  });
+
+  const conflicts = (tc.conflicts || []).map(c => ({
+    ...c,
+    claimers: c.claimers.map(cl => ({
+      ...cl,
+      name: cl.type === 'player' ? nameMap[cl.id] : nameMap[cl.claimedBy],
+    })),
+  }));
+
+  return { pool: tc.pool, playerClaims, centerClaims, conflicts };
 }
 
 function checkAllVoted(room) {
@@ -263,6 +299,17 @@ io.on('connection', socket => {
       room.dayPhase.votes[socket.id] = room.dayPhase.votes[prevId];
       delete room.dayPhase.votes[prevId];
     }
+    // Remap token claims
+    const tc = room.dayPhase?.tokenClaims;
+    if (tc) {
+      if (tc.playerClaims[prevId] !== undefined) {
+        tc.playerClaims[socket.id] = tc.playerClaims[prevId];
+        delete tc.playerClaims[prevId];
+      }
+      Object.values(tc.centerClaims).forEach(cc => {
+        if (cc.claimedBy === prevId) cc.claimedBy = socket.id;
+      });
+    }
 
     socket.join(room.code);
     socket.roomCode = room.code;
@@ -283,6 +330,7 @@ io.on('connection', socket => {
       votes: room.dayPhase?.votes || {},
       timerEnd: room.dayPhase?.timerEnd || null,
       hasAlphaWolf: room.hasAlphaWolf || false,
+      tokenClaims: tc ? sanitizeTokenClaims(tc, room) : null,
     });
 
     broadcastPlayerList(room);
@@ -442,6 +490,50 @@ io.on('connection', socket => {
     });
 
     checkAllVoted(room);
+  });
+
+  // ── Token claims ──
+  socket.on('token_claim_player', ({ roleId }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.state !== 'day') return;
+    const tc = room.dayPhase?.tokenClaims;
+    if (!tc || !tc.pool.includes(roleId)) return;
+
+    tc.playerClaims[socket.id] = roleId;
+    tc.conflicts = computeTokenConflicts(tc);
+    io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
+  });
+
+  socket.on('token_claim_center', ({ roleId, slot }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.state !== 'day') return;
+    const tc = room.dayPhase?.tokenClaims;
+    if (!tc || !tc.pool.includes(roleId)) return;
+
+    const validSlots = room.hasAlphaWolf
+      ? ['center0', 'center1', 'center2', 'centerWolf']
+      : ['center0', 'center1', 'center2'];
+    if (!validSlots.includes(slot)) return;
+
+    tc.centerClaims[slot] = { roleId, claimedBy: socket.id };
+    tc.conflicts = computeTokenConflicts(tc);
+    io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
+  });
+
+  socket.on('token_unclaim', ({ target }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.state !== 'day') return;
+    const tc = room.dayPhase?.tokenClaims;
+    if (!tc) return;
+
+    if (target === 'self') {
+      delete tc.playerClaims[socket.id];
+    } else if (tc.centerClaims[target]?.claimedBy === socket.id) {
+      delete tc.centerClaims[target];
+    }
+
+    tc.conflicts = computeTokenConflicts(tc);
+    io.to(room.code).emit('token_claims_update', sanitizeTokenClaims(tc, room));
   });
 
   // ── Hunter shoot (after being eliminated) ──

@@ -430,4 +430,43 @@ function computeResults(room) {
   return room.results;
 }
 
-module.exports = { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters };
+// ─── Token Claims ────────────────────────────────────────────────────────────
+
+function computeTokenConflicts(tc) {
+  const conflicts = [];
+
+  // Pool frequency: how many of each role exist
+  const poolFreq = {};
+  tc.pool.forEach(r => { poolFreq[r] = (poolFreq[r] || 0) + 1; });
+
+  // Claim frequency with claimer details
+  const claimMap = {};
+  Object.entries(tc.playerClaims).forEach(([pid, roleId]) => {
+    if (!claimMap[roleId]) claimMap[roleId] = [];
+    claimMap[roleId].push({ type: 'player', id: pid });
+  });
+  Object.entries(tc.centerClaims).forEach(([slot, { roleId, claimedBy }]) => {
+    if (!claimMap[roleId]) claimMap[roleId] = [];
+    claimMap[roleId].push({ type: 'center', slot, claimedBy });
+  });
+
+  // Detect overclaims
+  Object.entries(claimMap).forEach(([roleId, claimers]) => {
+    const available = poolFreq[roleId] || 0;
+    if (claimers.length > available) {
+      const roleName = ROLES[roleId]?.nameVi || ROLES[roleId]?.name || roleId;
+      conflicts.push({
+        type: 'overclaim',
+        roleId,
+        available,
+        claimed: claimers.length,
+        claimers,
+        reasoning: `${roleName} chỉ có ${available} lá trong game, nhưng đã có ${claimers.length} người nhận.`,
+      });
+    }
+  });
+
+  return conflicts;
+}
+
+module.exports = { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeTokenConflicts };

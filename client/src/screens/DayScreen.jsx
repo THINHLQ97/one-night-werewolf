@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import GameTable from '../components/GameTable';
 import RoleIcon from '../components/RoleIcon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
+import TokenClaimBoard from '../components/TokenClaimBoard';
 
 function useCountdown(timerEnd) {
   const [remaining, setRemaining] = useState(0);
@@ -31,7 +32,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onTokenClaimPlayer, onTokenClaimCenter, onTokenUnclaim }) {
   const { timerEnd, votes, bodyguardProtect, players } = dayState;
   const remaining = useCountdown(timerEnd);
   const isBodyguard = myRole?.roleId === 'bodyguard';
@@ -99,6 +100,21 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
       />
+
+      {/* Token Claim Board */}
+      {tokenClaims && (
+        <div className="mt-3">
+          <TokenClaimBoard
+            tokenClaims={tokenClaims}
+            hasAlphaWolf={hasAlphaWolf}
+            myId={myId}
+            players={players}
+            onClaimPlayer={onTokenClaimPlayer}
+            onClaimCenter={onTokenClaimCenter}
+            onUnclaim={onTokenUnclaim}
+          />
+        </div>
+      )}
 
       {/* Vote status */}
       <div className="mt-3 flex-1">

@@ -21,6 +21,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [hasAlphaWolf, setHasAlphaWolf] = useState(false);
   const [hunterPhase, setHunterPhase] = useState(null);
+  const [tokenClaims, setTokenClaims] = useState(null);
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -86,6 +87,7 @@ export default function App() {
               }
               if (res.state === 'day') {
                 setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players });
+                if (res.tokenClaims) setTokenClaims(res.tokenClaims);
                 setScreen('day');
               } else if (res.state === 'night' || res.state === 'role_reveal') {
                 setScreen(res.state === 'role_reveal' ? 'role_reveal' : 'night');
@@ -117,6 +119,7 @@ export default function App() {
     socket.on('game_started', (data) => {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
+      setTokenClaims(null);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
     });
 
@@ -224,15 +227,20 @@ export default function App() {
       setNightState(prev => ({ ...prev, isMyTurn: false, actionData: null }));
     });
 
-    socket.on('day_start', ({ timerEnd, players }) => {
+    socket.on('day_start', ({ timerEnd, players, tokenPool }) => {
       setScreen('day');
       setDayState({ timerEnd, votes: {}, players });
+      setTokenClaims(tokenPool ? { pool: tokenPool, playerClaims: {}, centerClaims: {}, conflicts: [] } : null);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
     });
 
     socket.on('vote_update', ({ votes, bodyguardProtect, players }) => {
       setDayState(prev => ({ ...prev, votes, bodyguardProtect: bodyguardProtect || null, players }));
+    });
+
+    socket.on('token_claims_update', (data) => {
+      setTokenClaims(data);
     });
 
     socket.on('hunter_phase_start', ({ hunters }) => {
@@ -261,6 +269,7 @@ export default function App() {
       setHostId(hostId);
       setMyRole(null);
       setResults(null);
+      setTokenClaims(null);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
       setScreen('lobby');
       stopBGM();
@@ -388,6 +397,10 @@ export default function App() {
         hasAlphaWolf={hasAlphaWolf}
         hunterPhase={hunterPhase}
         onHunterShoot={targetId => socket.emit('hunter_shoot', { targetId })}
+        tokenClaims={tokenClaims}
+        onTokenClaimPlayer={roleId => socket.emit('token_claim_player', { roleId })}
+        onTokenClaimCenter={(roleId, slot) => socket.emit('token_claim_center', { roleId, slot })}
+        onTokenUnclaim={target => socket.emit('token_unclaim', { target })}
       />
     </>);
   }
