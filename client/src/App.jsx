@@ -264,9 +264,9 @@ export default function App() {
       setHunterPhase(prev => prev ? { ...prev, shotFired: hunterName } : prev);
     });
 
-    socket.on('game_over', ({ results, players }) => {
+    socket.on('game_over', ({ results, players, nightLog }) => {
       setHunterPhase(null);
-      setResults({ ...results, players });
+      setResults({ ...results, players, nightLog: nightLog || [] });
       setScreen('results');
       stopBGM();
       sfxGameOver();

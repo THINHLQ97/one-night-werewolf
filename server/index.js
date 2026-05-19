@@ -46,6 +46,7 @@ function broadcastSettings(room) {
 async function runNightPhase(room) {
   const { nightPhase, players } = room;
   room.state = 'night';
+  room.nightLog = []; // Track all night actions for post-game history
 
   io.to(room.code).emit('night_start');
 
@@ -174,18 +175,22 @@ function endGame(room) {
 
     const otherPlayers = room.players.map(p => ({ id: p.id, name: p.name }));
 
-    hunters.forEach(hunterId => {
-      io.to(hunterId).emit('hunter_shoot_request', {
-        otherPlayers: otherPlayers.filter(p => p.id !== hunterId),
-      });
-    });
-
+    // Broadcast phase start to ALL first
     io.to(room.code).emit('hunter_phase_start', {
       hunters: hunters.map(id => {
         const p = room.players.find(pp => pp.id === id);
         return { id, name: p?.name };
       }),
     });
+
+    // Then send shoot request to each hunter (after phase_start so it doesn't get overwritten)
+    setTimeout(() => {
+      hunters.forEach(hunterId => {
+        io.to(hunterId).emit('hunter_shoot_request', {
+          otherPlayers: otherPlayers.filter(p => p.id !== hunterId),
+        });
+      });
+    }, 100);
 
     room.dayPhase.hunterTimer = setTimeout(() => {
       finishGame(room);
@@ -201,9 +206,21 @@ function finishGame(room) {
   if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
   const results = computeResults(room);
 
+  // Sanitize nightLog: resolve player IDs to names in actions
+  const nameMap = {};
+  room.players.forEach(p => { nameMap[p.id] = p.name; });
+  const nightLog = (room.nightLog || []).map(entry => ({
+    ...entry,
+    // Resolve target player names in action
+    targetName: entry.action.targetPlayer ? nameMap[entry.action.targetPlayer] : null,
+    target1Name: entry.action.target1 ? nameMap[entry.action.target1] : null,
+    target2Name: entry.action.target2 ? nameMap[entry.action.target2] : null,
+  }));
+
   io.to(room.code).emit('game_over', {
     results,
     players: room.players.map(p => ({ id: p.id, name: p.name })),
+    nightLog,
   });
 }
 
@@ -403,6 +420,17 @@ io.on('connection', socket => {
     if (idx === -1) return;
 
     const result = processNightAction(room, socket.id, role, action);
+
+    // Log this action for post-game history
+    const playerName = room.players.find(p => p.id === socket.id)?.name || '?';
+    if (!room.nightLog) room.nightLog = [];
+    room.nightLog.push({
+      role,
+      playerId: socket.id,
+      playerName,
+      action: { ...action },
+      result: { ...result },
+    });
 
     if (Object.keys(result).length > 0) {
       socket.emit('night_action_result', { role, result });

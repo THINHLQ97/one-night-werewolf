@@ -27,7 +27,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   if (!results) return null;
 
-  const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally } = results;
+  const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally, nightLog = [] } = results;
   const hunterKills = eliminated.filter(id => !initialEliminated?.includes(id));
 
   const isWinner = winners.includes(myId);
@@ -133,6 +133,18 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
         </div>
       </div>
 
+      {/* Night History */}
+      {nightLog.length > 0 && (
+        <div className="card mb-4">
+          <h3 className="text-moon-400 font-semibold mb-3">🌙 Diễn biến trong đêm</h3>
+          <div className="space-y-1.5">
+            {nightLog.map((entry, i) => (
+              <NightLogEntry key={i} entry={entry} playerMap={playerMap} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Vote tally */}
       <div className="card mb-6">
         <h3 className="text-moon-400 font-semibold mb-3">🗳️ Kết quả vote</h3>
@@ -163,6 +175,122 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
       )}
 
       <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
+    </div>
+  );
+}
+
+const CENTER_LABEL = { center0: 'Center 1', center1: 'Center 2', center2: 'Center 3', centerWolf: '🐺 Alpha' };
+
+function NightLogEntry({ entry, playerMap }) {
+  const { role, playerName, action, result, targetName, target1Name, target2Name } = entry;
+  const roleName = ROLE_NAMES[role] || role;
+
+  function describeAction() {
+    switch (role) {
+      case 'werewolf':
+        if (result.peeked) return `peeked at ${CENTER_LABEL[result.peeked.slot] || result.peeked.slot} → ${ROLE_NAMES[result.peeked.role] || '?'}`;
+        if (result.werewolves) return `saw fellow wolves`;
+        return 'woke up';
+
+      case 'minion':
+        return 'saw the werewolves';
+
+      case 'mason':
+        return 'saw fellow masons';
+
+      case 'seer':
+        if (result.seen?.type === 'player') return `saw ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        if (result.seen?.type === 'center') {
+          const slots = result.seen.slots || [];
+          return `saw center: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+        }
+        return 'looked';
+
+      case 'apprenticeseer':
+        if (result.seen?.slots) {
+          return `saw center: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+        }
+        return 'looked at center';
+
+      case 'robber':
+        if (targetName || action.targetPlayer) {
+          const name = targetName || playerMap[action.targetPlayer] || '?';
+          return `robbed ${name}` + (result.newRole ? ` → became ${ROLE_NAMES[result.newRole] || '?'}` : '');
+        }
+        return 'did nothing';
+
+      case 'troublemaker':
+        if (target1Name || target2Name || action.target1 || action.target2) {
+          const n1 = target1Name || playerMap[action.target1] || '?';
+          const n2 = target2Name || playerMap[action.target2] || '?';
+          return `swapped ${n1} ↔ ${n2}`;
+        }
+        return 'did nothing';
+
+      case 'drunk':
+        if (action.centerSlot) return `swapped with ${CENTER_LABEL[action.centerSlot] || action.centerSlot}`;
+        return 'did nothing';
+
+      case 'insomniac':
+        if (result.currentRole) return `woke up as ${ROLE_NAMES[result.currentRole] || '?'}`;
+        return 'checked role';
+
+      case 'sentinel':
+        if (action.targetPlayer) return `shielded ${targetName || playerMap[action.targetPlayer] || '?'}`;
+        return 'did nothing';
+
+      case 'alphawolf':
+        if (action.targetPlayer) {
+          const name = targetName || playerMap[action.targetPlayer] || '?';
+          return result.blocked ? `tried to turn ${name} (blocked by shield)` : `turned ${name} into a werewolf`;
+        }
+        return 'did nothing';
+
+      case 'mysticwolf':
+        if (result.seen) return `saw ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        return 'looked';
+
+      case 'paranormalinvestigator':
+        if (result.seen) return `investigated ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        return 'investigated';
+
+      case 'witch':
+        if (result.seen && action.swap && action.targetPlayer) {
+          const name = targetName || playerMap[action.targetPlayer] || '?';
+          return `saw ${CENTER_LABEL[action.centerSlot] || '?'}=${ROLE_NAMES[result.seen.role] || '?'}, swapped it with ${name}`;
+        }
+        if (result.seen) return `saw ${CENTER_LABEL[action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'} (no swap)`;
+        return 'looked at center';
+
+      case 'revealer':
+        if (result.revealed && result.targetPlayer) {
+          return `revealed ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
+        }
+        if (result.blocked) return `tried to reveal ${targetName || '?'} (wolf/tanner — hidden)`;
+        return 'did nothing';
+
+      case 'villageidiot':
+        return 'shifted all cards left';
+
+      case 'bodyguard':
+        return 'woke up';
+
+      case 'dreamwolf':
+        return 'stayed asleep';
+
+      default:
+        return 'woke up';
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03]">
+      <RoleIcon roleId={role} size={18} className="flex-shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <span className="text-white/70 text-xs font-medium">{playerName}</span>
+        <span className="text-white/30 text-xs"> ({roleName})</span>
+        <p className="text-white/50 text-[11px] leading-tight">{describeAction()}</p>
+      </div>
     </div>
   );
 }
