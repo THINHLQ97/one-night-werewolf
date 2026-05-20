@@ -42,8 +42,10 @@ export default function App() {
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
+  const playersRef = useRef(players);
   screenRef.current = screen;
   roomCodeRef.current = roomCode;
+  playersRef.current = players;
 
   const audioInitialized = useRef(false);
 
@@ -233,16 +235,26 @@ export default function App() {
       setNightState(prev => ({ ...prev, isMyTurn: false, actionData: null }));
     });
 
-    socket.on('day_start', ({ timerEnd, players, tokenPool, shieldedPlayer }) => {
+    socket.on('day_start', ({ timerEnd, players: dayPlayers, tokenPool, shieldedPlayer }) => {
       setScreen('day');
-      setDayState({ timerEnd, votes: {}, players, paused: false, shieldedPlayer: shieldedPlayer || null });
+      const merged = dayPlayers.map(dp => {
+        const existing = playersRef.current.find(p => p.id === dp.id);
+        return existing ? { ...existing, ...dp } : dp;
+      });
+      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null });
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
     });
 
-    socket.on('vote_update', ({ votes, bodyguardProtect, players }) => {
-      setDayState(prev => ({ ...prev, votes, bodyguardProtect: bodyguardProtect || null, players }));
+    socket.on('vote_update', ({ votes, bodyguardProtect, players: votePlayers }) => {
+      setDayState(prev => {
+        const merged = votePlayers.map(vp => {
+          const existing = prev.players.find(p => p.id === vp.id);
+          return existing ? { ...existing, ...vp } : vp;
+        });
+        return { ...prev, votes, bodyguardProtect: bodyguardProtect || null, players: merged };
+      });
     });
 
     socket.on('timer_update', ({ paused, timerEnd: newTimerEnd, remaining }) => {
@@ -270,9 +282,13 @@ export default function App() {
       setHunterPhase(prev => prev ? { ...prev, shotFired: hunterName } : prev);
     });
 
-    socket.on('game_over', ({ results, players, nightLog, rankUpdates }) => {
+    socket.on('game_over', ({ results, players: goPlayers, nightLog, rankUpdates }) => {
       setHunterPhase(null);
-      setResults({ ...results, players, nightLog: nightLog || [], rankUpdates: rankUpdates || {} });
+      const mergedPlayers = goPlayers.map(gp => {
+        const existing = playersRef.current.find(p => p.id === gp.id);
+        return existing ? { ...existing, ...gp } : gp;
+      });
+      setResults({ ...results, players: mergedPlayers, nightLog: nightLog || [], rankUpdates: rankUpdates || {} });
       setScreen('results');
       stopBGM();
       sfxGameOver();
