@@ -37,24 +37,24 @@ function verifyJwt(token) {
 async function handleGoogleLogin(idToken) {
   const google = await verifyGoogleToken(idToken);
 
-  let user = db.getUserByGoogle(google.googleId);
+  let user = await db.getUserByGoogle(google.googleId);
   if (!user) {
     const id = uuidv4();
-    user = db.createUser(id, google.googleId, google.email, google.name, google.picture);
+    user = await db.createUser(id, google.googleId, google.email, google.name, google.picture);
   }
 
   const token = signJwt(user.id);
   return { user, token };
 }
 
-function handleGuestLogin(name) {
+async function handleGuestLogin(name) {
   const id = uuidv4();
-  const user = db.createUser(id, null, null, name || 'Guest', null);
+  const user = await db.createUser(id, null, null, name || 'Guest', null);
   const token = signJwt(user.id);
   return { user, token };
 }
 
-function authenticateToken(token) {
+async function authenticateToken(token) {
   const payload = verifyJwt(token);
   if (!payload) return null;
   return db.getUser(payload.userId);

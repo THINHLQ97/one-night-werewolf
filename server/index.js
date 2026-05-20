@@ -31,35 +31,52 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
-app.post('/api/auth/guest', (req, res) => {
-  const { name } = req.body;
-  if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
-  const result = handleGuestLogin(name.trim());
-  res.json({ user: sanitizeUser(result.user), token: result.token });
+app.post('/api/auth/guest', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
+    const result = await handleGuestLogin(name.trim());
+    res.json({ user: sanitizeUser(result.user), token: result.token });
+  } catch (err) {
+    console.error('Guest login error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-app.get('/api/auth/me', (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'No token' });
-  const user = authenticateToken(token);
-  if (!user) return res.status(401).json({ error: 'Invalid token' });
-  res.json({ user: sanitizeUser(user) });
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token' });
+    const user = await authenticateToken(token);
+    if (!user) return res.status(401).json({ error: 'Invalid token' });
+    res.json({ user: sanitizeUser(user) });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-app.put('/api/auth/profile', (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'No token' });
-  const user = authenticateToken(token);
-  if (!user) return res.status(401).json({ error: 'Invalid token' });
-  const { displayName, avatarUrl } = req.body;
-  const updated = db.updateProfile(user.id, displayName || user.display_name, avatarUrl !== undefined ? avatarUrl : user.avatar_url);
-  res.json({ user: sanitizeUser(updated) });
+app.put('/api/auth/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token' });
+    const user = await authenticateToken(token);
+    if (!user) return res.status(401).json({ error: 'Invalid token' });
+    const { displayName, avatarUrl } = req.body;
+    const updated = await db.updateProfile(user.id, displayName || user.display_name, avatarUrl !== undefined ? avatarUrl : user.avatar_url);
+    res.json({ user: sanitizeUser(updated) });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-app.get('/api/leaderboard', (req, res) => {
-  const limit = Math.min(50, parseInt(req.query.limit) || 20);
-  const rows = db.getLeaderboard(limit);
-  res.json({ leaderboard: rows.map(r => sanitizeUser(r)) });
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    const rows = await db.getLeaderboard(limit);
+    res.json({ leaderboard: rows.map(r => sanitizeUser(r)) });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.get('/api/auth/google-client-id', (req, res) => {
@@ -96,22 +113,20 @@ const PORT = process.env.PORT || 3001;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function broadcastPlayerList(room) {
-  io.to(room.code).emit('player_list', {
-    players: room.players.map(p => {
-      const base = { id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false };
-      if (p.userId) {
-        const user = db.getUser(p.userId);
-        if (user) {
-          base.rank = user.rank;
-          base.points = user.points;
-          base.avatarUrl = user.avatar_url;
-        }
+async function broadcastPlayerList(room) {
+  const playerData = await Promise.all(room.players.map(async p => {
+    const base = { id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false };
+    if (p.userId) {
+      const user = await db.getUser(p.userId);
+      if (user) {
+        base.rank = user.rank;
+        base.points = user.points;
+        base.avatarUrl = user.avatar_url;
       }
-      return base;
-    }),
-    hostId: room.hostId,
-  });
+    }
+    return base;
+  }));
+  io.to(room.code).emit('player_list', { players: playerData, hostId: room.hostId });
 }
 
 function broadcastSettings(room) {
@@ -365,7 +380,7 @@ function endGame(room) {
   finishGame(room);
 }
 
-function finishGame(room) {
+async function finishGame(room) {
   if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
   const results = computeResults(room);
 
@@ -374,7 +389,6 @@ function finishGame(room) {
   room.players.forEach(p => { nameMap[p.id] = p.name; });
   const nightLog = (room.nightLog || []).map(entry => ({
     ...entry,
-    // Resolve target player names in action
     targetName: entry.action.targetPlayer ? nameMap[entry.action.targetPlayer] : null,
     target1Name: entry.action.target1 ? nameMap[entry.action.target1] : null,
     target2Name: entry.action.target2 ? nameMap[entry.action.target2] : null,
@@ -386,16 +400,16 @@ function finishGame(room) {
   const pointsMap = calculateGamePoints(humanPlayers, results.winners, totalPlayerCount);
 
   const rankUpdates = {};
-  humanPlayers.forEach(p => {
-    if (!p.userId) return;
+  for (const p of humanPlayers) {
+    if (!p.userId) continue;
     const originalRole = room.originalCards[p.id];
-    if (!originalRole) return;
+    if (!originalRole) continue;
     const delta = pointsMap[p.id] || 0;
     const won = results.winners.includes(p.id);
-    const userBefore = db.getUser(p.userId);
-    if (!userBefore) return;
+    const userBefore = await db.getUser(p.userId);
+    if (!userBefore) continue;
     const oldPoints = userBefore.points;
-    const updatedUser = db.updatePoints(p.userId, delta, won, room.code, originalRole, results.finalCards[p.id]);
+    const updatedUser = await db.updatePoints(p.userId, delta, won, room.code, originalRole, results.finalCards[p.id]);
     const rankChange = checkRankUp(oldPoints, updatedUser.points);
     rankUpdates[p.id] = {
       pointsDelta: delta,
@@ -404,7 +418,7 @@ function finishGame(room) {
       rankUp: rankChange.ranked ? rankChange.newRank : null,
       demoted: rankChange.demoted ? rankChange.newRank : null,
     };
-  });
+  }
 
   io.to(room.code).emit('game_over', {
     results,
@@ -420,9 +434,9 @@ io.on('connection', socket => {
   console.log('Connected:', socket.id);
 
   // ── Create room ──
-  socket.on('create_room', ({ name, token, authToken }, cb) => {
+  socket.on('create_room', async ({ name, token, authToken }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
-    const authUser = authToken ? authenticateToken(authToken) : null;
+    const authUser = authToken ? await authenticateToken(authToken) : null;
     const room = createRoom(socket.id, name.trim(), token, authUser?.id || null);
     socket.join(room.code);
     socket.roomCode = room.code;
@@ -436,10 +450,10 @@ io.on('connection', socket => {
   });
 
   // ── Create simulation room ──
-  socket.on('create_simulation', ({ name, token, authToken, botCount, selectedRoles, gameMode }, cb) => {
+  socket.on('create_simulation', async ({ name, token, authToken, botCount, selectedRoles, gameMode }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
     const count = Math.max(2, Math.min(9, parseInt(botCount) || 4));
-    const authUser = authToken ? authenticateToken(authToken) : null;
+    const authUser = authToken ? await authenticateToken(authToken) : null;
     const room = createRoom(socket.id, name.trim(), token, authUser?.id || null);
     if (authUser) socket.userId = authUser.id;
     room.isSimulation = true;
@@ -486,13 +500,13 @@ io.on('connection', socket => {
   });
 
   // ── Join room ──
-  socket.on('join_room', ({ code, name, token, authToken }, cb) => {
+  socket.on('join_room', async ({ code, name, token, authToken }, cb) => {
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb({ error: 'Không tìm thấy phòng' });
     if (room.state !== 'waiting') return cb({ error: 'Game đã bắt đầu' });
     if (room.players.length >= 10) return cb({ error: 'Phòng đã đầy (tối đa 10 người)' });
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
-    const authUser = authToken ? authenticateToken(authToken) : null;
+    const authUser = authToken ? await authenticateToken(authToken) : null;
     const added = addPlayer(room, socket.id, name.trim(), token, false, authUser?.id || null);
     if (authUser) socket.userId = authUser.id;
     if (!added) return cb({ error: 'Bạn đã trong phòng này' });
