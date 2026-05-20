@@ -116,6 +116,7 @@ export default function App() {
     });
 
     socket.on('player_list', ({ players, hostId }) => {
+      playersRef.current = players;
       setPlayers(players);
       setHostId(hostId);
     });
@@ -322,6 +323,7 @@ export default function App() {
 
   const handleJoinRoom = useCallback((code, ps, cfg, host, state, extraData) => {
     setRoomCode(code);
+    playersRef.current = ps;
     setPlayers(ps);
     setSettings(cfg);
     setHostId(host);

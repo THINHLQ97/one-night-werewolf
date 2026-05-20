@@ -1,13 +1,13 @@
 // Rank tiers: 1 (Iron) through 8 (Challenger), 500pt per tier, cap at 5000
 const RANKS = [
-  { tier: 1, name: 'Iron',       nameVi: 'Sắt',        minPoints: 0,    image: '1-iron.png' },
-  { tier: 2, name: 'Bronze',     nameVi: 'Đồng',       minPoints: 500,  image: '2-bronze.png' },
-  { tier: 3, name: 'Silver',     nameVi: 'Bạc',        minPoints: 1000, image: '3-silver.png' },
-  { tier: 4, name: 'Gold',       nameVi: 'Vàng',       minPoints: 1500, image: '4-gold.png' },
-  { tier: 5, name: 'WhiteGold',  nameVi: 'Bạch Kim',   minPoints: 2000, image: '5-whitegold.png' },
-  { tier: 6, name: 'Diamond',    nameVi: 'Kim Cương',   minPoints: 2500, image: '6-diamond.png' },
-  { tier: 7, name: 'Elite',      nameVi: 'Tinh Anh',   minPoints: 3500, image: '7-elite.png' },
-  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu',  minPoints: 5000, image: '8-challenger.png' },
+  { tier: 1, name: 'Iron',       nameVi: 'Sắt',        minPoints: 0,    image: '1-iron.png',       frameScale: 1.5 },
+  { tier: 2, name: 'Bronze',     nameVi: 'Đồng',       minPoints: 500,  image: '2-bronze.png',     frameScale: 1.55 },
+  { tier: 3, name: 'Silver',     nameVi: 'Bạc',        minPoints: 1000, image: '3-silver.png',     frameScale: 1.65 },
+  { tier: 4, name: 'Gold',       nameVi: 'Vàng',       minPoints: 1500, image: '4-gold.png',       frameScale: 1.75 },
+  { tier: 5, name: 'WhiteGold',  nameVi: 'Bạch Kim',   minPoints: 2000, image: '5-whitegold.png',  frameScale: 1.9 },
+  { tier: 6, name: 'Diamond',    nameVi: 'Kim Cương',   minPoints: 2500, image: '6-diamond.png',    frameScale: 2.15 },
+  { tier: 7, name: 'Elite',      nameVi: 'Tinh Anh',   minPoints: 3500, image: '7-elite.png',      frameScale: 2.05 },
+  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu',  minPoints: 5000, image: '8-challenger.png', frameScale: 2.3 },
 ];
 
 const MAX_POINTS = 5000;

@@ -11,7 +11,7 @@ const AVATAR_OPTIONS = [
 ];
 
 export function AvatarWithFrame({ avatarUrl, avatarEmoji, name, rank, size = 24 }) {
-  const frameSize = Math.round(size * 1.7);
+  const frameSize = Math.round(size * (rank?.frameScale || 1.7));
   return (
     <div className="relative inline-flex items-center justify-center flex-shrink-0" style={{ width: frameSize, height: frameSize }}>
       {avatarUrl ? (

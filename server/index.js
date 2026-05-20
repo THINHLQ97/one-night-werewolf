@@ -449,6 +449,7 @@ io.on('connection', socket => {
       settings: room.settings,
       hostId: room.hostId,
     });
+    broadcastPlayerList(room);
   });
 
   // ── Create simulation room ──
@@ -473,6 +474,7 @@ io.on('connection', socket => {
       settings: room.settings,
       hostId: room.hostId,
     });
+    broadcastPlayerList(room);
   });
 
   // ── Add/remove bot in lobby ──

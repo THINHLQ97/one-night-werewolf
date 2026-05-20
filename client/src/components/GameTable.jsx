@@ -168,16 +168,7 @@ export default function GameTable({
               `}
             >
               {/* Avatar circle */}
-              <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale, overflow: 'visible' }}>
-                {p.rank && (
-                  <img
-                    src={`/images/${p.rank.image}`}
-                    alt={p.rank.name}
-                    className="absolute pointer-events-none"
-                    style={{ width: avatarSize * 1.7, height: avatarSize * 1.7, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', objectFit: 'contain', opacity: 0.85 }}
-                    draggable={false}
-                  />
-                )}
+              <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
                 {isRevealed ? (
                   <RoleIcon roleId={isRevealed} size={iconSize} />
                 ) : isMe && myCurrentRole ? (
