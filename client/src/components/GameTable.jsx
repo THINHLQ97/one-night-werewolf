@@ -169,12 +169,12 @@ export default function GameTable({
             >
               {/* Avatar circle */}
               <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
-                {p.rank && p.rank.tier > 1 && (
+                {p.rank && (
                   <img
                     src={`/images/${p.rank.image}`}
                     alt={p.rank.name}
                     className="absolute pointer-events-none"
-                    style={{ width: avatarSize + 12 * scale, height: avatarSize + 12 * scale, top: -6 * scale, left: -6 * scale, objectFit: 'contain', opacity: 0.8 }}
+                    style={{ width: avatarSize * 1.7, height: avatarSize * 1.7, top: -(avatarSize * 0.35), left: -(avatarSize * 0.35), objectFit: 'contain', opacity: 0.85 }}
                     draggable={false}
                   />
                 )}
@@ -184,6 +184,10 @@ export default function GameTable({
                   <RoleIcon roleId={myCurrentRole} size={iconSize} />
                 ) : p.isBot ? (
                   <span>🤖</span>
+                ) : p.avatarUrl?.startsWith('emoji:') ? (
+                  <span style={{ fontSize: avatarSize * 0.55 }}>{p.avatarUrl.slice(6)}</span>
+                ) : p.avatarUrl ? (
+                  <img src={p.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <span>{p.name.charAt(0).toUpperCase()}</span>
                 )}

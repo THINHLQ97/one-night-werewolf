@@ -1,25 +1,65 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import RankBadge from './RankBadge';
+import RankInfoPopup from './RankInfoPopup';
 import Icon from './Icon';
 
+const AVATAR_OPTIONS = [
+  '🐺', '🦊', '🐱', '🐶', '🐻', '🐼', '🐨', '🦁',
+  '🐯', '🐮', '🐷', '🐸', '🐵', '🦄', '🐲', '👻',
+  '🤖', '👽', '🎃', '💀', '🦇', '🐍', '🦅', '🐧',
+];
+
+export function AvatarWithFrame({ avatarUrl, avatarEmoji, name, rank, size = 24 }) {
+  const frameSize = Math.round(size * 1.7);
+  return (
+    <div className="relative inline-flex items-center justify-center flex-shrink-0" style={{ width: frameSize, height: frameSize }}>
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="" className="rounded-full absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2 }} referrerPolicy="no-referrer" />
+      ) : avatarEmoji ? (
+        <div className="rounded-full bg-moon-400/20 flex items-center justify-center absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2, fontSize: size * 0.55 }}>
+          {avatarEmoji}
+        </div>
+      ) : (
+        <div className="rounded-full bg-moon-400/20 flex items-center justify-center font-bold text-moon-400 absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2, fontSize: size * 0.4 }}>
+          {name?.[0]?.toUpperCase() || '?'}
+        </div>
+      )}
+      {rank && (
+        <img
+          src={`/images/${rank.image}`}
+          alt={rank.name}
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          draggable={false}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ProfileBar({ className = '' }) {
-  const { user, logout, googleClientId, loginWithGoogle, loading } = useAuth();
+  const { user, logout, googleClientId, loginWithGoogle, updateProfile, loading } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showRankInfo, setShowRankInfo] = useState(false);
 
   if (loading) return null;
 
-  if (!user) {
-    return (
-      <div className={`flex items-center gap-2 ${className}`}>
-        {googleClientId && (
-          <GoogleLoginButton clientId={googleClientId} onLogin={loginWithGoogle} />
-        )}
-      </div>
-    );
-  }
+  if (!user) return null;
 
   const nextRank = getNextRankInfo(user.rank, user.points);
+  const currentEmoji = user.avatarUrl?.startsWith('emoji:') ? user.avatarUrl.slice(6) : null;
+  const currentImg = user.avatarUrl && !user.avatarUrl.startsWith('emoji:') ? user.avatarUrl : null;
+
+  async function selectAvatar(emoji) {
+    await updateProfile(user.displayName, `emoji:${emoji}`);
+    setShowAvatarPicker(false);
+  }
+
+  async function clearAvatar() {
+    await updateProfile(user.displayName, null);
+    setShowAvatarPicker(false);
+  }
 
   return (
     <div className={`relative ${className}`}>
@@ -27,34 +67,61 @@ export default function ProfileBar({ className = '' }) {
         onClick={() => setShowMenu(s => !s)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
       >
-        {user.avatarUrl ? (
-          <img src={user.avatarUrl} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="w-6 h-6 rounded-full bg-moon-400/20 flex items-center justify-center text-xs font-bold text-moon-400">
-            {user.displayName?.[0]?.toUpperCase() || '?'}
-          </div>
-        )}
+        <AvatarWithFrame avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={24} />
         <span className="text-sm text-white/70 font-medium max-w-[100px] truncate">{user.displayName}</span>
-        <RankBadge rank={user.rank} size={20} />
       </button>
+
+      {showRankInfo && (
+        <RankInfoPopup
+          currentRank={user.rank}
+          currentPoints={user.points}
+          onClose={() => setShowRankInfo(false)}
+        />
+      )}
 
       {showMenu && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 card min-w-[220px] p-3 space-y-3">
+          <div className="fixed inset-0 z-40" onClick={() => { setShowMenu(false); setShowAvatarPicker(false); }} />
+          <div className="absolute right-0 top-full mt-2 z-50 card min-w-[240px] p-3 space-y-3">
             <div className="flex items-center gap-3">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-moon-400/20 flex items-center justify-center text-lg font-bold text-moon-400">
-                  {user.displayName?.[0]?.toUpperCase() || '?'}
+              <button onClick={() => setShowAvatarPicker(s => !s)} className="relative group" title="Đổi avatar">
+                <AvatarWithFrame avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={40} />
+                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-[10px] text-white">✏️</span>
                 </div>
-              )}
+              </button>
               <div>
                 <p className="text-sm font-semibold text-white/80">{user.displayName}</p>
-                <p className="text-xs text-moon-400">{user.rank?.nameVi || 'Unranked'}</p>
+                <button
+                  onClick={() => { setShowRankInfo(true); setShowMenu(false); }}
+                  className="text-xs text-moon-400 hover:text-moon-300 hover:underline transition-colors"
+                >
+                  {user.rank?.nameVi || 'Unranked'} — {user.points} pts
+                </button>
               </div>
             </div>
+
+            {showAvatarPicker && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-white/40 uppercase tracking-wider">Chọn avatar</p>
+                <div className="grid grid-cols-8 gap-1">
+                  {AVATAR_OPTIONS.map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => selectAvatar(emoji)}
+                      className={`w-7 h-7 rounded-md flex items-center justify-center text-sm hover:bg-white/20 transition-colors ${currentEmoji === emoji ? 'bg-moon-400/30 ring-1 ring-moon-400' : 'bg-white/5'}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+                {(currentEmoji || currentImg) && (
+                  <button onClick={clearAvatar} className="text-[10px] text-white/30 hover:text-white/50 transition-colors">
+                    Xóa avatar
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
@@ -107,7 +174,7 @@ function getNextRankInfo(rank, points) {
   return { name: RANK_NAMES_VI[rank.tier] || '?', progress, remaining };
 }
 
-function GoogleLoginButton({ clientId, onLogin }) {
+export function GoogleLoginButton({ clientId, onLogin }) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {

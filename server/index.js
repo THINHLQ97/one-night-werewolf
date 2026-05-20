@@ -394,30 +394,32 @@ async function finishGame(room) {
     target2Name: entry.action.target2 ? nameMap[entry.action.target2] : null,
   }));
 
-  // Award points to authenticated users
-  const humanPlayers = room.players.filter(p => !p.isBot);
-  const totalPlayerCount = humanPlayers.length;
-  const pointsMap = calculateGamePoints(humanPlayers, results.winners, totalPlayerCount);
-
+  // Award points to authenticated users (skip simulation/bot games)
   const rankUpdates = {};
-  for (const p of humanPlayers) {
-    if (!p.userId) continue;
-    const originalRole = room.originalCards[p.id];
-    if (!originalRole) continue;
-    const delta = pointsMap[p.id] || 0;
-    const won = results.winners.includes(p.id);
-    const userBefore = await db.getUser(p.userId);
-    if (!userBefore) continue;
-    const oldPoints = userBefore.points;
-    const updatedUser = await db.updatePoints(p.userId, delta, won, room.code, originalRole, results.finalCards[p.id]);
-    const rankChange = checkRankUp(oldPoints, updatedUser.points);
-    rankUpdates[p.id] = {
-      pointsDelta: delta,
-      newPoints: updatedUser.points,
-      rank: updatedUser.rank,
-      rankUp: rankChange.ranked ? rankChange.newRank : null,
-      demoted: rankChange.demoted ? rankChange.newRank : null,
-    };
+  if (!room.isSimulation) {
+    const humanPlayers = room.players.filter(p => !p.isBot);
+    const totalPlayerCount = humanPlayers.length;
+    const pointsMap = calculateGamePoints(humanPlayers, results.winners, totalPlayerCount);
+
+    for (const p of humanPlayers) {
+      if (!p.userId) continue;
+      const originalRole = room.originalCards[p.id];
+      if (!originalRole) continue;
+      const delta = pointsMap[p.id] || 0;
+      const won = results.winners.includes(p.id);
+      const userBefore = await db.getUser(p.userId);
+      if (!userBefore) continue;
+      const oldPoints = userBefore.points;
+      const updatedUser = await db.updatePoints(p.userId, delta, won, room.code, originalRole, results.finalCards[p.id]);
+      const rankChange = checkRankUp(oldPoints, updatedUser.points);
+      rankUpdates[p.id] = {
+        pointsDelta: delta,
+        newPoints: updatedUser.points,
+        rank: updatedUser.rank,
+        rankUp: rankChange.ranked ? rankChange.newRank : null,
+        demoted: rankChange.demoted ? rankChange.newRank : null,
+      };
+    }
   }
 
   io.to(room.code).emit('game_over', {
