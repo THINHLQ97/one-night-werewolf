@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import socket from '../socket';
 import RoleIcon from '../components/RoleIcon';
+import Icon from '../components/Icon';
 
 const ALL_ROLES = [
   // Base
@@ -216,8 +217,8 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
 
       {/* Players */}
       <div className="card mb-4">
-        <h3 className="text-moon-400 font-semibold mb-3">
-          👥 Người chơi ({players.length}/10)
+        <h3 className="text-moon-400 font-semibold mb-3 flex items-center gap-1.5">
+          <Icon name="users" size={16} /> Người chơi ({players.length}/10)
         </h3>
         <div className="flex flex-wrap gap-2">
           {players.map(p => (
@@ -231,7 +232,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                     : 'bg-white/10 text-white/80'
               }`}
             >
-              {p.isBot ? '🤖 ' : p.id === hostId ? '👑 ' : ''}{p.name}
+              {p.isBot ? <><Icon name="robot" size={14} className="inline mr-1" /></> : p.id === hostId ? <><Icon name="crown" size={14} className="inline mr-1 text-moon-300" /></> : ''}{p.name}
               {p.id === socket.id ? ' (Bạn)' : ''}
             </span>
           ))}
@@ -264,7 +265,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
             className="text-moon-400/60 text-xs mt-3 hover:text-moon-300 transition-colors"
             onClick={() => { setEditingName(true); setNewName(myPlayer?.name || ''); }}
           >
-            ✏️ Đổi tên
+            <Icon name="pencil" size={14} className="inline mr-1" /> Đổi tên
           </button>
         ) : (
           <div className="flex gap-2 mt-3">
@@ -285,7 +286,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
       {/* Role setup */}
       <div className="card mb-4">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-moon-400 font-semibold">🃏 Chọn bài</h3>
+          <h3 className="text-moon-400 font-semibold flex items-center gap-1.5"><Icon name="cards" size={16} /> Chọn bài</h3>
           <span className={`text-sm font-mono ${selected.length === needed ? 'text-village-400' : 'text-wolf-400'}`}>
             {selected.length}/{needed}
           </span>
@@ -396,7 +397,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           onClick={handleStart}
           disabled={loading || players.length < 3}
         >
-          {loading ? 'Đang bắt đầu...' : '🌙 Bắt đầu game'}
+          {loading ? 'Đang bắt đầu...' : <><Icon name="moon" size={18} className="inline mr-1.5" /> Bắt đầu game</>}
         </button>
       )}
       {!isHost && (

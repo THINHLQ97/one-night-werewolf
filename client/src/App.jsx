@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import socket, { playerToken } from './socket';
 import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxGameOver } from './audio';
+import Icon from './components/Icon';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -352,7 +353,7 @@ export default function App() {
   const connectionOverlay = connectionLost ? (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
       <div className="text-center p-6">
-        <div className="text-4xl mb-3 animate-pulse">📡</div>
+        <div className="mb-3 animate-pulse text-moon-400"><Icon name="wifi" size={40} /></div>
         <p className="text-moon-300 font-semibold mb-1">Đang kết nối lại...</p>
         <p className="text-white/40 text-sm">Đừng tắt app, đợi vài giây</p>
       </div>

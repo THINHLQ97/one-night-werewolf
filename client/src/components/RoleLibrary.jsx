@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RoleIcon from './RoleIcon';
+import Icon from './Icon';
 
 const ROLES = [
   // ─── Base ───
@@ -212,7 +213,7 @@ export default function RoleLibrary({ isOpen, onClose, highlightRole = null }) {
     <div className="fixed inset-0 bg-black/90 z-40 flex flex-col fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-moon-300 font-bold text-lg">📖 Thư viện nhân vật</h2>
+        <h2 className="text-moon-300 font-bold text-lg flex items-center gap-2"><Icon name="book" size={20} /> Thư viện nhân vật</h2>
         <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20">
           ✕
         </button>
@@ -338,7 +339,10 @@ export function RoleLibraryButton({ onClick, className = '' }) {
       className={`w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors ${className}`}
       title="Thư viện nhân vật"
     >
-      📖
+      <svg width="16" height="16" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" fill="none" />
+      </svg>
     </button>
   );
 }

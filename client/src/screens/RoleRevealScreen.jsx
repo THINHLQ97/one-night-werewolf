@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RoleIcon from '../components/RoleIcon';
+import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 
 const TEAM_STYLE = {
@@ -17,7 +18,7 @@ export default function RoleRevealScreen({ myRole }) {
     return (
       <div className="min-h-screen flex items-center justify-center fade-in">
         <div className="text-center">
-          <div className="text-5xl mb-4 pulse-moon">🌙</div>
+          <div className="mb-4 pulse-moon text-moon-400"><Icon name="moon" size={48} /></div>
           <p className="text-moon-400">Đang nhận bài...</p>
         </div>
       </div>
@@ -29,8 +30,8 @@ export default function RoleRevealScreen({ myRole }) {
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
       <div className="flex items-center gap-3 mb-6 sm:mb-8">
-        <h2 className="text-moon-400 text-sm sm:text-lg text-center">
-          🌙 Đêm xuống — Xem bài của bạn
+        <h2 className="text-moon-400 text-sm sm:text-lg text-center flex items-center gap-2">
+          <Icon name="moon" size={20} className="text-moon-400" /> Đêm xuống — Xem bài của bạn
         </h2>
         <div className="flex gap-1.5">
           {revealed && (
@@ -39,7 +40,7 @@ export default function RoleRevealScreen({ myRole }) {
               className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
               title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
             >
-              {roleHidden ? '🙈' : '👁️'}
+              <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
             </button>
           )}
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
@@ -58,7 +59,7 @@ export default function RoleRevealScreen({ myRole }) {
         </button>
       ) : roleHidden ? (
         <div className="w-48 h-64 rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4">
-          <span className="text-6xl">🙈</span>
+          <Icon name="eyeOff" size={48} className="text-white/30" />
           <span className="text-white/40 font-semibold text-sm">Vai đã ẩn</span>
         </div>
       ) : (

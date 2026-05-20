@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import GameTable from '../components/GameTable';
 import RoleIcon from '../components/RoleIcon';
+import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import TokenClaimBoard from '../components/TokenClaimBoard';
 
@@ -31,7 +32,7 @@ const ROLE_SHORT = {
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 function centerName(slot) {
-  if (slot === 'centerWolf') return '🐺 Alpha';
+  if (slot === 'centerWolf') return 'Alpha';
   const idx = parseInt(slot.replace('center', ''));
   return CENTER[idx] || slot;
 }
@@ -57,11 +58,11 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
       {/* Header */}
       <div className="text-center pt-2 pb-2">
         <div className="flex items-center justify-center gap-3">
-          <span className="text-3xl">☀️</span>
+          <span className="text-yellow-400"><Icon name="sun" size={28} /></span>
           <div>
             <h2 className="text-lg font-bold text-moon-300">Thảo luận & Bỏ phiếu</h2>
-            <div className={`text-2xl font-mono font-bold ${paused ? 'text-yellow-400 animate-pulse' : remaining < 60 ? 'text-wolf-400' : 'text-white/80'}`}>
-              {paused && <span className="text-sm mr-1">⏸</span>}
+            <div className={`text-2xl font-mono font-bold flex items-center justify-center gap-1.5 ${paused ? 'text-yellow-400 animate-pulse' : remaining < 60 ? 'text-wolf-400' : 'text-white/80'}`}>
+              {paused && <Icon name="pause" size={16} />}
               {mins}:{secs}
             </div>
           </div>
@@ -71,13 +72,13 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
               className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
               title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
             >
-              {roleHidden ? '🙈' : '👁️'}
+              <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
             </button>
             <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           </div>
         </div>
         <p className="text-white/40 text-xs mt-1">
-          {votedCount}/{players.length} đã vote · {isBodyguard ? '💪 Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}
+          {votedCount}/{players.length} đã vote · {isBodyguard ? 'Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}
         </p>
       </div>
 
@@ -123,8 +124,8 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
       {/* Vote status */}
       <div className="mt-3 flex-1">
         {isBodyguard && myProtect && (
-          <p className="text-center text-village-400/60 text-xs mb-2">
-            💪 Bạn đang bảo vệ người này. Chạm người khác để đổi.
+          <p className="text-center text-village-400/60 text-xs mb-2 flex items-center justify-center gap-1.5">
+            <Icon name="shield" size={14} /> Bạn đang bảo vệ người này. Chạm người khác để đổi.
           </p>
         )}
         {!isBodyguard && myVote && (
@@ -136,7 +137,9 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         {/* Night knowledge notebook */}
         {!roleHidden && nightKnowledge && (
           <div className="p-3 bg-night-800/80 border border-moon-400/20 rounded-xl mb-3">
-            <p className="text-moon-400 text-xs font-semibold mb-2">📓 Dữ kiện từ đêm qua</p>
+            <p className="text-moon-400 text-xs font-semibold mb-2 flex items-center gap-1.5">
+              <Icon name="notebook" size={14} /> Dữ kiện từ đêm qua
+            </p>
             <KnowledgeSummary knowledge={nightKnowledge} players={players} />
           </div>
         )}
@@ -147,13 +150,14 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
             <div className="flex items-center gap-1.5">
               <button
                 onClick={paused ? onTimerResume : onTimerPause}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                   paused
                     ? 'bg-village-500/20 border border-village-400/30 text-village-300'
                     : 'bg-yellow-500/20 border border-yellow-400/30 text-yellow-300'
                 }`}
               >
-                {paused ? '▶ Tiếp tục' : '⏸ Tạm dừng'}
+                <Icon name={paused ? 'play' : 'pause'} size={12} />
+                {paused ? 'Tiếp tục' : 'Tạm dừng'}
               </button>
               <button
                 onClick={() => onTimerAdjust(-30)}
@@ -174,8 +178,8 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
                 +1m
               </button>
             </div>
-            <button className="btn-danger w-full text-sm" onClick={onEndDay}>
-              ⚡ Kết thúc bỏ phiếu ngay
+            <button className="btn-danger w-full text-sm flex items-center justify-center gap-1.5" onClick={onEndDay}>
+              <Icon name="lightning" size={16} /> Kết thúc bỏ phiếu ngay
             </button>
           </div>
         )}
@@ -205,7 +209,7 @@ function HunterPhaseOverlay({ hunterPhase, myId, players, onShoot }) {
   return (
     <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center px-4">
       <div className="card max-w-sm w-full text-center">
-        <div className="text-4xl mb-3">🏹</div>
+        <div className="mb-3 text-wolf-400"><Icon name="crosshair" size={40} /></div>
         <h2 className="text-xl font-bold text-wolf-400 mb-2">Thợ Săn bị loại!</h2>
         <p className="text-white/60 text-sm mb-4">
           {isMyTurn
@@ -234,10 +238,10 @@ function HunterPhaseOverlay({ hunterPhase, myId, players, onShoot }) {
 
         {isMyTurn && selected && (
           <button
-            className="btn-primary w-full"
+            className="btn-primary w-full flex items-center justify-center gap-2"
             onClick={() => { setSubmitted(true); onShoot(selected); }}
           >
-            🏹 Bắn {hunterPhase.otherPlayers.find(p => p.id === selected)?.name}
+            <Icon name="crosshair" size={18} /> Bắn {hunterPhase.otherPlayers.find(p => p.id === selected)?.name}
           </button>
         )}
 
@@ -258,26 +262,16 @@ function KnowledgeSummary({ knowledge, players }) {
 
   const items = [];
 
-  if (knownWerewolves.length > 0) {
-    items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
-  }
-  if (knownMasons.length > 0) {
-    items.push(`🤝 Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
-  }
-  Object.entries(revealedPlayers).forEach(([id, role]) => {
-    items.push(`👤 ${nameMap[id]}: ${ROLE_SHORT[role] || role}`);
-  });
-  Object.entries(revealedCenter).forEach(([slot, role]) => {
-    items.push(`🃏 ${centerName(slot)}: ${ROLE_SHORT[role] || role}`);
-  });
+  if (knownWerewolves.length > 0) items.push(`Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
+  Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id]}: ${ROLE_SHORT[role] || role}`));
+  Object.entries(revealedCenter).forEach(([slot, role]) => items.push(`${centerName(slot)}: ${ROLE_SHORT[role] || role}`));
   swappedPairs.forEach(([a, b]) => {
     const nameA = a.startsWith('center') ? centerName(a) : nameMap[a] || '?';
     const nameB = b.startsWith('center') ? centerName(b) : nameMap[b] || '?';
-    items.push(`🔄 ${nameA} ↔ ${nameB}`);
+    items.push(`${nameA} ↔ ${nameB}`);
   });
-  if (myCurrentRole) {
-    items.push(`📋 Bài hiện tại: ${ROLE_SHORT[myCurrentRole] || myCurrentRole}`);
-  }
+  if (myCurrentRole) items.push(`Bài hiện tại: ${ROLE_SHORT[myCurrentRole] || myCurrentRole}`);
 
   if (items.length === 0) return <p className="text-white/30 text-xs">Không có thông tin đặc biệt</p>;
 

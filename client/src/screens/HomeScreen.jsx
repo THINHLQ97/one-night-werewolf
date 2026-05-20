@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import socket, { playerToken } from '../socket';
+import Icon from '../components/Icon';
+import FallingCards from '../components/FallingCards';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -62,32 +64,39 @@ export default function HomeScreen({ onJoin, error, setError }) {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
-      <div className="text-center mb-8 sm:mb-10">
-        <div className="text-5xl sm:text-7xl mb-3 sm:mb-4">🐺</div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-moon-300 tracking-tight">One Night</h1>
-        <p className="text-moon-400 text-base sm:text-lg mt-1">Ultimate Werewolf</p>
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in relative">
+      <FallingCards count={14} />
+
+      <div className="text-center mb-8 sm:mb-10 relative z-10">
+        <img
+          src="/images/logo-game.png"
+          alt="One Night Ultimate Werewolf"
+          className="w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-2 drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]"
+          draggable={false}
+        />
       </div>
 
       {!mode ? (
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-          <button className="btn-primary text-lg py-4" onClick={() => { setMode('create'); setError(''); }}>
-            ✨ Tạo phòng mới
+        <div className="flex flex-col gap-4 w-full max-w-xs relative z-10">
+          <button className="btn-primary text-lg py-4 flex items-center justify-center gap-2.5" onClick={() => { setMode('create'); setError(''); }}>
+            <Icon name="sparkle" size={22} /> Tạo phòng mới
           </button>
-          <button className="btn-ghost text-lg py-4" onClick={() => { setMode('join'); setError(''); }}>
-            🚪 Vào phòng
+          <button className="btn-ghost text-lg py-4 flex items-center justify-center gap-2.5" onClick={() => { setMode('join'); setError(''); }}>
+            <Icon name="door" size={22} /> Vào phòng
           </button>
-          <button className="btn-ghost text-lg py-4 border-dashed" onClick={() => { setMode('simulation'); setError(''); }}>
-            🤖 Simulation Mode
+          <button className="btn-ghost text-lg py-4 border-dashed flex items-center justify-center gap-2.5" onClick={() => { setMode('simulation'); setError(''); }}>
+            <Icon name="robot" size={22} /> Simulation Mode
           </button>
         </div>
       ) : (
         <form
           onSubmit={mode === 'create' ? handleCreate : mode === 'join' ? handleJoin : handleSimulation}
-          className="card w-full max-w-sm flex flex-col gap-4"
+          className="card w-full max-w-sm flex flex-col gap-4 relative z-10"
         >
-          <h2 className="text-xl font-semibold text-moon-300">
-            {mode === 'create' ? '✨ Tạo phòng mới' : mode === 'join' ? '🚪 Vào phòng' : '🤖 Simulation Mode'}
+          <h2 className="text-xl font-semibold text-moon-300 flex items-center gap-2.5">
+            {mode === 'create' ? <><Icon name="sparkle" size={22} /> Tạo phòng mới</> :
+             mode === 'join' ? <><Icon name="door" size={22} /> Vào phòng</> :
+             <><Icon name="robot" size={22} /> Simulation Mode</>}
           </h2>
 
           {mode === 'simulation' && (
@@ -107,9 +116,9 @@ export default function HomeScreen({ onJoin, error, setError }) {
               <button
                 type="button"
                 onClick={() => setName(generateName())}
-                className="btn-ghost px-3 py-0 text-lg"
+                className="btn-ghost px-3 py-0"
                 title="Tạo tên ngẫu nhiên"
-              >🎲</button>
+              ><Icon name="dice" size={22} /></button>
             </div>
           </div>
 
@@ -147,13 +156,13 @@ export default function HomeScreen({ onJoin, error, setError }) {
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Đang kết nối...' : mode === 'create' ? 'Tạo phòng' : mode === 'join' ? 'Vào phòng' : 'Bắt đầu Simulation'}
           </button>
-          <button type="button" className="btn-ghost" onClick={() => { setMode(null); setError(''); }}>
-            ← Quay lại
+          <button type="button" className="btn-ghost flex items-center justify-center gap-2" onClick={() => { setMode(null); setError(''); }}>
+            <Icon name="arrowLeft" size={16} /> Quay lại
           </button>
         </form>
       )}
 
-      <p className="text-white/30 text-sm mt-12 text-center">
+      <p className="text-white/30 text-sm mt-12 text-center relative z-10">
         3–10 người · Không cần tài khoản
       </p>
     </div>
