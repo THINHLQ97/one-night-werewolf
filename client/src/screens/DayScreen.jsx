@@ -38,7 +38,7 @@ function centerName(slot) {
 }
 
 export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear }) {
-  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining } = dayState;
+  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer } = dayState;
   const remaining = useCountdown(timerEnd, paused, pausedRemaining);
   const isBodyguard = myRole?.roleId === 'bodyguard';
   const myVote = isBodyguard ? null : votes[myId];
@@ -105,6 +105,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         votes={votes}
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
+        shieldedPlayer={shieldedPlayer}
       />
 
       {/* Token Claim Board */}

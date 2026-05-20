@@ -2,6 +2,7 @@ import { useState } from 'react';
 import socket from '../socket';
 import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
+import RankBadge from '../components/RankBadge';
 
 const ALL_ROLES = [
   // Base
@@ -232,7 +233,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                     : 'bg-white/10 text-white/80'
               }`}
             >
-              {p.isBot ? <><Icon name="robot" size={14} className="inline mr-1" /></> : p.id === hostId ? <><Icon name="crown" size={14} className="inline mr-1 text-moon-300" /></> : ''}{p.name}
+              {p.isBot ? <><Icon name="robot" size={14} className="inline mr-1" /></> : p.id === hostId ? <><Icon name="crown" size={14} className="inline mr-1 text-moon-300" /></> : ''}{p.rank && <RankBadge rank={p.rank} size={16} className="inline-flex mr-1 align-middle" />}{p.name}
               {p.id === socket.id ? ' (Bạn)' : ''}
             </span>
           ))}

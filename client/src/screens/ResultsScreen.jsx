@@ -2,6 +2,7 @@ import { useState } from 'react';
 import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
+import RankBadge, { PointsBadge } from '../components/RankBadge';
 
 const ROLE_NAMES = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer',
@@ -28,7 +29,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   if (!results) return null;
 
-  const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally, nightLog = [] } = results;
+  const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally, nightLog = [], rankUpdates = {} } = results;
   const hunterKills = eliminated.filter(id => !initialEliminated?.includes(id));
 
   const isWinner = winners.includes(myId);
@@ -73,6 +74,12 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
         <p className="text-white/50 mt-2">
           {isWinner ? 'Bạn nằm trong phe thắng!' : 'Bạn thua lần này...'}
         </p>
+        {rankUpdates[myId] && (
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <RankBadge rank={rankUpdates[myId].rank} size={24} />
+            <PointsBadge points={rankUpdates[myId].newPoints} delta={rankUpdates[myId].pointsDelta} />
+          </div>
+        )}
       </div>
 
       {/* Eliminated */}

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import socket, { playerToken } from './socket';
 import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxGameOver } from './audio';
+import { useAuth } from './contexts/AuthContext';
 import Icon from './components/Icon';
+import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -10,6 +12,7 @@ import DayScreen from './screens/DayScreen';
 import ResultsScreen from './screens/ResultsScreen';
 
 export default function App() {
+  const { user, authToken, refreshUser } = useAuth();
   const [screen, setScreen] = useState('home');
   const [roomCode, setRoomCode] = useState('');
   const [players, setPlayers] = useState([]);
@@ -23,6 +26,8 @@ export default function App() {
   const [hasAlphaWolf, setHasAlphaWolf] = useState(false);
   const [hunterPhase, setHunterPhase] = useState(null);
   const [tokenClaims, setTokenClaims] = useState(null);
+  const [rankUpData, setRankUpData] = useState(null);
+  const [demotedData, setDemotedData] = useState(null);
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -228,9 +233,9 @@ export default function App() {
       setNightState(prev => ({ ...prev, isMyTurn: false, actionData: null }));
     });
 
-    socket.on('day_start', ({ timerEnd, players, tokenPool }) => {
+    socket.on('day_start', ({ timerEnd, players, tokenPool, shieldedPlayer }) => {
       setScreen('day');
-      setDayState({ timerEnd, votes: {}, players, paused: false });
+      setDayState({ timerEnd, votes: {}, players, paused: false, shieldedPlayer: shieldedPlayer || null });
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
@@ -265,12 +270,23 @@ export default function App() {
       setHunterPhase(prev => prev ? { ...prev, shotFired: hunterName } : prev);
     });
 
-    socket.on('game_over', ({ results, players, nightLog }) => {
+    socket.on('game_over', ({ results, players, nightLog, rankUpdates }) => {
       setHunterPhase(null);
-      setResults({ ...results, players, nightLog: nightLog || [] });
+      setResults({ ...results, players, nightLog: nightLog || [], rankUpdates: rankUpdates || {} });
       setScreen('results');
       stopBGM();
       sfxGameOver();
+
+      const myRankUpdate = rankUpdates?.[socket.id];
+      if (myRankUpdate?.rankUp) {
+        setTimeout(() => setRankUpData(myRankUpdate.rankUp), 1500);
+        refreshUser();
+      } else if (myRankUpdate?.demoted) {
+        setTimeout(() => setDemotedData(myRankUpdate.demoted), 1500);
+        refreshUser();
+      } else if (myRankUpdate) {
+        refreshUser();
+      }
     });
 
     socket.on('back_to_lobby', ({ players, settings, hostId }) => {
@@ -424,6 +440,8 @@ export default function App() {
         isHost={isHost}
         onNewGame={() => socket.emit('new_game')}
       />
+      <RankUpPopup rankUp={rankUpData} onClose={() => setRankUpData(null)} />
+      <DemotedPopup newRank={demotedData} onClose={() => setDemotedData(null)} />
     </>);
   }
   return null;

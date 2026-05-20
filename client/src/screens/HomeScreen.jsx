@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import socket, { playerToken } from '../socket';
+import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
 import FallingCards from '../components/FallingCards';
+import ProfileBar from '../components/ProfileBar';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -14,8 +16,9 @@ function generateName() {
 }
 
 export default function HomeScreen({ onJoin, error, setError }) {
+  const { user, authToken } = useAuth();
   const [mode, setMode] = useState(null);
-  const [name, setName] = useState(() => generateName());
+  const [name, setName] = useState(() => user?.displayName || generateName());
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [botCount, setBotCount] = useState(4);
@@ -24,7 +27,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
     e.preventDefault();
     if (!name.trim()) return setError('Nhập tên của bạn');
     setLoading(true);
-    socket.emit('create_room', { name: name.trim(), token: playerToken }, (res) => {
+    socket.emit('create_room', { name: name.trim(), token: playerToken, authToken }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
       onJoin(res.code, res.players, res.settings, res.hostId);
@@ -44,7 +47,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
         onJoin(res.code, res.players, res.settings, res.hostId, res.state, res);
         return;
       }
-      socket.emit('join_room', { name: name.trim(), code: roomCode, token: playerToken }, (res2) => {
+      socket.emit('join_room', { name: name.trim(), code: roomCode, token: playerToken, authToken }, (res2) => {
         setLoading(false);
         if (res2.error) return setError(res2.error);
         onJoin(res2.code, res2.players, res2.settings, res2.hostId);
@@ -56,7 +59,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
     e.preventDefault();
     if (!name.trim()) return setError('Nhập tên của bạn');
     setLoading(true);
-    socket.emit('create_simulation', { name: name.trim(), token: playerToken, botCount }, (res) => {
+    socket.emit('create_simulation', { name: name.trim(), token: playerToken, authToken, botCount }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
       onJoin(res.code, res.players, res.settings, res.hostId);
@@ -66,6 +69,9 @@ export default function HomeScreen({ onJoin, error, setError }) {
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in relative">
       <FallingCards count={14} />
+      <div className="absolute top-4 right-4 z-20">
+        <ProfileBar />
+      </div>
 
       <div className="text-center mb-8 sm:mb-10 relative z-10">
         <img

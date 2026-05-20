@@ -10,13 +10,13 @@ function generateCode() {
   return code;
 }
 
-function createRoom(hostId, hostName, token) {
+function createRoom(hostId, hostName, token, userId = null) {
   const code = generateCode();
   const room = {
     code,
     hostId,
     state: 'waiting',
-    players: [{ id: hostId, name: hostName, isHost: true, token: token || null }],
+    players: [{ id: hostId, name: hostName, isHost: true, token: token || null, userId }],
     settings: {
       selectedRoles: ['werewolf', 'werewolf', 'seer', 'robber', 'troublemaker', 'villager', 'villager'],
     },
@@ -41,9 +41,9 @@ function getRoomByPlayerId(playerId) {
   return null;
 }
 
-function addPlayer(room, playerId, playerName, token, isBot = false) {
+function addPlayer(room, playerId, playerName, token, isBot = false, userId = null) {
   if (room.players.some(p => p.id === playerId)) return false;
-  room.players.push({ id: playerId, name: playerName, isHost: false, token: token || null, isBot });
+  room.players.push({ id: playerId, name: playerName, isHost: false, token: token || null, isBot, userId });
   return true;
 }
 

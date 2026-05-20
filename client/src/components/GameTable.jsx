@@ -47,6 +47,7 @@ export default function GameTable({
   winners = [],
   isNight = false,
   hasAlphaWolf = false,
+  shieldedPlayer = null,
 }) {
   const containerRef = useRef(null);
   const tableSize = useContainerSize(containerRef);
@@ -168,6 +169,15 @@ export default function GameTable({
             >
               {/* Avatar circle */}
               <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
+                {p.rank && p.rank.tier > 1 && (
+                  <img
+                    src={`/images/${p.rank.image}`}
+                    alt={p.rank.name}
+                    className="absolute pointer-events-none"
+                    style={{ width: avatarSize + 12 * scale, height: avatarSize + 12 * scale, top: -6 * scale, left: -6 * scale, objectFit: 'contain', opacity: 0.8 }}
+                    draggable={false}
+                  />
+                )}
                 {isRevealed ? (
                   <RoleIcon roleId={isRevealed} size={iconSize} />
                 ) : isMe && myCurrentRole ? (
@@ -181,6 +191,11 @@ export default function GameTable({
                 {/* Wolf indicator */}
                 {isWolf && !isRevealed && (
                   <span className="absolute -top-1 -right-1 text-xs">🐺</span>
+                )}
+
+                {/* Shield indicator */}
+                {shieldedPlayer === p.id && (
+                  <span className="absolute -bottom-1 -left-1 text-xs">🛡️</span>
                 )}
 
                 {/* Swap indicator */}

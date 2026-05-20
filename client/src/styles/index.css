@@ -307,3 +307,9 @@
     inset: 20px;
   }
 }
+
+@keyframes rankParticle {
+  0% { opacity: 0.8; transform: rotate(var(--r, 0deg)) translateY(-80px) scale(1); }
+  50% { opacity: 0.4; transform: rotate(var(--r, 0deg)) translateY(-100px) scale(0.5); }
+  100% { opacity: 0; transform: rotate(var(--r, 0deg)) translateY(-120px) scale(0); }
+}
