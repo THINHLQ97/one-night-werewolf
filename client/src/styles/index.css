@@ -122,12 +122,13 @@
 /* ─── Center cards ───────────────────────────────────────────────────────────── */
 
 .center-card {
-  background: linear-gradient(135deg, #1a1f3a, #111327);
+  background: #111327;
   border: 2px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   transition: all 0.3s;
   cursor: default;
-  padding: 2px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .center-card-revealed {

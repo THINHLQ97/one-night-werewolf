@@ -118,9 +118,9 @@ export default function GameTable({
                       <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <span style={{ fontSize: isWolf ? 14 * scale : 18 * scale }}>{isWolf ? '🐺' : '🃏'}</span>
-                      <span className={`text-[8px] mt-0.5 ${isWolf ? 'text-wolf-400' : 'text-white/40'}`}>{isWolf ? 'Alpha' : i + 1}</span>
+                    <div className="flex flex-col items-center justify-center h-full relative overflow-hidden rounded-[6px]">
+                      <img src="/images/card-back.png" alt="card back" className="absolute inset-0 w-full h-full object-cover" />
+                      <span className={`relative text-[8px] mt-auto mb-0.5 font-bold ${isWolf ? 'text-wolf-400' : 'text-white/60'}`}>{isWolf ? '🐺 Alpha' : ''}</span>
                     </div>
                   )}
                 </button>
@@ -172,6 +172,8 @@ export default function GameTable({
                   <RoleIcon roleId={isRevealed} size={iconSize} />
                 ) : isMe && myCurrentRole ? (
                   <RoleIcon roleId={myCurrentRole} size={iconSize} />
+                ) : p.isBot ? (
+                  <span>🤖</span>
                 ) : (
                   <span>{p.name.charAt(0).toUpperCase()}</span>
                 )}

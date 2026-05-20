@@ -224,16 +224,39 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
             <span
               key={p.id}
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                p.id === hostId
-                  ? 'bg-moon-400/20 text-moon-300 border border-moon-400/40'
-                  : 'bg-white/10 text-white/80'
+                p.isBot
+                  ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                  : p.id === hostId
+                    ? 'bg-moon-400/20 text-moon-300 border border-moon-400/40'
+                    : 'bg-white/10 text-white/80'
               }`}
             >
-              {p.id === hostId ? '👑 ' : ''}{p.name}
+              {p.isBot ? '🤖 ' : p.id === hostId ? '👑 ' : ''}{p.name}
               {p.id === socket.id ? ' (Bạn)' : ''}
             </span>
           ))}
         </div>
+
+        {/* Add/Remove Bot buttons (host only) */}
+        {isHost && (
+          <div className="flex gap-2 mt-3">
+            <button
+              className="text-blue-400/60 text-xs hover:text-blue-300 transition-colors"
+              onClick={() => socket.emit('add_bot', {}, (res) => { if (res?.error) console.warn(res.error); })}
+              disabled={players.length >= 10}
+            >
+              + Thêm Bot
+            </button>
+            {players.some(p => p.isBot) && (
+              <button
+                className="text-wolf-400/60 text-xs hover:text-wolf-300 transition-colors"
+                onClick={() => socket.emit('remove_bot', {}, (res) => { if (res?.error) console.warn(res.error); })}
+              >
+                - Xóa Bot
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Rename */}
         {!editingName ? (

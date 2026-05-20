@@ -49,10 +49,12 @@ export default function RoleRevealScreen({ myRole }) {
       {!revealed ? (
         <button
           onClick={() => setRevealed(true)}
-          className="w-48 h-64 rounded-2xl border-2 border-moon-400/40 bg-night-700 flex flex-col items-center justify-center gap-4 hover:border-moon-400 hover:bg-night-600 transition-all active:scale-95 cursor-pointer"
+          className="w-48 h-64 rounded-2xl border-2 border-moon-400/40 overflow-hidden relative hover:border-moon-400 transition-all active:scale-95 cursor-pointer group"
         >
-          <span className="text-6xl">🃏</span>
-          <span className="text-moon-400 font-semibold">Lật bài</span>
+          <img src="/images/card-back.png" alt="card back" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
+            <span className="text-moon-300 font-semibold text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm group-hover:bg-black/70 transition-colors">Lật bài</span>
+          </div>
         </button>
       ) : roleHidden ? (
         <div className="w-48 h-64 rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4">

@@ -41,10 +41,21 @@ function getRoomByPlayerId(playerId) {
   return null;
 }
 
-function addPlayer(room, playerId, playerName, token) {
+function addPlayer(room, playerId, playerName, token, isBot = false) {
   if (room.players.some(p => p.id === playerId)) return false;
-  room.players.push({ id: playerId, name: playerName, isHost: false, token: token || null });
+  room.players.push({ id: playerId, name: playerName, isHost: false, token: token || null, isBot });
   return true;
+}
+
+function addBotPlayers(room, count, generateBotId, generateBotName) {
+  const added = [];
+  for (let i = 0; i < count; i++) {
+    const id = generateBotId();
+    const name = generateBotName(i);
+    room.players.push({ id, name, isHost: false, token: null, isBot: true });
+    added.push({ id, name });
+  }
+  return added;
 }
 
 function removePlayer(room, playerId) {
@@ -84,4 +95,4 @@ function deleteRoom(code) {
   rooms.delete(code);
 }
 
-module.exports = { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, deleteRoom, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer };
+module.exports = { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, deleteRoom, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer };

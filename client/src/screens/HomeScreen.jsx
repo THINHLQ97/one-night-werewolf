@@ -16,6 +16,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
   const [name, setName] = useState(() => generateName());
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [botCount, setBotCount] = useState(4);
 
   function handleCreate(e) {
     e.preventDefault();
@@ -49,6 +50,17 @@ export default function HomeScreen({ onJoin, error, setError }) {
     });
   }
 
+  function handleSimulation(e) {
+    e.preventDefault();
+    if (!name.trim()) return setError('Nhập tên của bạn');
+    setLoading(true);
+    socket.emit('create_simulation', { name: name.trim(), token: playerToken, botCount }, (res) => {
+      setLoading(false);
+      if (res.error) return setError(res.error);
+      onJoin(res.code, res.players, res.settings, res.hostId);
+    });
+  }
+
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
       <div className="text-center mb-8 sm:mb-10">
@@ -65,15 +77,22 @@ export default function HomeScreen({ onJoin, error, setError }) {
           <button className="btn-ghost text-lg py-4" onClick={() => { setMode('join'); setError(''); }}>
             🚪 Vào phòng
           </button>
+          <button className="btn-ghost text-lg py-4 border-dashed" onClick={() => { setMode('simulation'); setError(''); }}>
+            🤖 Simulation Mode
+          </button>
         </div>
       ) : (
         <form
-          onSubmit={mode === 'create' ? handleCreate : handleJoin}
+          onSubmit={mode === 'create' ? handleCreate : mode === 'join' ? handleJoin : handleSimulation}
           className="card w-full max-w-sm flex flex-col gap-4"
         >
           <h2 className="text-xl font-semibold text-moon-300">
-            {mode === 'create' ? '✨ Tạo phòng mới' : '🚪 Vào phòng'}
+            {mode === 'create' ? '✨ Tạo phòng mới' : mode === 'join' ? '🚪 Vào phòng' : '🤖 Simulation Mode'}
           </h2>
+
+          {mode === 'simulation' && (
+            <p className="text-white/50 text-sm -mt-2">Chơi thử với bot AI để test game</p>
+          )}
 
           <div>
             <label className="text-white/40 text-xs mb-1 block">Tên hiển thị (có thể đổi sau)</label>
@@ -105,10 +124,28 @@ export default function HomeScreen({ onJoin, error, setError }) {
             />
           )}
 
+          {mode === 'simulation' && (
+            <div>
+              <label className="text-white/40 text-xs mb-1 block">Số lượng bot: {botCount}</label>
+              <div className="flex items-center gap-3">
+                <button type="button" className="btn-ghost px-3 py-1" onClick={() => setBotCount(c => Math.max(2, c - 1))}>-</button>
+                <input
+                  type="range"
+                  min={2} max={9}
+                  value={botCount}
+                  onChange={e => setBotCount(parseInt(e.target.value))}
+                  className="flex-1 accent-moon-400"
+                />
+                <button type="button" className="btn-ghost px-3 py-1" onClick={() => setBotCount(c => Math.min(9, c + 1))}>+</button>
+              </div>
+              <p className="text-white/30 text-xs mt-1 text-center">Tổng: {botCount + 1} người chơi (bạn + {botCount} bot)</p>
+            </div>
+          )}
+
           {error && <p className="text-wolf-400 text-sm text-center">{error}</p>}
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Đang kết nối...' : mode === 'create' ? 'Tạo phòng' : 'Vào phòng'}
+            {loading ? 'Đang kết nối...' : mode === 'create' ? 'Tạo phòng' : mode === 'join' ? 'Vào phòng' : 'Bắt đầu Simulation'}
           </button>
           <button type="button" className="btn-ghost" onClick={() => { setMode(null); setError(''); }}>
             ← Quay lại

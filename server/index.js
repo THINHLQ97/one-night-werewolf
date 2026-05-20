@@ -5,8 +5,9 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
-const { createRoom, getRoom, getRoomByPlayerId, addPlayer, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
+const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
+const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 
 const app = express();
 app.use(cors());
@@ -32,7 +33,7 @@ const PORT = process.env.PORT || 3001;
 
 function broadcastPlayerList(room) {
   io.to(room.code).emit('player_list', {
-    players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+    players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
     hostId: room.hostId,
   });
 }
@@ -78,7 +79,10 @@ async function runNightPhase(room) {
     }
 
     if (actingPlayers.length > 0) {
-      actingPlayers.forEach(p => {
+      const realPlayers = actingPlayers.filter(p => !p.isBot);
+      const botPlayers = actingPlayers.filter(p => p.isBot);
+
+      realPlayers.forEach(p => {
         const actionData = getNightActionData(room, role);
         if (actionData.otherPlayers) {
           actionData.otherPlayers = actionData.otherPlayers.filter(op => op.id !== p.id);
@@ -95,6 +99,48 @@ async function runNightPhase(room) {
           nightPhase.resolver = null;
           resolve();
         }, 30000);
+
+        // Bot auto-actions after short delay
+        if (botPlayers.length > 0) {
+          setTimeout(() => {
+            botPlayers.forEach(bot => {
+              if (!nightPhase.pendingPlayerIds.includes(bot.id)) return;
+              const action = decideBotNightAction(room, bot.id, role);
+              const result = processNightAction(room, bot.id, role, action);
+
+              if (!room.nightLog) room.nightLog = [];
+              room.nightLog.push({ role, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
+
+              // Handle multi-step bot roles
+              if (role === 'paranormalinvestigator' && result.canContinue) {
+                const action2 = decideBotNightActionStep2(room, bot.id, role, result);
+                const result2 = processNightAction(room, bot.id, role, action2);
+                room.nightLog.push({ role, playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2 } });
+              }
+              if (role === 'witch' && result.step === 1 && result.canSwap) {
+                const action2 = decideBotNightActionStep2(room, bot.id, role, result);
+                const result2 = processNightAction(room, bot.id, role, action2);
+                room.nightLog.push({ role, playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2 } });
+              }
+
+              // Revealer public broadcast
+              if (role === 'revealer' && result.revealed && result.targetPlayer) {
+                io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
+              }
+
+              const idx = nightPhase.pendingPlayerIds.indexOf(bot.id);
+              if (idx !== -1) nightPhase.pendingPlayerIds.splice(idx, 1);
+              nightPhase.pendingActions.push({ playerId: bot.id, role, action });
+            });
+
+            if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+              clearTimeout(nightPhase.timer);
+              const r = nightPhase.resolver;
+              nightPhase.resolver = null;
+              r();
+            }
+          }, 1500);
+        }
       });
     } else {
       await new Promise(r => setTimeout(r, 3000));
@@ -134,6 +180,33 @@ function startDayPhase(room) {
   room.dayPhase.autoEndTimer = setTimeout(() => {
     if (room.state === 'day') endGame(room);
   }, 5 * 60 * 1000);
+
+  // Bot auto-votes with staggered delays
+  const bots = room.players.filter(p => p.isBot);
+  bots.forEach((bot, i) => {
+    const delay = 3000 + i * 1500 + Math.random() * 2000;
+    setTimeout(() => {
+      if (room.state !== 'day') return;
+      if (room.dayPhase.votes[bot.id]) return;
+
+      const currentRole = room.currentCards[bot.id];
+      if (currentRole === 'bodyguard') {
+        const targetId = decideBotBodyguardProtect(room, bot.id);
+        room.dayPhase.bodyguardProtect = { protectorId: bot.id, targetId };
+      } else {
+        const targetId = decideBotVote(room, bot.id);
+        room.dayPhase.votes[bot.id] = targetId;
+      }
+
+      io.to(room.code).emit('vote_update', {
+        votes: room.dayPhase.votes,
+        bodyguardProtect: room.dayPhase.bodyguardProtect || null,
+        players: room.players.map(p => ({ id: p.id, name: p.name })),
+      });
+
+      checkAllVoted(room);
+    }, delay);
+  });
 }
 
 function sanitizeTokenClaims(tc, room) {
@@ -186,9 +259,22 @@ function endGame(room) {
     // Then send shoot request to each hunter (after phase_start so it doesn't get overwritten)
     setTimeout(() => {
       hunters.forEach(hunterId => {
-        io.to(hunterId).emit('hunter_shoot_request', {
-          otherPlayers: otherPlayers.filter(p => p.id !== hunterId),
-        });
+        const hunterPlayer = room.players.find(p => p.id === hunterId);
+        if (hunterPlayer?.isBot) {
+          // Bot hunter auto-shoots
+          setTimeout(() => {
+            if (!room.dayPhase.pendingHunters?.includes(hunterId)) return;
+            const targetId = decideBotHunterShoot(room, hunterId);
+            room.dayPhase.hunterTarget[hunterId] = targetId;
+            room.dayPhase.pendingHunters = room.dayPhase.pendingHunters.filter(id => id !== hunterId);
+            io.to(room.code).emit('hunter_shoot_update', { hunterId, hunterName: hunterPlayer.name });
+            if (room.dayPhase.pendingHunters.length === 0) finishGame(room);
+          }, 2000);
+        } else {
+          io.to(hunterId).emit('hunter_shoot_request', {
+            otherPlayers: otherPlayers.filter(p => p.id !== hunterId),
+          });
+        }
       });
     }, 100);
 
@@ -237,10 +323,59 @@ io.on('connection', socket => {
     socket.roomCode = room.code;
     cb({
       code: room.code,
-      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
     });
+  });
+
+  // ── Create simulation room ──
+  socket.on('create_simulation', ({ name, token, botCount, selectedRoles, gameMode }, cb) => {
+    if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
+    const count = Math.max(2, Math.min(9, parseInt(botCount) || 4));
+
+    const room = createRoom(socket.id, name.trim(), token);
+    room.isSimulation = true;
+    socket.join(room.code);
+    socket.roomCode = room.code;
+
+    addBotPlayers(room, count, generateBotId, generateBotName);
+
+    if (selectedRoles) room.settings.selectedRoles = selectedRoles;
+    if (gameMode) room.settings.gameMode = gameMode;
+
+    cb({
+      code: room.code,
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
+      settings: room.settings,
+      hostId: room.hostId,
+    });
+  });
+
+  // ── Add/remove bot in lobby ──
+  socket.on('add_bot', (_, cb) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id) return cb?.({ error: 'Không có quyền' });
+    if (room.state !== 'waiting') return cb?.({ error: 'Game đã bắt đầu' });
+    if (room.players.length >= 10) return cb?.({ error: 'Phòng đã đầy' });
+
+    const botIndex = room.players.filter(p => p.isBot).length;
+    addBotPlayers(room, 1, generateBotId, () => generateBotName(botIndex));
+    broadcastPlayerList(room);
+    cb?.({ ok: true });
+  });
+
+  socket.on('remove_bot', (_, cb) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id) return cb?.({ error: 'Không có quyền' });
+    if (room.state !== 'waiting') return cb?.({ error: 'Game đã bắt đầu' });
+
+    const lastBot = [...room.players].reverse().find(p => p.isBot);
+    if (!lastBot) return cb?.({ error: 'Không có bot nào' });
+
+    room.players = room.players.filter(p => p.id !== lastBot.id);
+    broadcastPlayerList(room);
+    cb?.({ ok: true });
   });
 
   // ── Join room ──
@@ -260,7 +395,7 @@ io.on('connection', socket => {
 
     cb({
       code: room.code,
-      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
     });
@@ -336,7 +471,7 @@ io.on('connection', socket => {
       ok: true,
       code: room.code,
       state: room.state,
-      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
       roleId,
@@ -386,8 +521,8 @@ io.on('connection', socket => {
       return cb?.({ error: e.message });
     }
 
-    // Send each player their private role
-    room.players.forEach(p => {
+    // Send each real player their private role (skip bots)
+    room.players.filter(p => !p.isBot).forEach(p => {
       io.to(p.id).emit('role_assigned', {
         roleId: room.originalCards[p.id],
         role: ROLES[room.originalCards[p.id]],
@@ -662,7 +797,7 @@ io.on('connection', socket => {
     room.dayPhase = null;
     room.results = null;
     io.to(room.code).emit('back_to_lobby', {
-      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost })),
+      players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
     });
