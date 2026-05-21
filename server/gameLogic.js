@@ -372,14 +372,16 @@ function determineWinners(room, eliminated) {
 
   const winners = [];
 
+  // Tanner wins independently — if Tanner is eliminated, ONLY Tanner wins (+ PI transformed to tanner)
+  // Other teams do NOT win when Tanner is eliminated
   if (eliminatedTanner) {
     eliminated.forEach(id => {
       if (currentCards[id] === 'tanner') winners.push(id);
     });
-    // PI who transformed to tanner also wins if the tanner wins
     Object.entries(room.piTransformed || {}).forEach(([pid, team]) => {
-      if (team === 'tanner' && eliminatedTanner) winners.push(pid);
+      if (team === 'tanner') winners.push(pid);
     });
+    return { winners: [...new Set(winners)] };
   }
 
   function getEffectiveTeam(pid) {

@@ -2,13 +2,13 @@ import { useState } from 'react';
 
 const RANKS = [
   { tier: 1, name: 'Iron', nameVi: 'Sắt', minPoints: 0, image: '1-iron.png' },
-  { tier: 2, name: 'Bronze', nameVi: 'Đồng', minPoints: 500, image: '2-bronze.png' },
-  { tier: 3, name: 'Silver', nameVi: 'Bạc', minPoints: 1000, image: '3-silver.png' },
-  { tier: 4, name: 'Gold', nameVi: 'Vàng', minPoints: 1500, image: '4-gold.png' },
-  { tier: 5, name: 'WhiteGold', nameVi: 'Bạch Kim', minPoints: 2000, image: '5-whitegold.png' },
-  { tier: 6, name: 'Diamond', nameVi: 'Kim Cương', minPoints: 2500, image: '6-diamond.png' },
-  { tier: 7, name: 'Elite', nameVi: 'Tinh Anh', minPoints: 3500, image: '7-elite.png' },
-  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu', minPoints: 5000, image: '8-challenger.png' },
+  { tier: 2, name: 'Bronze', nameVi: 'Đồng', minPoints: 50, image: '2-bronze.png' },
+  { tier: 3, name: 'Silver', nameVi: 'Bạc', minPoints: 100, image: '3-silver.png' },
+  { tier: 4, name: 'Gold', nameVi: 'Vàng', minPoints: 200, image: '4-gold.png' },
+  { tier: 5, name: 'WhiteGold', nameVi: 'Bạch Kim', minPoints: 400, image: '5-whitegold.png' },
+  { tier: 6, name: 'Diamond', nameVi: 'Kim Cương', minPoints: 700, image: '6-diamond.png' },
+  { tier: 7, name: 'Elite', nameVi: 'Tinh Anh', minPoints: 1000, image: '7-elite.png' },
+  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu', minPoints: 1500, image: '8-challenger.png' },
 ];
 
 const TIER_COLORS = {
@@ -73,7 +73,7 @@ function RanksTable({ currentRank, currentPoints }) {
       {RANKS.map(rank => {
         const isCurrent = currentRank?.tier === rank.tier;
         const nextRank = RANKS.find(r => r.tier === rank.tier + 1);
-        const maxPts = nextRank ? nextRank.minPoints - 1 : 5000;
+        const maxPts = nextRank ? nextRank.minPoints - 1 : 2000;
 
         return (
           <div
@@ -116,7 +116,7 @@ function RanksTable({ currentRank, currentPoints }) {
                     />
                   </div>
                   <div className="text-[10px] text-white/30 mt-0.5">
-                    {currentPoints} / {nextRank ? nextRank.minPoints : 5000} pts
+                    {currentPoints} / {nextRank ? nextRank.minPoints : 2000} pts
                   </div>
                 </div>
               )}
@@ -184,7 +184,7 @@ function ScoringExplainer() {
         <h3 className="font-bold text-moon-300 text-xs mb-1.5">Lưu ý</h3>
         <ul className="text-xs text-white/50 space-y-1">
           <li>• Điểm tối thiểu: 0 — không bao giờ bị âm</li>
-          <li>• Điểm tối đa: 5,000 (Challenger)</li>
+          <li>• Điểm tối đa: 2,000 (Challenger)</li>
           <li>• Bàn càng đông, thắng càng nhiều điểm</li>
           <li>• Thắng ít người = chia nhiều điểm hơn</li>
         </ul>

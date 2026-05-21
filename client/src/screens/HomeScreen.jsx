@@ -208,8 +208,8 @@ export default function HomeScreen({ onJoin, error, setError }) {
         </form>
       )}
 
-      <p className="text-white/30 text-sm mt-12 text-center relative z-10">
-        3–10 người · Không cần tài khoản
+      <p className="text-white/20 text-xs mt-12 text-center relative z-10">
+        Dự án phi lợi nhuận · Mọi bản quyền hình ảnh thuộc về Bezier Games
       </p>
     </div>
   );

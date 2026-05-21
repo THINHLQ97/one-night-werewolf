@@ -74,7 +74,7 @@ async function updateProfile(id, displayName, avatarUrl) {
 
 async function updatePoints(id, pointsDelta, won, roomCode, originalRole, finalRole) {
   await pool.query(
-    'UPDATE users SET points = LEAST(5000, GREATEST(0, points + $1)), games_played = games_played + 1, games_won = games_won + $2, updated_at = NOW() WHERE id = $3',
+    'UPDATE users SET points = LEAST(2000, GREATEST(0, points + $1)), games_played = games_played + 1, games_won = games_won + $2, updated_at = NOW() WHERE id = $3',
     [pointsDelta, won ? 1 : 0, id]
   );
   await pool.query(

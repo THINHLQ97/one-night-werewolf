@@ -1,16 +1,16 @@
-// Rank tiers: 1 (Iron) through 8 (Challenger), 500pt per tier, cap at 5000
+// Rank tiers: 1 (Iron) through 8 (Challenger), progressive gaps, cap at 2000
 const RANKS = [
   { tier: 1, name: 'Iron',       nameVi: 'Sắt',        minPoints: 0,    image: '1-iron.png',       frameScale: 1.5 },
-  { tier: 2, name: 'Bronze',     nameVi: 'Đồng',       minPoints: 500,  image: '2-bronze.png',     frameScale: 1.55 },
-  { tier: 3, name: 'Silver',     nameVi: 'Bạc',        minPoints: 1000, image: '3-silver.png',     frameScale: 1.65 },
-  { tier: 4, name: 'Gold',       nameVi: 'Vàng',       minPoints: 1500, image: '4-gold.png',       frameScale: 1.75 },
-  { tier: 5, name: 'WhiteGold',  nameVi: 'Bạch Kim',   minPoints: 2000, image: '5-whitegold.png',  frameScale: 1.9 },
-  { tier: 6, name: 'Diamond',    nameVi: 'Kim Cương',   minPoints: 2500, image: '6-diamond.png',    frameScale: 2.15 },
-  { tier: 7, name: 'Elite',      nameVi: 'Tinh Anh',   minPoints: 3500, image: '7-elite.png',      frameScale: 2.05 },
-  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu',  minPoints: 5000, image: '8-challenger.png', frameScale: 2.3 },
+  { tier: 2, name: 'Bronze',     nameVi: 'Đồng',       minPoints: 50,   image: '2-bronze.png',     frameScale: 1.55 },
+  { tier: 3, name: 'Silver',     nameVi: 'Bạc',        minPoints: 100,  image: '3-silver.png',     frameScale: 1.65 },
+  { tier: 4, name: 'Gold',       nameVi: 'Vàng',       minPoints: 200,  image: '4-gold.png',       frameScale: 1.75 },
+  { tier: 5, name: 'WhiteGold',  nameVi: 'Bạch Kim',   minPoints: 400,  image: '5-whitegold.png',  frameScale: 1.9 },
+  { tier: 6, name: 'Diamond',    nameVi: 'Kim Cương',   minPoints: 700,  image: '6-diamond.png',    frameScale: 2.15 },
+  { tier: 7, name: 'Elite',      nameVi: 'Tinh Anh',   minPoints: 1000, image: '7-elite.png',      frameScale: 2.05 },
+  { tier: 8, name: 'Challenger', nameVi: 'Thách Đấu',  minPoints: 1500, image: '8-challenger.png', frameScale: 2.3 },
 ];
 
-const MAX_POINTS = 5000;
+const MAX_POINTS = 2000;
 const LOSS_PER_PLAYER = 5;
 
 // Calculate points for all players based on game outcome
