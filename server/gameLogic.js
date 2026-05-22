@@ -403,11 +403,29 @@ function determineWinners(room, eliminated) {
       });
     }
   } else {
+    // No werewolves among players (all wolves in center)
+    const minionInGame = players.some(p => getEffectiveTeam(p.id) === 'werewolf');
+    const eliminatedMinion = eliminated.some(id => getEffectiveTeam(id) === 'werewolf');
+
     if (eliminated.length === 0) {
+      if (minionInGame) {
+        // Minion exists but wasn't found → werewolf team wins
+        players.forEach(p => {
+          if (getEffectiveTeam(p.id) === 'werewolf') winners.push(p.id);
+        });
+      } else {
+        // No wolves, no minion, no one eliminated → everyone wins (except tanner)
+        players.forEach(p => {
+          if (getEffectiveTeam(p.id) !== 'tanner') winners.push(p.id);
+        });
+      }
+    } else if (eliminatedMinion) {
+      // Villagers found and eliminated the Minion → village wins
       players.forEach(p => {
-        if (getEffectiveTeam(p.id) !== 'tanner') winners.push(p.id);
+        if (getEffectiveTeam(p.id) === 'village') winners.push(p.id);
       });
     }
+    // else: no wolves, no minion eliminated, but someone died → no one wins
   }
 
   return { winners: [...new Set(winners)] };
