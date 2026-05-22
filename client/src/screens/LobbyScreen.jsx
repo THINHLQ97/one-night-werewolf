@@ -340,7 +340,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                     className="flex items-center gap-2 flex-1 text-left"
                     onClick={() => setExpandedRole(isExpanded ? null : role.id)}
                   >
-                    <RoleIcon roleId={role.id} size={28} />
+                    <RoleIcon roleId={role.id} size={24} />
                     <span className={`text-sm font-medium ${TEAM_COLOR[role.team]}`}>{role.name}</span>
                     <span className={`text-white/30 text-[10px] transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
                   </button>

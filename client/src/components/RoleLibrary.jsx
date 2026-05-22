@@ -250,7 +250,7 @@ function RoleList({ roles, onSelect }) {
                   onClick={() => onSelect(role.id)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all active:scale-[0.98] ${tc.bg} hover:brightness-125`}
                 >
-                  <RoleIcon roleId={role.id} size={44} />
+                  <RoleIcon roleId={role.id} size={36} />
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm">{role.nameVi}</span>
@@ -283,14 +283,14 @@ function RoleDetail({ role, onBack }) {
     <div className="flex-1 overflow-y-auto px-4 pb-6">
       <button onClick={onBack} className="text-moon-400 text-sm mb-3 hover:text-moon-300">← Quay lại</button>
 
-      {/* Role card */}
-      <div className={`p-4 rounded-2xl border mb-4 ${tc.bg}`}>
-        <div className="flex items-center gap-4 mb-3">
-          <RoleIcon roleId={role.id} size={72} />
-          <div>
+      {/* Role card — full portrait */}
+      <div className={`rounded-2xl border mb-4 ${tc.bg} overflow-hidden`}>
+        <div className="flex flex-col items-center p-4">
+          <RoleIcon roleId={role.id} size={140} className="shadow-lg" />
+          <div className="text-center mt-3">
             <h3 className="text-xl font-bold text-white">{role.nameVi}</h3>
             <span className="text-white/40 text-sm">{role.name}</span>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center justify-center gap-2 mt-1">
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tc.badge}`}>{role.teamLabel}</span>
               {role.nightOrder && <span className="text-white/30 text-[10px]">Đêm thứ {role.nightOrder}</span>}
             </div>

@@ -1,119 +1,139 @@
+// ─── Audio system ─────────────────────────────────────────────────────────────
+// MP3-based BGM & effects + synthesized micro-SFX
+
 let ctx = null;
-let bgmNodes = [];
-let bgmGain = null;
+let initialized = false;
+let currentBgm = null;
+let fadeTimer = null;
+
+const audioCache = {};
+
+function getAudio(src) {
+  if (!audioCache[src]) {
+    audioCache[src] = new Audio(src);
+    audioCache[src].preload = 'auto';
+  }
+  return audioCache[src];
+}
 
 export function initAudio() {
-  if (ctx) return;
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
-  bgmGain = ctx.createGain();
-  bgmGain.connect(ctx.destination);
-  bgmGain.gain.value = 0;
+  if (initialized) return;
+  initialized = true;
+  try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+  // Preload all MP3 files
+  ['/audio/night-effect.mp3', '/audio/morning-effect.mp3',
+   '/audio/night-bgm.mp3', '/audio/day-bgm.mp3',
+   '/audio/win-effect.mp3', '/audio/lose-effect.mp3'].forEach(src => getAudio(src));
 }
 
 export function resumeAudio() {
   if (ctx?.state === 'suspended') ctx.resume();
+  if (!initialized) initAudio();
+}
+
+// ─── Fade helpers ─────────────────────────────────────────────────────────────
+
+function fadeOut(audio, duration = 1500) {
+  return new Promise(resolve => {
+    if (!audio || audio.paused) { resolve(); return; }
+    clearInterval(fadeTimer);
+    const startVol = audio.volume;
+    const steps = Math.max(1, duration / 50);
+    const dec = startVol / steps;
+    fadeTimer = setInterval(() => {
+      if (audio.volume > dec + 0.001) {
+        audio.volume = Math.max(0, audio.volume - dec);
+      } else {
+        clearInterval(fadeTimer);
+        fadeTimer = null;
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = startVol;
+        resolve();
+      }
+    }, 50);
+  });
+}
+
+function fadeIn(audio, targetVol, duration = 2000) {
+  audio.volume = 0;
+  audio.play().catch(() => {});
+  const steps = Math.max(1, duration / 50);
+  const inc = targetVol / steps;
+  const timer = setInterval(() => {
+    if (audio.volume < targetVol - inc) {
+      audio.volume = Math.min(targetVol, audio.volume + inc);
+    } else {
+      audio.volume = targetVol;
+      clearInterval(timer);
+    }
+  }, 50);
+}
+
+function playEffect(src, volume = 0.5) {
+  const audio = getAudio(src);
+  audio.currentTime = 0;
+  audio.volume = volume;
+  audio.play().catch(() => {});
 }
 
 // ─── BGM ──────────────────────────────────────────────────────────────────────
 
-function stopAllBGM() {
-  bgmGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
-  const nodes = [...bgmNodes];
-  bgmNodes = [];
-  setTimeout(() => nodes.forEach(n => { try { n.stop(); } catch {} }), 2000);
-}
-
 export function startNightBGM() {
-  if (!ctx) initAudio();
-  stopAllBGM();
-
-  // Deep bass drone
-  const osc1 = ctx.createOscillator();
-  osc1.type = 'sine';
-  osc1.frequency.value = 55;
-  const g1 = ctx.createGain();
-  g1.gain.value = 0.12;
-  osc1.connect(g1);
-  g1.connect(bgmGain);
-  osc1.start();
-  bgmNodes.push(osc1);
-
-  // Eerie pad
-  const osc2 = ctx.createOscillator();
-  osc2.type = 'triangle';
-  osc2.frequency.value = 82.4;
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 150;
-  filter.Q.value = 5;
-  const g2 = ctx.createGain();
-  g2.gain.value = 0.06;
-  osc2.connect(filter);
-  filter.connect(g2);
-  g2.connect(bgmGain);
-  osc2.start();
-  bgmNodes.push(osc2);
-
-  // Slow LFO on filter
-  const lfo = ctx.createOscillator();
-  lfo.type = 'sine';
-  lfo.frequency.value = 0.1;
-  const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 80;
-  lfo.connect(lfoGain);
-  lfoGain.connect(filter.frequency);
-  lfo.start();
-  bgmNodes.push(lfo);
-
-  // Wind noise
-  const bufferSize = ctx.sampleRate * 2;
-  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = noiseBuffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
-  const noise = ctx.createBufferSource();
-  noise.buffer = noiseBuffer;
-  noise.loop = true;
-  const noiseFilter = ctx.createBiquadFilter();
-  noiseFilter.type = 'bandpass';
-  noiseFilter.frequency.value = 300;
-  noiseFilter.Q.value = 0.5;
-  const noiseGain = ctx.createGain();
-  noiseGain.gain.value = 0.025;
-  noise.connect(noiseFilter);
-  noiseFilter.connect(noiseGain);
-  noiseGain.connect(bgmGain);
-  noise.start();
-  bgmNodes.push(noise);
-
-  bgmGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 3);
+  if (!initialized) initAudio();
+  const start = () => {
+    playEffect('/audio/night-effect.mp3', 0.6);
+    setTimeout(() => {
+      const bgm = getAudio('/audio/night-bgm.mp3');
+      bgm.loop = true;
+      currentBgm = bgm;
+      fadeIn(bgm, 0.25, 2000);
+    }, 1000);
+  };
+  if (currentBgm && !currentBgm.paused) {
+    fadeOut(currentBgm, 1000).then(start);
+  } else {
+    start();
+  }
 }
 
 export function startDayBGM() {
-  if (!ctx) initAudio();
-  stopAllBGM();
-
-  // Brighter major chord
-  [261.6, 329.6, 392.0].forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    const g = ctx.createGain();
-    g.gain.value = i === 0 ? 0.04 : 0.025;
-    osc.connect(g);
-    g.connect(bgmGain);
-    osc.start();
-    bgmNodes.push(osc);
-  });
-
-  bgmGain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 2);
+  if (!initialized) initAudio();
+  const start = () => {
+    playEffect('/audio/morning-effect.mp3', 0.6);
+    setTimeout(() => {
+      const bgm = getAudio('/audio/day-bgm.mp3');
+      bgm.loop = true;
+      currentBgm = bgm;
+      fadeIn(bgm, 0.25, 2000);
+    }, 1000);
+  };
+  if (currentBgm && !currentBgm.paused) {
+    fadeOut(currentBgm, 1000).then(start);
+  } else {
+    start();
+  }
 }
 
 export function stopBGM() {
-  if (!ctx) return;
-  stopAllBGM();
+  if (currentBgm && !currentBgm.paused) {
+    fadeOut(currentBgm, 1500).then(() => { currentBgm = null; });
+  } else {
+    currentBgm = null;
+  }
 }
 
-// ─── SFX ──────────────────────────────────────────────────────────────────────
+// ─── SFX (MP3-based) ─────────────────────────────────────────────────────────
+
+export function sfxWin() {
+  playEffect('/audio/win-effect.mp3', 0.5);
+}
+
+export function sfxLose() {
+  playEffect('/audio/lose-effect.mp3', 0.5);
+}
+
+// ─── SFX (synthesized — small UI sounds) ──────────────────────────────────────
 
 function playTone(freq, duration, type = 'sine', vol = 0.15) {
   if (!ctx) return;
@@ -145,6 +165,7 @@ export function sfxVote() {
 }
 
 export function sfxGameOver() {
+  // Legacy — prefer sfxWin/sfxLose
   [523, 659, 784, 1047].forEach((f, i) => {
     setTimeout(() => playTone(f, 0.3, 'sine', 0.1), i * 150);
   });
@@ -170,4 +191,3 @@ export function sfxWolfHowl() {
   osc.start();
   osc.stop(ctx.currentTime + 2);
 }
-

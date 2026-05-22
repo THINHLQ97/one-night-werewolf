@@ -1,37 +1,58 @@
-const ROLE_IMAGES = {
-  werewolf: 'https://bizweb.dktcdn.net/100/316/286/files/werewolf.jpg?v=1671683859160',
-  minion: 'https://bizweb.dktcdn.net/100/316/286/files/minion.jpg?v=1671683858697',
-  seer: 'https://bizweb.dktcdn.net/100/316/286/files/seer.jpg?v=1671683857717',
-  robber: 'https://bizweb.dktcdn.net/100/316/286/files/robber.jpg?v=1671683857100',
-  troublemaker: 'https://bizweb.dktcdn.net/100/316/286/files/troublemaker.jpg?v=1671683856507',
-  drunk: 'https://bizweb.dktcdn.net/100/316/286/files/drunk.jpg?v=1671683856133',
-  insomniac: 'https://bizweb.dktcdn.net/100/316/286/files/insomniac.jpg?v=1671683855693',
-  villager: 'https://bizweb.dktcdn.net/100/316/286/files/villager.jpg?v=1671683855300',
-  hunter: 'https://bizweb.dktcdn.net/100/316/286/files/hunter.jpg?v=1671683853690',
-  tanner: 'https://bizweb.dktcdn.net/100/316/286/files/tanner.jpg?v=1671683854923',
-  mason: 'https://bizweb.dktcdn.net/100/316/286/files/mason.jpg',
-  sentinel: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak2.jpg',
-  alphawolf: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak1.jpg',
-  mysticwolf: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak3.jpg',
-  dreamwolf: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak9.jpg',
-  apprenticeseer: 'https://file.hstatic.net/1000019936/file/1_dac753b4164d43ff82fb6a75c4de17eb_grande.jpg',
-  paranormalinvestigator: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak4.jpg',
-  witch: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak5.jpg',
-  villageidiot: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak6.jpg',
-  revealer: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak7.jpg',
-  bodyguard: 'https://www.ultraboardgames.com/one-night-ultimate-werewolf/gfx/daybreak9_.jpg',
+// Map role IDs to local card images
+const CARD_IMAGES = {
+  werewolf: '/images/character card/Werewolf.webp',
+  minion: '/images/character card/Minion.webp',
+  seer: '/images/character card/Seer-0.webp',
+  robber: '/images/character card/Robber.webp',
+  troublemaker: '/images/character card/Troublemaker.webp',
+  drunk: '/images/character card/Drunk.webp',
+  insomniac: '/images/character card/Insomniac.webp',
+  villager: '/images/character card/Villager.webp',
+  hunter: '/images/character card/Hunter.webp',
+  tanner: '/images/character card/Tanner.webp',
+  mason: '/images/character card/Mason.webp',
+  sentinel: '/images/character card/Sentinel.webp',
+  alphawolf: '/images/character card/Alpha_wolf.webp',
+  mysticwolf: '/images/character card/Mystic_wolf.webp',
+  dreamwolf: '/images/character card/Dreamwolf.webp',
+  apprenticeseer: '/images/character card/Apprentice_seer.webp',
+  paranormalinvestigator: '/images/character card/Paranormal_investigator.webp',
+  witch: '/images/character card/Witch.webp',
+  villageidiot: '/images/character card/Village_idiot.webp',
+  revealer: '/images/character card/Revealer.webp',
+  bodyguard: '/images/character card/Bodyguard.webp',
+  doppelganger: '/images/character card/Doppelganger.webp',
 };
 
+export const CARD_BACK = '/images/Card-back.webp';
+
+export { CARD_IMAGES };
+
+/**
+ * Renders a role card image. Portrait aspect ratio (~3:4).
+ * @param {string} roleId - Role identifier
+ * @param {number} size - Width in px (height auto = size * 1.4)
+ * @param {string} className - Additional CSS classes
+ */
 export default function RoleIcon({ roleId, size = 80, className = '' }) {
-  const src = ROLE_IMAGES[roleId];
-  if (!src) return <div className={`text-4xl ${className}`}>🃏</div>;
+  const src = CARD_IMAGES[roleId];
+  if (!src) {
+    return (
+      <div
+        className={`flex items-center justify-center bg-night-700 rounded-lg text-2xl ${className}`}
+        style={{ width: size, height: Math.round(size * 1.4) }}
+      >
+        🃏
+      </div>
+    );
+  }
 
   return (
     <img
       src={src}
       alt={roleId}
-      className={`rounded-full object-cover ${className}`}
-      style={{ width: size, height: size }}
+      className={`rounded-lg object-cover ${className}`}
+      style={{ width: size, height: Math.round(size * 1.4) }}
       draggable={false}
     />
   );

@@ -84,6 +84,12 @@
   animation: wolfPulse 2s ease-in-out infinite;
 }
 
+.player-mason > div:first-child {
+  border-color: rgba(39, 174, 96, 0.7) !important;
+  box-shadow: 0 0 12px rgba(39, 174, 96, 0.4);
+  animation: masonPulse 2s ease-in-out infinite;
+}
+
 .player-selected > div:first-child {
   border-color: rgba(196, 168, 107, 0.9) !important;
   box-shadow: 0 0 16px rgba(196, 168, 107, 0.5);
@@ -175,6 +181,11 @@
 @keyframes wolfPulse {
   0%, 100% { box-shadow: 0 0 8px rgba(231, 76, 60, 0.3); }
   50%      { box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); }
+}
+
+@keyframes masonPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(39, 174, 96, 0.3); }
+  50%      { box-shadow: 0 0 20px rgba(39, 174, 96, 0.6); }
 }
 
 @keyframes cardReveal {

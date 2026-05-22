@@ -241,6 +241,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         revealedPlayers={roleHidden ? {} : revealedPlayers}
         revealedCenter={roleHidden ? {} : revealedCenter}
         knownWerewolves={roleHidden ? [] : knownWerewolves}
+        knownMasons={roleHidden ? [] : (knownMasons || [])}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable={isMyTurn && !submitted ? actionMode : null}

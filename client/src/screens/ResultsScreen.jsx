@@ -24,6 +24,16 @@ const TEAM_OF = {
   tanner: 'tanner',
 };
 
+// Result sign images for each faction win/lose
+const RESULT_SIGNS = {
+  village_win: '/images/result sign/villages-win.webp',
+  village_lose: '/images/result sign/villages-lose.webp',
+  werewolf_win: '/images/result sign/werewolves-win.webp',
+  werewolf_lose: '/images/result sign/werewolves-lose.webp',
+  tanner_win: '/images/result sign/tanner-win.webp',
+  tanner_lose: '/images/result sign/tanner-lose.webp',
+};
+
 export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   const [libraryOpen, setLibraryOpen] = useState(false);
 
@@ -38,42 +48,42 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   const winningTeams = new Set(winners.map(id => TEAM_OF[finalCards[id]]));
 
-  let teamLabel, teamColor, teamIcon;
+  // Determine which sign to show
+  let signSrc;
   if (winners.length === 0) {
-    teamLabel = 'Không ai thắng';
-    teamColor = 'text-white/60';
-    teamIcon = null;
+    // No one wins — show village lose sign
+    signSrc = isWinner ? null : RESULT_SIGNS.village_lose;
   } else if (winningTeams.has('tanner') && winningTeams.size === 1) {
-    teamLabel = 'Tanner Wins!';
-    teamColor = 'text-purple-400';
-    teamIcon = <Icon name="skull" size={28} className="text-purple-400" />;
+    signSrc = isWinner ? RESULT_SIGNS.tanner_win : RESULT_SIGNS.tanner_lose;
   } else if (winningTeams.has('village')) {
-    teamLabel = winningTeams.has('tanner') ? 'Village & Tanner Win!' : 'Village Wins!';
-    teamColor = 'text-village-400';
-    teamIcon = <Icon name="shield" size={28} className="text-village-400" />;
+    signSrc = isWinner ? RESULT_SIGNS.village_win : RESULT_SIGNS.village_lose;
   } else {
-    teamLabel = 'Werewolves Win!';
-    teamColor = 'text-wolf-400';
-    teamIcon = null;
+    signSrc = isWinner ? RESULT_SIGNS.werewolf_win : RESULT_SIGNS.werewolf_lose;
   }
 
   return (
     <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in relative z-10">
-      {/* Win banner */}
-      <div className="text-center pt-6 sm:pt-8 pb-4 sm:pb-6 relative">
-        <RoleLibraryButton onClick={() => setLibraryOpen(true)} className="absolute top-6 right-0" />
-        <div className="mb-3">
-          {isWinner
-            ? <Icon name="trophy" size={52} className="text-yellow-400 mx-auto" />
-            : <Icon name="skull" size={52} className="text-white/30 mx-auto" />
-          }
-        </div>
-        <h2 className={`text-3xl font-bold flex items-center justify-center gap-2 ${teamColor}`}>
-          {teamIcon} {teamLabel}
-        </h2>
-        <p className="text-white/50 mt-2">
+      {/* Win/Lose banner sign */}
+      <div className="text-center pt-4 sm:pt-6 pb-4 sm:pb-6 relative">
+        <RoleLibraryButton onClick={() => setLibraryOpen(true)} className="absolute top-4 right-0" />
+
+        {signSrc ? (
+          <img
+            src={signSrc}
+            alt={isWinner ? 'Victory' : 'Defeat'}
+            className="mx-auto max-w-[320px] w-full drop-shadow-2xl"
+            draggable={false}
+          />
+        ) : (
+          <div className="py-6">
+            <p className="text-2xl font-bold text-white/60">Không ai thắng</p>
+          </div>
+        )}
+
+        <p className="text-white/50 mt-2 text-sm">
           {isWinner ? 'Bạn nằm trong phe thắng!' : 'Bạn thua lần này...'}
         </p>
+
         {rankUpdates[myId] && (
           <div className="mt-2 flex items-center justify-center gap-2">
             <RankBadge rank={rankUpdates[myId].rank} size={24} />
@@ -135,7 +145,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
                       <div className="text-white/30 text-xs">Ban đầu: {ROLE_NAMES[orig]}</div>
                     )}
                   </div>
-                  <RoleIcon roleId={final} size={32} />
+                  <RoleIcon roleId={final} size={28} />
                 </div>
               </div>
             );
@@ -219,104 +229,62 @@ function NightLogEntry({ entry, playerMap }) {
   function describeAction() {
     switch (role) {
       case 'werewolf':
-        if (result.peeked) return `peeked at ${CENTER_LABEL[result.peeked.slot] || result.peeked.slot} → ${ROLE_NAMES[result.peeked.role] || '?'}`;
+        if (result.peeked) return `peeked at ${CENTER_LABEL[result.peeked.slot] || result.peeked.slot} -> ${ROLE_NAMES[result.peeked.role] || '?'}`;
         if (result.werewolves) return `saw fellow wolves`;
         return 'woke up';
-
-      case 'minion':
-        return 'saw the werewolves';
-
-      case 'mason':
-        return 'saw fellow masons';
-
+      case 'minion': return 'saw the werewolves';
+      case 'mason': return 'saw fellow masons';
       case 'seer':
-        if (result.seen?.type === 'player') return `saw ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        if (result.seen?.type === 'player') return `saw ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}`;
         if (result.seen?.type === 'center') {
           const slots = result.seen.slots || [];
           return `saw center: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
         }
         return 'looked';
-
       case 'apprenticeseer':
-        if (result.seen?.slots) {
-          return `saw center: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
-        }
+        if (result.seen?.slots) return `saw center: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
         return 'looked at center';
-
-      case 'robber':
-        if (targetName || action.targetPlayer) {
-          const name = targetName || playerMap[action.targetPlayer] || '?';
-          return `robbed ${name}` + (result.newRole ? ` → became ${ROLE_NAMES[result.newRole] || '?'}` : '');
-        }
-        return 'did nothing';
-
-      case 'troublemaker':
-        if (target1Name || target2Name || action.target1 || action.target2) {
-          const n1 = target1Name || playerMap[action.target1] || '?';
-          const n2 = target2Name || playerMap[action.target2] || '?';
-          return `swapped ${n1} ↔ ${n2}`;
-        }
-        return 'did nothing';
-
+      case 'robber': {
+        const name = targetName || playerMap[action.targetPlayer] || '?';
+        return action.targetPlayer ? `robbed ${name}${result.newRole ? ` -> became ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'did nothing';
+      }
+      case 'troublemaker': {
+        const n1 = target1Name || playerMap[action.target1] || '?';
+        const n2 = target2Name || playerMap[action.target2] || '?';
+        return (action.target1 && action.target2) ? `swapped ${n1} <-> ${n2}` : 'did nothing';
+      }
       case 'drunk':
-        if (action.centerSlot) return `swapped with ${CENTER_LABEL[action.centerSlot] || action.centerSlot}`;
-        return 'did nothing';
-
+        return action.centerSlot ? `swapped with ${CENTER_LABEL[action.centerSlot] || action.centerSlot}` : 'did nothing';
       case 'insomniac':
-        if (result.currentRole) return `woke up as ${ROLE_NAMES[result.currentRole] || '?'}`;
-        return 'checked role';
-
+        return result.currentRole ? `woke up as ${ROLE_NAMES[result.currentRole] || '?'}` : 'checked role';
       case 'sentinel':
-        if (action.targetPlayer) return `shielded ${targetName || playerMap[action.targetPlayer] || '?'}`;
-        return 'did nothing';
-
-      case 'alphawolf':
-        if (action.targetPlayer) {
-          const name = targetName || playerMap[action.targetPlayer] || '?';
-          return result.blocked ? `tried to turn ${name} (blocked by shield)` : `turned ${name} into a werewolf`;
-        }
-        return 'did nothing';
-
+        return action.targetPlayer ? `shielded ${targetName || playerMap[action.targetPlayer] || '?'}` : 'did nothing';
+      case 'alphawolf': {
+        const name = targetName || playerMap[action.targetPlayer] || '?';
+        return action.targetPlayer ? (result.blocked ? `tried to turn ${name} (blocked)` : `turned ${name} into a werewolf`) : 'did nothing';
+      }
       case 'mysticwolf':
-        if (result.seen) return `saw ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
-        return 'looked';
-
+        return result.seen ? `saw ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}` : 'looked';
       case 'paranormalinvestigator':
-        if (result.seen) return `investigated ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
-        return 'investigated';
-
+        return result.seen ? `investigated ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}` : 'investigated';
       case 'witch':
-        if (result.seen && action.swap && action.targetPlayer) {
-          const name = targetName || playerMap[action.targetPlayer] || '?';
-          return `saw ${CENTER_LABEL[action.centerSlot] || '?'}=${ROLE_NAMES[result.seen.role] || '?'}, swapped it with ${name}`;
-        }
-        if (result.seen) return `saw ${CENTER_LABEL[action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'} (no swap)`;
+        if (result.seen && action.swap && action.targetPlayer) return `saw ${CENTER_LABEL[action.centerSlot] || '?'}=${ROLE_NAMES[result.seen.role] || '?'}, swapped with ${targetName || playerMap[action.targetPlayer] || '?'}`;
+        if (result.seen) return `saw ${CENTER_LABEL[action.centerSlot] || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'} (no swap)`;
         return 'looked at center';
-
       case 'revealer':
-        if (result.revealed && result.targetPlayer) {
-          return `revealed ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
-        }
-        if (result.blocked) return `tried to reveal ${targetName || '?'} (wolf/tanner — hidden)`;
+        if (result.revealed && result.targetPlayer) return `revealed ${targetName || playerMap[result.targetPlayer] || '?'} -> ${ROLE_NAMES[result.role] || '?'}`;
+        if (result.blocked) return `tried to reveal ${targetName || '?'} (wolf/tanner - hidden)`;
         return 'did nothing';
-
-      case 'villageidiot':
-        return 'shifted all cards left';
-
-      case 'bodyguard':
-        return 'woke up';
-
-      case 'dreamwolf':
-        return 'stayed asleep';
-
-      default:
-        return 'woke up';
+      case 'villageidiot': return 'shifted all cards';
+      case 'bodyguard': return 'woke up';
+      case 'dreamwolf': return 'stayed asleep';
+      default: return 'woke up';
     }
   }
 
   return (
     <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03]">
-      <RoleIcon roleId={role} size={18} className="flex-shrink-0 mt-0.5" />
+      <RoleIcon roleId={role} size={16} className="flex-shrink-0 mt-0.5" />
       <div className="min-w-0">
         <span className="text-white/70 text-xs font-medium">{playerName}</span>
         <span className="text-white/30 text-xs"> ({roleName})</span>

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import RoleIcon from './RoleIcon';
+import { CARD_IMAGES, CARD_BACK } from './RoleIcon';
 
 const CARD_ROLES = [
   'werewolf', 'seer', 'robber', 'troublemaker', 'minion',
@@ -7,14 +7,6 @@ const CARD_ROLES = [
   'mason', 'witch', 'alphawolf', 'mysticwolf', 'revealer',
   'sentinel', 'paranormalinvestigator', 'bodyguard',
 ];
-
-const ROLE_NAMES = {
-  werewolf: 'Werewolf', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
-  minion: 'Minion', drunk: 'Drunk', insomniac: 'Insomniac', hunter: 'Hunter',
-  tanner: 'Tanner', villager: 'Villager', mason: 'Mason', witch: 'Witch',
-  alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', revealer: 'Revealer',
-  sentinel: 'Sentinel', paranormalinvestigator: 'P.I.', bodyguard: 'Bodyguard',
-};
 
 function seededRandom(seed) {
   let s = seed;
@@ -66,13 +58,15 @@ export default function FallingCards({ count = 12 }) {
             }}
           >
             <div className="falling-card-front">
-              <div className="falling-card-face">
-                <RoleIcon roleId={card.role} size={32} />
-                <span className="falling-card-label">{ROLE_NAMES[card.role]}</span>
-              </div>
+              <img
+                src={CARD_IMAGES[card.role]}
+                alt={card.role}
+                className="w-full h-full object-cover rounded-[8px]"
+                draggable={false}
+              />
             </div>
             <div className="falling-card-back">
-              <img src="/images/card-back.png" alt="" draggable={false} />
+              <img src={CARD_BACK} alt="" draggable={false} />
             </div>
           </div>
         </div>

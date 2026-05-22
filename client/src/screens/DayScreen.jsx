@@ -97,6 +97,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         revealedPlayers={roleHidden ? {} : revealedPlayers}
         revealedCenter={roleHidden ? {} : revealedCenter}
         knownWerewolves={roleHidden ? [] : knownWerewolves}
+        knownMasons={roleHidden ? [] : knownMasons}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable="player"

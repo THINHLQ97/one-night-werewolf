@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import RoleIcon from './RoleIcon';
+import RoleIcon, { CARD_BACK } from './RoleIcon';
 import { RANK_BORDER_GRADIENTS } from './RankBadge';
 
 const ROLE_EMOJI = {
@@ -38,6 +38,7 @@ export default function GameTable({
   revealedPlayers = {},
   revealedCenter = {},
   knownWerewolves = [],
+  knownMasons = [],
   swappedPairs = [],
   myCurrentRole = null,
   selectable = null,
@@ -121,7 +122,7 @@ export default function GameTable({
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full relative overflow-hidden rounded-[6px]">
-                      <img src="/images/card-back.png" alt="card back" className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" />
                       <span className={`relative text-[8px] mt-auto mb-0.5 font-bold ${isWolf ? 'text-wolf-400' : 'text-white/60'}`}>{isWolf ? '🐺 Alpha' : ''}</span>
                     </div>
                   )}
@@ -142,6 +143,7 @@ export default function GameTable({
         const isMe = p.id === myId;
         const isRevealed = revealedPlayers[p.id];
         const isWolf = knownWerewolves.includes(p.id);
+        const isMason = knownMasons.includes(p.id);
         const isSelected = selected.includes(p.id);
         const isClickable = (selectable === 'player' || selectable === 'both') && p.id !== myId;
         const isEliminated = eliminated.includes(p.id);
@@ -161,6 +163,7 @@ export default function GameTable({
               className={`player-node transition-all duration-300
                 ${isMe ? 'player-me' : ''}
                 ${isWolf ? 'player-wolf' : ''}
+                ${isMason ? 'player-mason' : ''}
                 ${isSelected ? 'player-selected' : ''}
                 ${isClickable ? 'player-clickable' : ''}
                 ${isEliminated ? 'player-eliminated' : ''}
@@ -210,6 +213,11 @@ export default function GameTable({
                 {/* Wolf indicator */}
                 {isWolf && !isRevealed && (
                   <span className="absolute -top-1 -right-1 text-xs">🐺</span>
+                )}
+
+                {/* Mason indicator */}
+                {isMason && !isRevealed && (
+                  <span className="absolute -top-1 -left-1 text-xs">🤝</span>
                 )}
 
                 {/* Shield indicator */}

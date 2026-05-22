@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import socket, { playerToken } from './socket';
-import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxGameOver } from './audio';
+import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxWin, sfxLose } from './audio';
 import { useAuth } from './contexts/AuthContext';
 import Icon from './components/Icon';
 import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
@@ -293,7 +293,8 @@ export default function App() {
       setResults({ ...results, players: mergedPlayers, nightLog: nightLog || [], rankUpdates: rankUpdates || {} });
       setScreen('results');
       stopBGM();
-      sfxGameOver();
+      const isWinner = results.winners?.includes(socket.id);
+      setTimeout(() => { if (isWinner) sfxWin(); else sfxLose(); }, 1500);
 
       const myRankUpdate = rankUpdates?.[socket.id];
       if (myRankUpdate?.rankUp) {

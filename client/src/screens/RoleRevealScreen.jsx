@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import RoleIcon from '../components/RoleIcon';
+import RoleIcon, { CARD_BACK } from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 
 const TEAM_STYLE = {
-  werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Werewolf Team' },
-  village:  { bg: 'bg-village-500/20 border-village-500/40', text: 'text-village-400', label: 'Village Team' },
-  tanner:   { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', label: 'Solo' },
+  werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Phe Sói', glow: 'shadow-[0_0_30px_rgba(231,76,60,0.3)]' },
+  village:  { bg: 'bg-village-500/20 border-village-500/40', text: 'text-village-400', label: 'Phe Dân', glow: 'shadow-[0_0_30px_rgba(39,174,96,0.3)]' },
+  tanner:   { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', label: 'Phe Riêng', glow: 'shadow-[0_0_30px_rgba(142,68,173,0.3)]' },
 };
 
 export default function RoleRevealScreen({ myRole }) {
@@ -48,34 +48,42 @@ export default function RoleRevealScreen({ myRole }) {
       </div>
 
       {!revealed ? (
+        /* Card back — tap to flip */
         <button
           onClick={() => setRevealed(true)}
-          className="w-48 h-64 rounded-2xl border-2 border-moon-400/40 overflow-hidden relative hover:border-moon-400 transition-all active:scale-95 cursor-pointer group"
+          className="rounded-2xl border-2 border-moon-400/40 overflow-hidden relative hover:border-moon-400 transition-all active:scale-95 cursor-pointer group shadow-lg"
+          style={{ width: 180, height: 252 }}
         >
-          <img src="/images/card-back.png" alt="card back" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
           <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
             <span className="text-moon-300 font-semibold text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm group-hover:bg-black/70 transition-colors">Lật bài</span>
           </div>
         </button>
       ) : roleHidden ? (
-        <div className="w-48 h-64 rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4">
+        <div className="rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4" style={{ width: 180, height: 252 }}>
           <Icon name="eyeOff" size={48} className="text-white/30" />
           <span className="text-white/40 font-semibold text-sm">Vai đã ẩn</span>
         </div>
       ) : (
-        <div className={`w-64 rounded-2xl border-2 ${style.bg} p-8 text-center fade-in`}>
-          <div className="flex justify-center mb-4">
-            <RoleIcon roleId={myRole.roleId} size={100} />
+        /* Revealed: full card on top + info below */
+        <div className="flex flex-col items-center fade-in">
+          {/* Card portrait */}
+          <div className={`rounded-2xl overflow-hidden border-2 ${style.bg} ${style.glow}`} style={{ width: 180, height: 252 }}>
+            <RoleIcon roleId={myRole.roleId} size={180} className="!rounded-xl" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{myRole.name}</h3>
-          <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-white/10 ${style.text}`}>
-            {style.label}
-          </span>
-          <p className="text-white/70 text-sm mt-4 leading-relaxed">{myRole.description}</p>
+
+          {/* Role info below card */}
+          <div className="mt-4 text-center max-w-xs">
+            <h3 className="text-2xl font-bold text-white mb-1">{myRole.name}</h3>
+            <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-white/10 ${style.text}`}>
+              {style.label}
+            </span>
+            <p className="text-white/60 text-sm mt-3 leading-relaxed">{myRole.description}</p>
+          </div>
         </div>
       )}
 
-      <p className="text-white/30 text-sm mt-10 text-center max-w-xs">
+      <p className="text-white/30 text-sm mt-8 text-center max-w-xs">
         Đêm sẽ bắt đầu sau 15 giây. Hãy nhớ vai của bạn và đừng tiết lộ cho người khác!
       </p>
 
