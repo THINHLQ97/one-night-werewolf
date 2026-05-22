@@ -52,7 +52,7 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
         </div>
       );
     }
-    // Circular crop — zoom into the upper-center area (face)
+    // Circular crop — zoom into the face area, skip title text at top
     return (
       <div
         className={`rounded-full overflow-hidden flex-shrink-0 bg-night-800 ${className}`}
@@ -61,7 +61,7 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
         <img
           src={src}
           alt={roleId}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 25%' }}
+          style={{ width: '130%', height: '130%', objectFit: 'cover', objectPosition: '50% 38%', marginLeft: '-15%', marginTop: '-8%' }}
           draggable={false}
         />
       </div>

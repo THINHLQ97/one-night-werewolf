@@ -52,17 +52,23 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   const playerMap = {};
   players.forEach(p => { playerMap[p.id] = p.name; });
 
-  const winningTeams = new Set(winners.map(id => TEAM_OF[finalCards[id]]));
+  // Determine result sign based on the player's OWN team
+  const myTeam = TEAM_OF[finalCards[myId]] || 'village';
 
   let signSrc;
   if (winners.length === 0) {
-    signSrc = RESULT_SIGNS.village_lose;
-  } else if (winningTeams.has('tanner') && winningTeams.size === 1) {
-    signSrc = isWinner ? RESULT_SIGNS.tanner_win : RESULT_SIGNS.tanner_lose;
-  } else if (winningTeams.has('village')) {
-    signSrc = isWinner ? RESULT_SIGNS.village_win : RESULT_SIGNS.village_lose;
+    // No one wins
+    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
+            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
+            : RESULT_SIGNS.village_lose;
+  } else if (isWinner) {
+    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_win
+            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_win
+            : RESULT_SIGNS.village_win;
   } else {
-    signSrc = isWinner ? RESULT_SIGNS.werewolf_win : RESULT_SIGNS.werewolf_lose;
+    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
+            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
+            : RESULT_SIGNS.village_lose;
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import RoleIcon, { CARD_BACK } from './RoleIcon';
+import RoleIcon, { CARD_BACK, CARD_IMAGES } from './RoleIcon';
 import { RANK_BORDER_GRADIENTS } from './RankBadge';
 
 const ROLE_EMOJI = {
@@ -117,9 +117,9 @@ export default function GameTable({
                   title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : (isWolf ? '🐺 Alpha' : `Giữa ${i + 1}`)}
                 >
                   {isRevealed ? (
-                    <div className="flex flex-col items-center justify-center h-full overflow-hidden">
-                      <RoleIcon roleId={isRevealed} size={cardW - 4} className="!rounded-md" />
-                      <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
+                    <div className="relative w-full h-full overflow-hidden rounded-[6px]">
+                      <img src={CARD_IMAGES[isRevealed]} alt={isRevealed} className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                      <span className="absolute bottom-0 left-0 right-0 text-[7px] text-white font-bold text-center bg-black/60 py-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full relative overflow-hidden rounded-[6px]">
