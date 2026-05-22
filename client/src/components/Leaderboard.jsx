@@ -115,7 +115,7 @@ export default function Leaderboard({ onClose }) {
                           <img
                             src={`/images/${p.rank.image}`}
                             alt={p.rank.name}
-                            className="w-5 h-5 object-contain"
+                            className="w-6 h-6 object-contain"
                             draggable={false}
                           />
                         )}

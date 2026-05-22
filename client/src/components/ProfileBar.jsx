@@ -17,7 +17,7 @@ export function RankedAvatar({ avatarUrl, avatarEmoji, name, rank, size = 24, sh
   const borderWidth = Math.max(2, Math.round(size * 0.08));
   const gradient = rank ? RANK_BORDER_GRADIENTS[rank.tier] : null;
   const outerSize = size + borderWidth * 2;
-  const badgeSize = Math.max(12, Math.round(size * 0.45));
+  const badgeSize = Math.max(14, Math.round(size * 0.55));
 
   return (
     <div className="relative inline-flex flex-shrink-0" style={{ width: outerSize, height: outerSize }}>

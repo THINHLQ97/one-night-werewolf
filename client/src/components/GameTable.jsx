@@ -202,7 +202,7 @@ export default function GameTable({
                     src={`/images/${p.rank.image}`}
                     alt={p.rank.name}
                     className="absolute pointer-events-none"
-                    style={{ width: 14 * scale, height: 14 * scale, bottom: -2, right: -2, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
+                    style={{ width: 20 * scale, height: 20 * scale, bottom: -3, right: -3, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
                     draggable={false}
                   />
                 )}
