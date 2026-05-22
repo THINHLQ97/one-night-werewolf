@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
 import FallingCards from '../components/FallingCards';
 import ProfileBar, { GoogleLoginButton } from '../components/ProfileBar';
+import Leaderboard from '../components/Leaderboard';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -23,6 +24,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [botCount, setBotCount] = useState(4);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
 
@@ -83,9 +85,18 @@ export default function HomeScreen({ onJoin, error, setError }) {
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in relative">
       <FallingCards count={14} />
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <button
+          onClick={() => setShowLeaderboard(true)}
+          className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+          title="Bảng xếp hạng"
+        >
+          <Icon name="trophy" size={18} className="text-moon-400" />
+        </button>
         <ProfileBar />
       </div>
+
+      {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} />}
 
       <div className="text-center mb-8 sm:mb-10 relative z-10">
         <img
