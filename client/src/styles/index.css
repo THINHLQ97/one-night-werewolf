@@ -70,14 +70,12 @@
 }
 
 .player-node > div:first-child {
-  background: #1a1f3a;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
   transition: all 0.3s;
 }
 
 .player-me > div:first-child {
-  border-color: rgba(196, 168, 107, 0.5);
-  background: #252b4a;
+  box-shadow: 0 0 8px rgba(196, 168, 107, 0.3);
 }
 
 .player-wolf > div:first-child {
