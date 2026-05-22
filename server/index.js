@@ -929,6 +929,17 @@ io.on('connection', socket => {
     });
   });
 
+  // ── Leave room (back to home) ──
+  socket.on('leave_room', (_, cb) => {
+    const room = getRoomByPlayerId(socket.id);
+    if (!room) return cb?.({ ok: true });
+    if (room.state !== 'waiting') return cb?.({ error: 'Không thể rời phòng khi game đang chơi' });
+    socket.leave(room.code);
+    const updated = removePlayer(room, socket.id);
+    if (updated) broadcastPlayerList(updated);
+    cb?.({ ok: true });
+  });
+
   // ── Disconnect ──
   socket.on('disconnect', () => {
     console.log('Disconnected:', socket.id);

@@ -142,7 +142,7 @@ const ROLE_DETAILS = {
   },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
@@ -203,8 +203,16 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
 
   return (
     <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in">
+      {/* Back button */}
+      <button
+        onClick={onLeave}
+        className="flex items-center gap-1 text-white/40 hover:text-white/70 transition-colors text-sm mt-2 mb-1"
+      >
+        <Icon name="arrowLeft" size={16} /> Rời phòng
+      </button>
+
       {/* Room code */}
-      <div className="text-center pt-4 sm:pt-6 pb-3 sm:pb-4">
+      <div className="text-center pt-2 sm:pt-4 pb-3 sm:pb-4">
         <p className="text-white/50 text-sm mb-1">Mã phòng</p>
         <button
           onClick={copied}

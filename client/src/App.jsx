@@ -414,6 +414,16 @@ export default function App() {
         onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
         onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
+        onLeave={() => {
+          socket.emit('leave_room', {}, () => {
+            setScreen('home');
+            setRoomCode('');
+            setPlayers([]);
+            setHostId('');
+            setSettings({ selectedRoles: [] });
+            localStorage.removeItem('onw_room');
+          });
+        }}
       />
     </>);
   }
