@@ -85,7 +85,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
       {/* My role reminder */}
       {myRole && !roleHidden && (
         <div className="flex items-center justify-center gap-2 mb-2">
-          <RoleIcon roleId={myCurrentRole || myRole.roleId} size={20} />
+          <RoleIcon roleId={myCurrentRole || myRole.roleId} size={22} circular />
           <span className="text-white/50 text-xs">Vai của bạn: {ROLE_SHORT[myCurrentRole || myRole.roleId]}</span>
         </div>
       )}

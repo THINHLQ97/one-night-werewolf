@@ -211,7 +211,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         </div>
         {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">
-            <RoleIcon roleId={myRole.roleId} size={20} />
+            <RoleIcon roleId={myRole.roleId} size={22} circular />
             <span className="text-white/50 text-sm">{myRole.name}</span>
           </div>
         )}
@@ -223,7 +223,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           isMyRoleCalled ? 'bg-moon-400/10 border border-moon-400/30' : 'bg-white/5'
         }`}>
           <div className="flex items-center justify-center gap-2">
-            <RoleIcon roleId={currentRole} size={20} />
+            <RoleIcon roleId={currentRole} size={22} circular />
             <span className="text-moon-300 font-semibold">{ROLE_NAMES[currentRole]}</span>
           </div>
           {isMyRoleCalled ? (

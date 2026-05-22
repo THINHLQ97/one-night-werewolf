@@ -29,7 +29,6 @@ export default function App() {
   const [tokenClaims, setTokenClaims] = useState(null);
   const [rankUpData, setRankUpData] = useState(null);
   const [demotedData, setDemotedData] = useState(null);
-  const [transitionOverlay, setTransitionOverlay] = useState(null); // 'win' | 'lose' | null
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -295,17 +294,9 @@ export default function App() {
       stopBGM();
 
       const isWinner = results.winners?.includes(socket.id);
-
-      // Show transition overlay, then switch screen
-      setTransitionOverlay(isWinner ? 'win' : 'lose');
-      // Play SFX immediately during transition
-      setTimeout(() => { if (isWinner) sfxWin(); else sfxLose(); }, 400);
-      // Switch to results screen after brief overlay
-      setTimeout(() => {
-        setScreen('results');
-        // Keep overlay for a bit then fade it
-        setTimeout(() => setTransitionOverlay(null), 1500);
-      }, 800);
+      setScreen('results');
+      // Play SFX after short delay for result sign entrance
+      setTimeout(() => { if (isWinner) sfxWin(); else sfxLose(); }, 600);
 
       const myRankUpdate = rankUpdates?.[socket.id];
       if (myRankUpdate?.rankUp) {
@@ -456,7 +447,7 @@ export default function App() {
     </>);
   }
   if (screen === 'day') {
-    return (<><SceneBackground scene={currentScene} />{connectionOverlay}{transitionEl}
+    return (<><SceneBackground scene={currentScene} />{connectionOverlay}
       <DayScreen
         dayState={dayState}
         myId={socket.id}
@@ -478,18 +469,8 @@ export default function App() {
       />
     </>);
   }
-  // Transition overlay between day and results
-  const transitionEl = transitionOverlay ? (
-    <div className={`fixed inset-0 z-40 transition-opacity duration-700 ${screen === 'results' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-      style={{ background: transitionOverlay === 'win'
-        ? 'radial-gradient(ellipse at center, rgba(241,196,15,0.3) 0%, rgba(0,0,0,0.9) 100%)'
-        : 'radial-gradient(ellipse at center, rgba(139,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%)'
-      }}
-    />
-  ) : null;
-
   if (screen === 'results') {
-    return (<><SceneBackground scene="day" />{connectionOverlay}{transitionEl}
+    return (<><SceneBackground scene="day" />{connectionOverlay}
       <ResultsScreen
         results={results}
         myId={socket.id}

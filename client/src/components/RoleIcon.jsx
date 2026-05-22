@@ -52,17 +52,16 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
         </div>
       );
     }
-    // Circular crop — zoom into the upper ~60% of the card (face area)
+    // Circular crop — zoom into the upper-center area (face)
     return (
       <div
-        className={`rounded-full overflow-hidden flex-shrink-0 ${className}`}
+        className={`rounded-full overflow-hidden flex-shrink-0 bg-night-800 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
           src={src}
           alt={roleId}
-          className="object-cover"
-          style={{ width: '140%', height: '140%', objectPosition: '50% 18%', marginLeft: '-20%', marginTop: '-5%' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 25%' }}
           draggable={false}
         />
       </div>

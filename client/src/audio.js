@@ -1,7 +1,6 @@
 // ─── Audio system ─────────────────────────────────────────────────────────────
 // MP3-based BGM & effects + synthesized micro-SFX
 
-let ctx = null;
 let initialized = false;
 let currentBgm = null;
 let bgmFadeTimer = null;
@@ -19,7 +18,6 @@ function getAudio(src) {
 export function initAudio() {
   if (initialized) return;
   initialized = true;
-  try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
   // Preload all MP3 files
   ['/audio/night-effect.mp3', '/audio/morning-effect.mp3',
    '/audio/night-bgm.mp3', '/audio/day-bgm.mp3',
@@ -27,7 +25,6 @@ export function initAudio() {
 }
 
 export function resumeAudio() {
-  if (ctx?.state === 'suspended') ctx.resume();
   if (!initialized) initAudio();
 }
 
@@ -149,54 +146,11 @@ export function sfxLose() {
   playEffect('/audio/lose-effect.mp3', 0.5);
 }
 
-// ─── SFX (synthesized — small UI sounds) ──────────────────────────────────────
+// ─── SFX (stubs — no more synthesized sounds) ────────────────────────────────
+// All synthesized oscillator sounds removed. These are now no-ops or silent.
+// Only MP3-based audio is used.
 
-function playTone(freq, duration, type = 'sine', vol = 0.15) {
-  if (!ctx) return;
-  const osc = ctx.createOscillator();
-  osc.type = type;
-  osc.frequency.value = freq;
-  const g = ctx.createGain();
-  g.gain.value = vol;
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-  osc.connect(g);
-  g.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + duration);
-}
-
-export function sfxCardFlip() {
-  playTone(800, 0.08, 'sine', 0.1);
-  setTimeout(() => playTone(1200, 0.06, 'sine', 0.08), 50);
-}
-
-export function sfxReveal() {
-  playTone(523, 0.15, 'sine', 0.1);
-  setTimeout(() => playTone(659, 0.15, 'sine', 0.1), 100);
-  setTimeout(() => playTone(784, 0.2, 'sine', 0.12), 200);
-}
-
-export function sfxVote() {
-  playTone(440, 0.1, 'triangle', 0.12);
-}
-
-export function sfxWolfHowl() {
-  if (!ctx) return;
-  const osc = ctx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(150, ctx.currentTime);
-  osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.8);
-  osc.frequency.linearRampToValueAtTime(200, ctx.currentTime + 1.5);
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 600;
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0, ctx.currentTime);
-  g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.3);
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.8);
-  osc.connect(filter);
-  filter.connect(g);
-  g.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 2);
-}
+export function sfxCardFlip() { /* silent */ }
+export function sfxReveal() { /* silent */ }
+export function sfxVote() { /* silent */ }
+export function sfxWolfHowl() { /* silent */ }
