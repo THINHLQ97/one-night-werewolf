@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import RoleIcon from './RoleIcon';
+import { RANK_BORDER_GRADIENTS } from './RankBadge';
 
 const ROLE_EMOJI = {
   werewolf: '🐺', minion: '🦹', seer: '🔮', robber: '🦝', troublemaker: '😈',
@@ -167,20 +168,43 @@ export default function GameTable({
                 ${isMyVoteTarget ? 'player-voted' : ''}
               `}
             >
-              {/* Avatar circle */}
-              <div className="rounded-full flex items-center justify-center font-bold relative" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
-                {isRevealed ? (
-                  <RoleIcon roleId={isRevealed} size={iconSize} />
-                ) : isMe && myCurrentRole ? (
-                  <RoleIcon roleId={myCurrentRole} size={iconSize} />
-                ) : p.isBot ? (
-                  <span>🤖</span>
-                ) : p.avatarUrl?.startsWith('emoji:') ? (
-                  <span style={{ fontSize: avatarSize * 0.55 }}>{p.avatarUrl.slice(6)}</span>
-                ) : p.avatarUrl ? (
-                  <img src={p.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <span>{p.name.charAt(0).toUpperCase()}</span>
+              {/* Avatar with rank gradient border */}
+              <div className="relative" style={{ width: avatarSize + 4, height: avatarSize + 4 }}>
+                <div
+                  className="rounded-full flex items-center justify-center"
+                  style={{
+                    width: avatarSize + 4,
+                    height: avatarSize + 4,
+                    background: p.rank ? (RANK_BORDER_GRADIENTS[p.rank.tier] || 'rgba(255,255,255,0.1)') : 'rgba(255,255,255,0.1)',
+                    padding: 2,
+                  }}
+                >
+                  <div className="rounded-full flex items-center justify-center font-bold overflow-hidden bg-[#1a1a2e]" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
+                    {isRevealed ? (
+                      <RoleIcon roleId={isRevealed} size={iconSize} />
+                    ) : isMe && myCurrentRole ? (
+                      <RoleIcon roleId={myCurrentRole} size={iconSize} />
+                    ) : p.isBot ? (
+                      <span>🤖</span>
+                    ) : p.avatarUrl?.startsWith('emoji:') ? (
+                      <span style={{ fontSize: avatarSize * 0.55 }}>{p.avatarUrl.slice(6)}</span>
+                    ) : p.avatarUrl ? (
+                      <img src={p.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <span>{p.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rank badge icon */}
+                {p.rank && p.rank.tier > 1 && (
+                  <img
+                    src={`/images/${p.rank.image}`}
+                    alt={p.rank.name}
+                    className="absolute pointer-events-none"
+                    style={{ width: 14 * scale, height: 14 * scale, bottom: -2, right: -2, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }}
+                    draggable={false}
+                  />
                 )}
 
                 {/* Wolf indicator */}

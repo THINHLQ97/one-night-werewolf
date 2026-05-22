@@ -9,6 +9,29 @@ const RANK_COLORS = {
   8: 'text-red-400',
 };
 
+// CSS gradient borders matching each rank's badge colors
+export const RANK_BORDER_GRADIENTS = {
+  1: 'linear-gradient(135deg, #6b7280, #4b5563)',           // Iron - gray
+  2: 'linear-gradient(135deg, #d97706, #92400e)',           // Bronze - amber
+  3: 'linear-gradient(135deg, #d1d5db, #9ca3af)',           // Silver - silver
+  4: 'linear-gradient(135deg, #facc15, #ca8a04)',           // Gold - gold
+  5: 'linear-gradient(135deg, #fef9c3, #fde68a, #d4d4d8)', // WhiteGold - platinum
+  6: 'linear-gradient(135deg, #67e8f9, #06b6d4, #0891b2)', // Diamond - cyan
+  7: 'linear-gradient(135deg, #c084fc, #9333ea, #7e22ce)', // Elite - purple
+  8: 'linear-gradient(135deg, #f87171, #ef4444, #fbbf24)', // Challenger - red/gold
+};
+
+export const RANK_BORDER_SOLID = {
+  1: '#6b7280',
+  2: '#d97706',
+  3: '#d1d5db',
+  4: '#facc15',
+  5: '#fde68a',
+  6: '#22d3ee',
+  7: '#a855f7',
+  8: '#ef4444',
+};
+
 export default function RankBadge({ rank, size = 48, showName = false, className = '' }) {
   if (!rank) return null;
 

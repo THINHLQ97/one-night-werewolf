@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { AvatarWithFrame } from './ProfileBar';
+import { RankedAvatar } from './ProfileBar';
 import Icon from './Icon';
 
 const API_BASE = import.meta.env.VITE_SERVER_URL || '';
@@ -81,13 +81,14 @@ export default function Leaderboard({ onClose }) {
                       )}
                     </div>
 
-                    {/* Avatar with rank frame */}
-                    <AvatarWithFrame
+                    {/* Avatar with rank border */}
+                    <RankedAvatar
                       avatarUrl={avatarImg}
                       avatarEmoji={avatarEmoji}
                       name={p.displayName}
                       rank={p.rank}
                       size={28}
+                      showBadge
                     />
 
                     {/* Player info */}

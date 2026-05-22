@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import RankBadge from './RankBadge';
+import RankBadge, { RANK_BORDER_GRADIENTS } from './RankBadge';
 import RankInfoPopup from './RankInfoPopup';
 import Icon from './Icon';
 
@@ -10,26 +10,59 @@ const AVATAR_OPTIONS = [
   '🤖', '👽', '🎃', '💀', '🦇', '🐍', '🦅', '🐧',
 ];
 
-export function AvatarWithFrame({ avatarUrl, avatarEmoji, name, rank, size = 24 }) {
-  const frameSize = Math.round(size * (rank?.frameScale || 1.7));
+/**
+ * Avatar with CSS gradient border based on rank + optional rank badge icon
+ */
+export function RankedAvatar({ avatarUrl, avatarEmoji, name, rank, size = 24, showBadge = false }) {
+  const borderWidth = Math.max(2, Math.round(size * 0.08));
+  const gradient = rank ? RANK_BORDER_GRADIENTS[rank.tier] : null;
+  const outerSize = size + borderWidth * 2;
+  const badgeSize = Math.max(12, Math.round(size * 0.45));
+
   return (
-    <div className="relative inline-flex items-center justify-center flex-shrink-0" style={{ width: frameSize, height: frameSize }}>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="" className="rounded-full absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2 }} referrerPolicy="no-referrer" />
-      ) : avatarEmoji ? (
-        <div className="rounded-full bg-moon-400/20 flex items-center justify-center absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2, fontSize: size * 0.55 }}>
-          {avatarEmoji}
+    <div className="relative inline-flex flex-shrink-0" style={{ width: outerSize, height: outerSize }}>
+      {/* Gradient border ring */}
+      <div
+        className="rounded-full flex items-center justify-center"
+        style={{
+          width: outerSize,
+          height: outerSize,
+          background: gradient || 'rgba(255,255,255,0.1)',
+          padding: borderWidth,
+        }}
+      >
+        {/* Inner avatar */}
+        <div
+          className="rounded-full flex items-center justify-center overflow-hidden bg-[#1a1a2e]"
+          style={{ width: size, height: size }}
+        >
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          ) : avatarEmoji ? (
+            <div className="w-full h-full flex items-center justify-center bg-moon-400/10" style={{ fontSize: size * 0.5 }}>
+              {avatarEmoji}
+            </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center font-bold text-moon-400 bg-moon-400/10" style={{ fontSize: size * 0.4 }}>
+              {name?.[0]?.toUpperCase() || '?'}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="rounded-full bg-moon-400/20 flex items-center justify-center font-bold text-moon-400 absolute" style={{ width: size, height: size, top: (frameSize - size) / 2, left: (frameSize - size) / 2, fontSize: size * 0.4 }}>
-          {name?.[0]?.toUpperCase() || '?'}
-        </div>
-      )}
-      {rank && (
+      </div>
+
+      {/* Rank badge icon */}
+      {showBadge && rank && (
         <img
           src={`/images/${rank.image}`}
           alt={rank.name}
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          className="absolute pointer-events-none"
+          style={{
+            width: badgeSize,
+            height: badgeSize,
+            bottom: -2,
+            right: -2,
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+          }}
           draggable={false}
         />
       )}
@@ -67,7 +100,7 @@ export default function ProfileBar({ className = '' }) {
         onClick={() => setShowMenu(s => !s)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
       >
-        <AvatarWithFrame avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={24} />
+        <RankedAvatar avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={24} showBadge />
         <span className="text-sm text-white/70 font-medium max-w-[100px] truncate">{user.displayName}</span>
       </button>
 
@@ -85,7 +118,7 @@ export default function ProfileBar({ className = '' }) {
           <div className="absolute right-0 top-full mt-2 z-50 card min-w-[240px] p-3 space-y-3">
             <div className="flex items-center gap-3">
               <button onClick={() => setShowAvatarPicker(s => !s)} className="relative group" title="Đổi avatar">
-                <AvatarWithFrame avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={40} />
+                <RankedAvatar avatarUrl={currentImg} avatarEmoji={currentEmoji} name={user.displayName} rank={user.rank} size={40} showBadge />
                 <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-[10px] text-white">✏️</span>
                 </div>
