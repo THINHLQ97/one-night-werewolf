@@ -5,6 +5,7 @@ import Icon from '../components/Icon';
 import FallingCards from '../components/FallingCards';
 import ProfileBar, { GoogleLoginButton } from '../components/ProfileBar';
 import Leaderboard from '../components/Leaderboard';
+import RoleLibrary from '../components/RoleLibrary';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -25,6 +26,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
   const [loading, setLoading] = useState(false);
   const [botCount, setBotCount] = useState(4);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
 
@@ -163,6 +165,9 @@ export default function HomeScreen({ onJoin, error, setError }) {
           <button className="btn-ghost text-lg py-4 border-dashed flex items-center justify-center gap-2.5" onClick={() => { setMode('simulation'); setError(''); }}>
             <Icon name="robot" size={22} /> Simulation Mode
           </button>
+          <button className="btn-ghost text-base py-3 flex items-center justify-center gap-2 text-moon-400 border-moon-400/20" onClick={() => setShowLibrary(true)}>
+            <Icon name="book" size={20} /> Thư viện nhân vật
+          </button>
         </div>
       ) : (
         <form
@@ -222,6 +227,8 @@ export default function HomeScreen({ onJoin, error, setError }) {
       <p className="text-white/20 text-xs mt-12 text-center relative z-10">
         Dự án phi lợi nhuận · Mọi bản quyền hình ảnh thuộc về Bezier Games
       </p>
+
+      <RoleLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
     </div>
   );
 }
