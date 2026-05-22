@@ -49,7 +49,7 @@ export default function SceneBackground({ scene }) {
       <div
         className="absolute inset-0 transition-colors duration-[1500ms] ease-in-out"
         style={{
-          backgroundColor: isDay ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.65)',
+          backgroundColor: isDay ? 'rgba(0, 0, 0, 0.30)' : 'rgba(0, 0, 0, 0.35)',
         }}
       />
     </div>
