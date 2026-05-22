@@ -54,7 +54,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = nightKnowledge || {};
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-lg mx-auto fade-in">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-lg mx-auto fade-in relative z-10">
       {/* Header */}
       <div className="text-center pt-2 pb-2">
         <div className="flex items-center justify-center gap-3">

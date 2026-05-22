@@ -4,6 +4,7 @@ import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHow
 import { useAuth } from './contexts/AuthContext';
 import Icon from './components/Icon';
 import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
+import SceneBackground from './components/SceneBackground';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -384,6 +385,11 @@ export default function App() {
 
   const isHost = socket.id === hostId;
 
+  // Determine scene for day/night background
+  const currentScene = (screen === 'role_reveal' || screen === 'night') ? 'night'
+    : screen === 'day' ? 'day'
+    : null;
+
   const connectionOverlay = connectionLost ? (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
       <div className="text-center p-6">
@@ -412,10 +418,10 @@ export default function App() {
     </>);
   }
   if (screen === 'role_reveal') {
-    return <>{connectionOverlay}<RoleRevealScreen myRole={myRole} /></>;
+    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} /></>;
   }
   if (screen === 'night') {
-    return (<>{connectionOverlay}
+    return (<><SceneBackground scene={currentScene} />{connectionOverlay}
       <NightScreen
         myRole={myRole}
         myId={socket.id}
@@ -428,7 +434,7 @@ export default function App() {
     </>);
   }
   if (screen === 'day') {
-    return (<>{connectionOverlay}
+    return (<><SceneBackground scene={currentScene} />{connectionOverlay}
       <DayScreen
         dayState={dayState}
         myId={socket.id}
@@ -451,7 +457,7 @@ export default function App() {
     </>);
   }
   if (screen === 'results') {
-    return (<>{connectionOverlay}
+    return (<><SceneBackground scene="day" />{connectionOverlay}
       <ResultsScreen
         results={results}
         myId={socket.id}

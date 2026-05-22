@@ -16,7 +16,7 @@ export default function RoleRevealScreen({ myRole }) {
 
   if (!myRole) {
     return (
-      <div className="min-h-screen flex items-center justify-center fade-in">
+      <div className="min-h-screen flex items-center justify-center fade-in relative z-10">
         <div className="text-center">
           <div className="mb-4 pulse-moon text-moon-400"><Icon name="moon" size={48} /></div>
           <p className="text-moon-400">Đang nhận bài...</p>
@@ -28,7 +28,7 @@ export default function RoleRevealScreen({ myRole }) {
   const style = TEAM_STYLE[myRole.team] || TEAM_STYLE.village;
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in relative z-10">
       <div className="flex items-center gap-3 mb-6 sm:mb-8">
         <h2 className="text-moon-400 text-sm sm:text-lg text-center flex items-center gap-2">
           <Icon name="moon" size={20} className="text-moon-400" /> Đêm xuống — Xem bài của bạn

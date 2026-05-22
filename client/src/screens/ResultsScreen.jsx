@@ -58,7 +58,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in">
+    <div className="min-h-screen min-h-[100dvh] px-3 py-4 sm:p-4 max-w-lg mx-auto fade-in relative z-10">
       {/* Win banner */}
       <div className="text-center pt-6 sm:pt-8 pb-4 sm:pb-6 relative">
         <RoleLibraryButton onClick={() => setLibraryOpen(true)} className="absolute top-6 right-0" />
