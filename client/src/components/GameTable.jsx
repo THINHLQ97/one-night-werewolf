@@ -23,7 +23,7 @@ function useContainerSize(ref) {
     if (!ref.current) return;
     const update = () => {
       const w = ref.current.parentElement?.clientWidth || 340;
-      setSize(Math.min(380, Math.max(260, w - 16)));
+      setSize(Math.min(460, Math.max(260, w - 16)));
     };
     update();
     window.addEventListener('resize', update);
@@ -52,7 +52,8 @@ export default function GameTable({
   shieldedPlayer = null,
 }) {
   const containerRef = useRef(null);
-  const tableSize = useContainerSize(containerRef);
+  const rawSize = useContainerSize(containerRef);
+  const tableSize = rawSize;
   const scale = tableSize / 340;
   const centerX = tableSize / 2;
   const centerY = tableSize / 2;
@@ -116,8 +117,8 @@ export default function GameTable({
                   title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : (isWolf ? '🐺 Alpha' : `Giữa ${i + 1}`)}
                 >
                   {isRevealed ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <RoleIcon roleId={isRevealed} size={centerIconSize} />
+                    <div className="flex flex-col items-center justify-center h-full overflow-hidden">
+                      <RoleIcon roleId={isRevealed} size={cardW - 4} className="!rounded-md" />
                       <span className="text-[8px] text-moon-300 mt-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
                     </div>
                   ) : (
@@ -184,9 +185,9 @@ export default function GameTable({
                 >
                   <div className="rounded-full flex items-center justify-center font-bold overflow-hidden bg-[#1a1a2e]" style={{ width: avatarSize, height: avatarSize, fontSize: 16 * scale }}>
                     {isRevealed ? (
-                      <RoleIcon roleId={isRevealed} size={iconSize} />
+                      <RoleIcon roleId={isRevealed} size={avatarSize} circular />
                     ) : isMe && myCurrentRole ? (
-                      <RoleIcon roleId={myCurrentRole} size={iconSize} />
+                      <RoleIcon roleId={myCurrentRole} size={avatarSize} circular />
                     ) : p.isBot ? (
                       <span>🤖</span>
                     ) : p.avatarUrl?.startsWith('emoji:') ? (

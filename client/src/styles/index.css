@@ -228,14 +228,13 @@
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .falling-card-front {
-  background: linear-gradient(145deg, #1e2444, #151933);
-  border: 1px solid rgba(196, 168, 107, 0.25);
+  background: #0d1117;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +263,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 @keyframes cardFall {
@@ -321,4 +320,44 @@
   0% { opacity: 0.8; transform: rotate(var(--r, 0deg)) translateY(-80px) scale(1); }
   50% { opacity: 0.4; transform: rotate(var(--r, 0deg)) translateY(-100px) scale(0.5); }
   100% { opacity: 0; transform: rotate(var(--r, 0deg)) translateY(-120px) scale(0); }
+}
+
+/* ─── Results screen effects ──────────────────────────────────────────────── */
+
+@keyframes confettiFall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) translateX(var(--drift, 0px)) rotate(720deg);
+  }
+}
+.animate-confettiFall {
+  animation: confettiFall ease-out forwards;
+}
+
+@keyframes loseFlash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  30% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+.animate-loseFlash {
+  animation: loseFlash 1.5s ease-out forwards;
+}
+
+@keyframes signBounce {
+  0% { opacity: 0; transform: scale(0.3) rotate(-5deg); }
+  50% { opacity: 1; transform: scale(1.08) rotate(1deg); }
+  70% { transform: scale(0.95) rotate(-0.5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.animate-signBounce {
+  animation: signBounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

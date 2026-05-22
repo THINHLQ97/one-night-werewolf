@@ -57,11 +57,11 @@ export default function FallingCards({ count = 12 }) {
               animationDuration: `${card.flipDuration}s`,
             }}
           >
-            <div className="falling-card-front">
+            <div className="falling-card-front" style={{ borderRadius: 10, overflow: 'hidden' }}>
               <img
                 src={CARD_IMAGES[card.role]}
                 alt={card.role}
-                className="w-full h-full object-cover rounded-[8px]"
+                className="w-full h-full object-cover"
                 draggable={false}
               />
             </div>

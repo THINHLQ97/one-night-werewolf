@@ -54,7 +54,7 @@ export default function RoleRevealScreen({ myRole }) {
           className="rounded-2xl border-2 border-moon-400/40 overflow-hidden relative hover:border-moon-400 transition-all active:scale-95 cursor-pointer group shadow-lg"
           style={{ width: 180, height: 252 }}
         >
-          <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+          <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" />
           <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
             <span className="text-moon-300 font-semibold text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm group-hover:bg-black/70 transition-colors">Lật bài</span>
           </div>

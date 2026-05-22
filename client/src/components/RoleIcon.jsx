@@ -24,18 +24,51 @@ const CARD_IMAGES = {
   doppelganger: '/images/character card/Doppelganger.webp',
 };
 
-export const CARD_BACK = '/images/Card-back.webp';
+export const CARD_BACK = '/images/Card-Back.webp';
 
 export { CARD_IMAGES };
 
 /**
- * Renders a role card image. Portrait aspect ratio (~3:4).
+ * Renders a role card image.
+ * Default: portrait aspect ratio (~3:4).
+ * circular: crops into a circle focusing on the upper (face) area.
+ *
  * @param {string} roleId - Role identifier
- * @param {number} size - Width in px (height auto = size * 1.4)
+ * @param {number} size - Width in px (height auto = size * 1.4 for card mode)
+ * @param {boolean} circular - If true, render as a circular face crop
  * @param {string} className - Additional CSS classes
  */
-export default function RoleIcon({ roleId, size = 80, className = '' }) {
+export default function RoleIcon({ roleId, size = 80, circular = false, className = '' }) {
   const src = CARD_IMAGES[roleId];
+
+  if (circular) {
+    if (!src) {
+      return (
+        <div
+          className={`flex items-center justify-center bg-night-700 rounded-full text-lg ${className}`}
+          style={{ width: size, height: size }}
+        >
+          🃏
+        </div>
+      );
+    }
+    // Circular crop — zoom into the upper ~60% of the card (face area)
+    return (
+      <div
+        className={`rounded-full overflow-hidden flex-shrink-0 ${className}`}
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={src}
+          alt={roleId}
+          className="object-cover"
+          style={{ width: '140%', height: '140%', objectPosition: '50% 18%', marginLeft: '-20%', marginTop: '-5%' }}
+          draggable={false}
+        />
+      </div>
+    );
+  }
+
   if (!src) {
     return (
       <div
