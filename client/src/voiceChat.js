@@ -222,23 +222,13 @@ class VoiceChatManager {
       if (stream) {
         this.remoteStreams[peerId] = stream;
 
-        // Create analyser for speaking detection
-        if (this.audioContext) {
-          const source = this.audioContext.createMediaStreamSource(stream);
-          const analyser = this.audioContext.createAnalyser();
-          analyser.fftSize = 256;
-          analyser.smoothingTimeConstant = 0.5;
-          source.connect(analyser);
-
-          // Also connect to audio output so we can hear them
-          const dest = this.audioContext.createMediaStreamDestination();
-          source.connect(this.audioContext.destination);
-
-          this.analysers[peerId] = { analyser, dataArray: new Uint8Array(analyser.frequencyBinCount) };
-        }
-
-        // Ensure audio playback
+        // Play audio via <audio> element FIRST — this is the primary playback method
         this._playRemoteAudio(peerId, stream);
+
+        // Create a SEPARATE analyser for speaking detection only
+        // Do NOT connect to audioContext.destination — let <audio> element handle playback
+        this._setupRemoteAnalyser(peerId, stream);
+
         this._notifyPeers();
       }
     };
@@ -263,17 +253,55 @@ class VoiceChatManager {
   }
 
   _playRemoteAudio(peerId, stream) {
-    // Create a hidden audio element to play remote audio
-    let audio = document.getElementById(`voice-audio-${peerId}`);
-    if (!audio) {
-      audio = document.createElement('audio');
-      audio.id = `voice-audio-${peerId}`;
-      audio.autoplay = true;
-      audio.playsInline = true;
-      document.body.appendChild(audio);
+    // Remove any existing audio element first
+    const existing = document.getElementById(`voice-audio-${peerId}`);
+    if (existing) {
+      existing.srcObject = null;
+      existing.remove();
     }
+
+    // Create a fresh hidden audio element to play remote audio
+    const audio = document.createElement('audio');
+    audio.id = `voice-audio-${peerId}`;
+    audio.autoplay = true;
+    audio.playsInline = true;
+    audio.volume = 1.0;
+    document.body.appendChild(audio);
+
+    // Set stream and play
     audio.srcObject = stream;
-    audio.play().catch(() => {});
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(err => {
+        console.warn('Voice: autoplay blocked for peer', peerId, '- retrying on user gesture');
+        // Retry on next user interaction
+        const retry = () => {
+          audio.play().catch(() => {});
+          document.removeEventListener('click', retry);
+          document.removeEventListener('touchstart', retry);
+        };
+        document.addEventListener('click', retry, { once: true });
+        document.addEventListener('touchstart', retry, { once: true });
+      });
+    }
+  }
+
+  _setupRemoteAnalyser(peerId, stream) {
+    // Use a separate AudioContext analyser ONLY for speaking detection
+    // This does NOT interfere with the <audio> element playback
+    if (!this.audioContext) return;
+
+    try {
+      const source = this.audioContext.createMediaStreamSource(stream);
+      const analyser = this.audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.5;
+      // Connect source -> analyser ONLY (no destination — that would interfere with <audio>)
+      source.connect(analyser);
+      this.analysers[peerId] = { analyser, dataArray: new Uint8Array(analyser.frequencyBinCount), source };
+    } catch (e) {
+      console.warn('Voice: Failed to setup analyser for peer', peerId, e);
+    }
   }
 
   _removePeer(peerId) {
@@ -283,6 +311,10 @@ class VoiceChatManager {
       delete this.peers[peerId];
     }
     delete this.remoteStreams[peerId];
+    // Disconnect analyser source node
+    if (this.analysers[peerId]?.source) {
+      try { this.analysers[peerId].source.disconnect(); } catch {}
+    }
     delete this.analysers[peerId];
     delete this.speakingStates[peerId];
 

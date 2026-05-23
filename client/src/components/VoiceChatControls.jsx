@@ -82,7 +82,7 @@ export default function VoiceChatControls({ roomCode, isHost, players, myId }) {
           <Icon name={bgmIcon} size={16} />
         </button>
         {showBgmSlider && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-night-800 border border-white/20 rounded-xl px-3 py-2.5 shadow-xl min-w-[140px] z-50">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-night-800 border border-white/20 rounded-xl px-3 py-2.5 shadow-xl min-w-[140px] z-50">
             <p className="text-white/40 text-[10px] text-center mb-1.5 font-medium">BGM</p>
             <input
               type="range"
@@ -133,11 +133,11 @@ export default function VoiceChatControls({ roomCode, isHost, players, myId }) {
           {/* Leave voice */}
           <button
             onClick={handleLeave}
-            className="w-8 h-8 rounded-full bg-wolf-500/20 text-wolf-400 flex items-center justify-center hover:bg-wolf-500/30 transition-colors"
+            className="w-8 h-8 rounded-full bg-wolf-500/20 text-wolf-400 flex items-center justify-center hover:bg-wolf-500/30 transition-colors relative"
             title="Rời voice chat"
           >
             <Icon name="headphones" size={14} />
-            <span className="absolute text-[8px] font-bold">x</span>
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-wolf-500 text-white text-[7px] font-bold flex items-center justify-center leading-none">✕</span>
           </button>
         </div>
       )}
