@@ -7,6 +7,7 @@ const ROLES = [
   {
     id: 'werewolf', name: 'Werewolf', nameVi: 'Ma Sói', emoji: '🐺',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2, expansion: 'base',
+    lore: 'Từ bao đời nay, Ma Sói đã ẩn mình giữa ngôi làng dưới lớp vỏ con người hiền lành. Ban ngày, chúng cười nói, chia sẻ bữa ăn với hàng xóm. Nhưng khi màn đêm buông xuống, bản năng hoang dã trỗi dậy — đôi mắt phát sáng trong bóng tối, tìm kiếm con mồi tiếp theo. Không ai biết Ma Sói thật sự là ai, cho đến khi quá muộn. Sức mạnh lớn nhất của chúng không nằm ở nanh vuốt, mà ở khả năng khiến mọi người tin tưởng — rồi phản bội niềm tin ấy.',
     nightAction: 'Mở mắt và nhìn đồng bọn Sói. Nếu là Sói đơn độc, được xem 1 bài ở giữa.',
     winCondition: 'Thắng nếu không có Sói nào bị loại.',
     tips: 'Hãy tỏ ra vô tội và đổ lỗi cho người khác. Nếu là Sói đơn, dùng thông tin bài giữa để tạo alibi.',
@@ -16,6 +17,7 @@ const ROLES = [
   {
     id: 'minion', name: 'Minion', nameVi: 'Tay Sai', emoji: '🦹',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 3, expansion: 'base',
+    lore: 'Tay Sai không phải Ma Sói — hắn là con người, với đầy đủ trí nhớ và ý thức. Nhưng hắn đã chọn phục vụ bóng tối. Có kẻ nói hắn bị dụ dỗ bởi lời hứa quyền lực, có kẻ bảo hắn đã quá sợ hãi mà quỳ gối trước nanh sói. Dù lý do là gì, Tay Sai sẵn sàng chết thay cho chủ nhân. Hắn biết mặt từng con Sói, nhưng chúng không hề biết hắn tồn tại — một kẻ tận tụy đến mức vô hình.',
     nightAction: 'Mở mắt và biết ai là Sói. Nhưng Sói không biết bạn là Tay Sai.',
     winCondition: 'Thắng cùng phe Sói. Nếu bạn bị loại thay Sói, phe Sói vẫn thắng.',
     tips: 'Hãy thu hút sự nghi ngờ về phía mình để bảo vệ Sói. Có thể nhận mình là Sói giả.',
@@ -25,6 +27,7 @@ const ROLES = [
   {
     id: 'mason', name: 'Mason', nameVi: 'Sinh Đôi', emoji: '🤝',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 4, expansion: 'base',
+    lore: 'Hội Sinh Đôi là một nhóm bí mật có từ trước khi Ma Sói xuất hiện. Họ thề trung thành với nhau bằng một nghi thức cổ xưa — siết tay trong bóng tối và không bao giờ phản bội đồng đội. Trong đêm, họ mở mắt nhìn nhau, xác nhận rằng liên minh vẫn vững. Đó là thứ quý giá nhất trong ngôi làng đầy nghi kỵ: sự tin tưởng tuyệt đối. Khi mọi người đều có thể là Sói, những người Sinh Đôi biết chắc một điều — đồng đội mình là con người.',
     nightAction: 'Mở mắt và nhìn nhau. Biết chắc ai cùng phe Dân.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Bạn biết chắc đồng đội — hãy tin tưởng nhau và phối hợp tìm Sói. Nếu chỉ có 1 Mason, bài còn lại ở giữa.',
@@ -34,6 +37,7 @@ const ROLES = [
   {
     id: 'seer', name: 'Seer', nameVi: 'Tiên Tri', emoji: '🔮',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 5, expansion: 'base',
+    lore: 'Tiên Tri mang trong mình khả năng nhìn thấu bản chất con người — một món quà, nhưng cũng là lời nguyền. Mỗi đêm, bà lặng lẽ chạm vào tấm thẻ bài và sự thật hiện lên trước mắt. Bà biết ai là Sói, ai là Dân, ai đang nói dối. Nhưng biết sự thật và khiến người khác tin sự thật là hai chuyện khác nhau. Ma Sói biết rõ mối nguy từ Tiên Tri — chúng sẵn sàng giả danh bà để gieo rắc nghi ngờ và khiến dân làng tự tay hủy diệt vũ khí mạnh nhất của mình.',
     nightAction: 'Chọn xem bài của 1 người chơi khác, HOẶC xem 2 bài ở giữa.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Chia sẻ thông tin bạn biết nhưng cẩn thận — Sói có thể giả danh Tiên Tri.',
@@ -43,6 +47,7 @@ const ROLES = [
   {
     id: 'robber', name: 'Robber', nameVi: 'Kẻ Cướp', emoji: '🦝',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 6, expansion: 'base',
+    lore: 'Kẻ Cướp không hẳn là người xấu — hắn chỉ... linh hoạt về mặt đạo đức. Trong đêm, hắn lẻn đến bên một người đang ngủ, đổi số phận của mình lấy số phận của họ. Sáng mai, hắn thức dậy với một danh tính hoàn toàn mới. Có lần hắn lấy được tấm khiên của Dân, lần khác hắn lại vô tình trở thành chính con Sói mà hắn muốn tránh xa. Kẻ Cướp luôn là kẻ biết rõ mình là ai nhất — vấn đề là hắn không biết mình SẼ trở thành ai.',
     nightAction: 'Đổi bài của bạn với bài của 1 người khác, sau đó xem bài mới của mình.',
     winCondition: 'Bạn thuộc phe của bài MỚI. Nếu lấy được bài Sói, bạn là Sói.',
     tips: 'Nếu lấy được vai tốt, hãy khai báo. Nếu lấy Sói... hãy im lặng và đánh lạc hướng.',
@@ -52,6 +57,7 @@ const ROLES = [
   {
     id: 'troublemaker', name: 'Troublemaker', nameVi: 'Kẻ Gây Rối', emoji: '😈',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 7, expansion: 'base',
+    lore: 'Kẻ Gây Rối không bao giờ ngồi yên. Trong khi cả làng chìm trong giấc ngủ, cô lẻn đi và hoán đổi bài của hai người — biến Sói thành Dân, biến Dân thành Sói, mà không ai hay biết. Cô không làm điều này vì ác ý, mà vì tin rằng sự hỗn loạn sẽ phơi bày sự thật. Khi ban ngày đến và mọi người tranh cãi, chính những mâu thuẫn cô tạo ra sẽ khiến kẻ nói dối lộ mặt. Trong thế giới của Kẻ Gây Rối, sự thật chỉ xuất hiện khi trật tự bị phá vỡ.',
     nightAction: 'Hoán đổi bài của 2 người khác (không xem bài).',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Khai báo bạn đã đổi ai. Điều này giúp xác định ai đang nắm bài gì.',
@@ -61,6 +67,7 @@ const ROLES = [
   {
     id: 'drunk', name: 'Drunk', nameVi: 'Kẻ Say', emoji: '🍺',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 8, expansion: 'base',
+    lore: 'Kẻ Say đã uống quá nhiều rượu tại quán rượu làng đêm qua. Trong cơn say, hắn loạng choạng bước tới bàn bài ở giữa và vô tình đổi bài của mình với một lá bài bí ẩn. Sáng hôm sau, hắn tỉnh dậy với cơn đau đầu khủng khiếp và không nhớ gì về đêm qua — kể cả việc mình bây giờ là ai. Hắn có thể đã trở thành Sói, Tiên Tri, hoặc bất kỳ ai, nhưng hắn sẽ không bao giờ biết cho đến khi trận vote kết thúc.',
     nightAction: 'Đổi bài của bạn với 1 bài ở giữa (không được xem bài mới).',
     winCondition: 'Bạn thuộc phe của bài MỚI, nhưng bạn không biết đó là bài gì.',
     tips: 'Bạn không biết vai mới — hãy lắng nghe và suy luận từ thông tin người khác.',
@@ -70,6 +77,7 @@ const ROLES = [
   {
     id: 'insomniac', name: 'Insomniac', nameVi: 'Người Mất Ngủ', emoji: '👁️',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 9, expansion: 'base',
+    lore: 'Người Mất Ngủ chưa từng có một đêm yên giấc kể từ khi Ma Sói xuất hiện. Bà nằm trên giường, mắt mở trừng trừng, lắng nghe từng tiếng bước chân trong bóng tối. Chính vì không thể ngủ, bà là người cuối cùng kiểm tra lại bài của mình trước bình minh — và nhờ đó, bà biết liệu có ai đã lén lút thay đổi số phận của mình trong đêm. Người Mất Ngủ có thể mệt mỏi, nhưng bà không bao giờ bị bất ngờ.',
     nightAction: 'Thức dậy cuối cùng và xem bài hiện tại của mình (sau khi có thể bị đổi).',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Nếu bài bạn bị đổi, ai đó đã lấy vai cũ của bạn — hãy tìm ra ai.',
@@ -79,6 +87,7 @@ const ROLES = [
   {
     id: 'hunter', name: 'Hunter', nameVi: 'Thợ Săn', emoji: '🏹',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'base',
+    lore: 'Thợ Săn đã giết Ma Sói đầu tiên của mình khi mới mười sáu tuổi, với một phát bắn duy nhất giữa đêm trăng rằm. Từ đó, ông mang theo cây nỏ bên mình mọi lúc, ngay cả khi ngủ. Ông không có khả năng siêu nhiên, nhưng có một bản năng sắc bén và phản xạ tuyệt vời. Nếu dân làng treo cổ ông vì nhầm lẫn, mũi tên cuối cùng của ông sẽ bay — nhằm vào người mà ông tin là Sói. Một phát bắn cuối cùng, một cơ hội cuối cùng để công lý được thực thi.',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng cùng phe Dân. Nếu bạn bị loại, người bạn vote cũng bị loại theo.',
     tips: 'Hãy vote cẩn thận! Nếu bạn bị loại, vote của bạn sẽ kéo theo 1 người nữa.',
@@ -88,6 +97,7 @@ const ROLES = [
   {
     id: 'tanner', name: 'Tanner', nameVi: 'Thợ Thuộc Da', emoji: '💀',
     team: 'tanner', teamLabel: 'Phe Riêng', nightOrder: null, expansion: 'base',
+    lore: 'Thợ Thuộc Da đã sống một cuộc đời cô độc và khốn khổ. Công việc thuộc da nhơ nhớp khiến ông bị cả làng xa lánh, mùi hôi thối bám trên người không bao giờ rửa sạch. Dần dần, sự chán ghét cuộc sống ngấm sâu vào tâm hồn ông. Giờ đây, ông chỉ có một ước nguyện duy nhất: được chết. Nhưng không phải cái chết tầm thường — ông muốn bị dân làng kết tội, muốn đứng trên bục xử án và nhìn thấy nỗi sợ trong mắt họ khi họ nhận ra mình vừa mắc sai lầm khủng khiếp nhất.',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng nếu bạn bị loại. Phe Sói và Dân đều thua nếu Tanner thắng.',
     tips: 'Hành xử đáng ngờ vừa đủ để bị vote, nhưng đừng lộ liễu quá.',
@@ -97,6 +107,7 @@ const ROLES = [
   {
     id: 'villager', name: 'Villager', nameVi: 'Dân Làng', emoji: '👨‍🌾',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'base',
+    lore: 'Dân Làng là xương sống của ngôi làng — những nông dân, thợ rèn, thợ may bình thường sống cuộc đời giản dị. Họ không có phép thuật, không có vũ khí đặc biệt, chỉ có đôi tai biết lắng nghe và trí óc biết suy xét. Trong đêm đầy hiểm nguy, họ ngủ yên không hay biết gì. Nhưng khi bình minh lên, chính những con người bình thường này mới là lực lượng quyết định — bằng lá phiếu và bằng niềm tin, họ phải tìm ra kẻ giả dối giữa những người thân quen.',
     nightAction: 'Không có hành động ban đêm.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Lắng nghe, phân tích và tìm mâu thuẫn trong lời khai của mọi người.',
@@ -107,6 +118,7 @@ const ROLES = [
   {
     id: 'sentinel', name: 'Sentinel', nameVi: 'Lính Canh', emoji: '🛡️',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 1, expansion: 'daybreak',
+    lore: 'Lính Canh là người đầu tiên thức dậy mỗi đêm, khi cả làng còn chìm trong giấc ngủ. Với tấm khiên cổ xưa được truyền qua nhiều thế hệ, ông đặt nó trước cửa nhà một người cần được bảo vệ. Tấm khiên mang phép thuật phòng thủ — không ai có thể đụng vào bài của người được bảo vệ, dù là Sói, Kẻ Cướp, hay Kẻ Gây Rối. Lính Canh hành động trước tất cả, và quyết định của ông có thể thay đổi cục diện cả trận đấu.',
     nightAction: 'Đặt khiên bảo vệ 1 người chơi. Người đó không thể bị xem hoặc đổi bài trong đêm.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Hãy bảo vệ người mà bạn nghĩ là vai quan trọng (Tiên Tri, Người Mất Ngủ...).',
@@ -116,6 +128,7 @@ const ROLES = [
   {
     id: 'alphawolf', name: 'Alpha Wolf', nameVi: 'Sói Đầu Đàn', emoji: '🐺',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2.1, expansion: 'daybreak',
+    lore: 'Sói Đầu Đàn là con sói lớn nhất, mạnh nhất và xảo quyệt nhất trong bầy. Hắn không chỉ săn mồi — hắn tạo ra đồng bọn mới. Bằng cú cắn trong đêm, hắn biến một người Dân vô tội thành Ma Sói, mở rộng bầy đàn mà nạn nhân không hề hay biết. Sáng hôm sau, kẻ bị cắn vẫn nghĩ mình là Dân, nhưng bài của họ đã thay đổi. Sói Đầu Đàn là nỗi khiếp sợ lớn nhất của ngôi làng — không phải vì sức mạnh, mà vì hắn biến kẻ thù thành đồng minh.',
     nightAction: 'Thức dậy cùng Sói. Sau đó đổi 1 bài ở giữa với bài của 1 người khác.',
     winCondition: 'Thắng nếu không có Sói nào bị loại.',
     tips: 'Đổi bài cho người được phe Dân tin tưởng nhất — biến họ thành Sói.',
@@ -125,6 +138,7 @@ const ROLES = [
   {
     id: 'mysticwolf', name: 'Mystic Wolf', nameVi: 'Sói Thần Bí', emoji: '🐺',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2.2, expansion: 'daybreak',
+    lore: 'Sói Thần Bí sở hữu đôi mắt có thể nhìn xuyên thấu tâm hồn con người. Không giống những con sói khác chỉ biết dùng nanh vuốt, con sói này dùng trí tuệ siêu nhiên. Trong đêm, nó lặng lẽ ghé đến bên một người và đọc được bản chất thật sự của họ — Tiên Tri, Thợ Săn, hay Dân Làng. Thông tin này trở thành vũ khí lợi hại nhất của phe Sói vào ban ngày, khi chúng biết chính xác ai cần bị loại bỏ trước.',
     nightAction: 'Thức dậy cùng Sói. Sau đó được xem bài của 1 người chơi.',
     winCondition: 'Thắng nếu không có Sói nào bị loại.',
     tips: 'Xem bài ai nguy hiểm nhất (Tiên Tri?) để chuẩn bị đối phó ban ngày.',
@@ -134,6 +148,7 @@ const ROLES = [
   {
     id: 'dreamwolf', name: 'Dream Wolf', nameVi: 'Sói Mộng Du', emoji: '🐺',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: null, expansion: 'daybreak',
+    lore: 'Sói Mộng Du là một người dân bình thường ban ngày — và hắn cũng tin mình là người bình thường. Nhưng trong giấc mơ, nanh vuốt mọc ra, bản năng hoang dã trỗi dậy. Hắn ngủ qua cả giai đoạn đêm, không thức dậy cùng đồng bọn Sói, và các Sói khác cũng không biết hắn tồn tại. Hắn là con sói cô đơn nhất — chiến đấu cho phe Sói mà không biết đồng minh là ai, không biết kẻ thù ở đâu, chỉ biết rằng mình phải sống sót.',
     nightAction: 'Thuộc phe Sói nhưng KHÔNG thức dậy. Sói khác không biết bạn.',
     winCondition: 'Thắng nếu không có Sói nào bị loại.',
     tips: 'Bạn không biết ai là Sói và họ không biết bạn. Đóng vai Dân thuyết phục nhất!',
@@ -143,6 +158,7 @@ const ROLES = [
   {
     id: 'apprenticeseer', name: 'Apprentice Seer', nameVi: 'Tiên Tri Học Việc', emoji: '🔮',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 4.5, expansion: 'daybreak',
+    lore: 'Tiên Tri Học Việc là đệ tử trẻ tuổi của Tiên Tri, đang trong quá trình rèn luyện khả năng ngoại cảm. Năng lực của cô chưa đủ mạnh để nhìn thấu bài của người chơi, nhưng cô có thể cảm nhận được một lá bài nằm yên ở giữa bàn. Dù chỉ là một mảnh ghép nhỏ, thông tin ấy đôi khi là chìa khóa để giải mã toàn bộ bí ẩn. Tiên Tri Học Việc chứng minh rằng ngay cả khả năng khiêm tốn nhất cũng có thể cứu cả ngôi làng.',
     nightAction: 'Xem 1 bài ở giữa bàn.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Biết 1 bài ở giữa giúp loại trừ — vai đó không ai giữ!',
@@ -152,6 +168,7 @@ const ROLES = [
   {
     id: 'paranormalinvestigator', name: 'P.I.', nameVi: 'Thám Tử', emoji: '🕵️',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 5.5, expansion: 'daybreak',
+    lore: 'Thám Tử là một nhà điều tra siêu nhiên, chuyên nghiên cứu những hiện tượng bí ẩn giữa ranh giới người và thú. Ông xem bài của người khác để tìm ra sự thật, nhưng có một rủi ro chết người: nếu ông nhìn vào mắt Ma Sói hoặc chạm vào bóng tối của Thợ Thuộc Da, tâm trí ông sẽ bị nhiễm. Ông trở thành chính thứ mà ông điều tra. Đây là nghề nguy hiểm nhất trong làng — nơi tìm kiếm sự thật có thể biến bạn thành kẻ thù.',
     nightAction: 'Xem bài tối đa 2 người. Nếu thấy Sói/Tanner → biến thành vai đó!',
     winCondition: 'Nếu thấy Sói → bạn là Sói. Thấy Tanner → bạn là Tanner. Còn lại → phe Dân.',
     tips: 'Rủi ro cao! Xem bài có thể biến bạn thành phe khác. Cân nhắc kỹ.',
@@ -161,6 +178,7 @@ const ROLES = [
   {
     id: 'witch', name: 'Witch', nameVi: 'Phù Thủy', emoji: '🧙',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 6.5, expansion: 'daybreak',
+    lore: 'Phù Thủy sống một mình ở rìa làng, trong căn nhà nhỏ đầy lọ thuốc và bùa phép. Dân làng sợ bà, nhưng cũng cần bà. Mỗi đêm, bà pha thuốc và nhìn vào một lá bài ở giữa bàn, thấy rõ bản chất của nó. Rồi bà quyết định — để yên, hoặc dùng phép thuật hoán đổi lá bài ấy với bài của một người chơi. Một quyết định tưởng nhỏ nhưng có thể lật ngược thế cờ: biến Dân thành Sói, hoặc tước đi sức mạnh của kẻ thù.',
     nightAction: 'Xem 1 bài ở giữa, có thể đổi bài đó với bài của 1 người chơi.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Nếu thấy bài Sói ở giữa, đổi cho người đáng ngờ để xác nhận hoặc gây rối.',
@@ -170,6 +188,7 @@ const ROLES = [
   {
     id: 'villageidiot', name: 'Village Idiot', nameVi: 'Ngốc Làng', emoji: '🤪',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 7.5, expansion: 'daybreak',
+    lore: 'Ngốc Làng không thực sự ngốc — ông chỉ nhìn thế giới theo cách riêng của mình. Trong khi mọi người ngủ say, ông lặng lẽ xoay tất cả các lá bài sang một hướng, tạo ra một cơn hỗn loạn mà chính ông cũng không hiểu hết hậu quả. Nhưng đôi khi, chính sự hỗn loạn ấy lại phơi bày những bí mật mà trật tự không thể. Ngốc Làng dạy cho cả làng một bài học: đôi khi, phá vỡ mọi quy luật lại là cách tốt nhất để tìm ra sự thật.',
     nightAction: 'Xoay bài của tất cả người khác sang trái hoặc phải (không xem).',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Khai báo hướng xoay giúp mọi người suy luận ai đang giữ bài gì.',
@@ -179,6 +198,7 @@ const ROLES = [
   {
     id: 'revealer', name: 'Revealer', nameVi: 'Người Lật Bài', emoji: '🔦',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 9.5, expansion: 'daybreak',
+    lore: 'Người Lật Bài tin rằng sự thật phải được phơi bày dưới ánh sáng. Với ngọn đèn dầu cổ, ông lật bài của một người ngủ say. Nếu lá bài cho thấy họ là Dân vô tội, ông để ngỏ cho cả làng thấy vào sáng mai — xóa bỏ mọi nghi ngờ. Nhưng nếu ông lật phải bài của Sói hoặc Thợ Thuộc Da, ông vội vàng úp lại và giữ bí mật cho riêng mình. Người Lật Bài biết rằng một số sự thật cần được chia sẻ, và một số khác cần được giữ kín cho đúng thời điểm.',
     nightAction: 'Lật bài 1 người. Nếu không phải Sói/Tanner → công khai cho tất cả!',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Nếu lật được Dân → tất cả biết → thu hẹp nghi phạm Sói.',
@@ -188,11 +208,24 @@ const ROLES = [
   {
     id: 'bodyguard', name: 'Bodyguard', nameVi: 'Cận Vệ', emoji: '💪',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: null, expansion: 'daybreak',
+    lore: 'Cận Vệ từng là một chiến binh dày dạn trận mạc, giờ đây dành phần đời còn lại để bảo vệ người yếu đuối. Ông không thức dậy ban đêm — ông để giấc ngủ giữ cho cơ bắp tỉnh táo. Nhưng khi ban ngày đến và lá phiếu bay, ông sử dụng sức mạnh đặc biệt: thay vì kết tội, ông chọn bảo vệ. Người được Cận Vệ chỉ vào sẽ thoát khỏi bản án tử, bất kể bao nhiêu lá phiếu chống lại họ.',
     nightAction: 'Không thức dậy ban đêm. Khi vote: chỉ vào người muốn BẢO VỆ thay vì loại.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Đừng tiết lộ mình là Cận Vệ. Bảo vệ người bạn tin là Dân!',
     nightScript: 'Cận Vệ không thức dậy ban đêm.',
     howToPlay: 'Ban đêm: Không có hành động.\nBan ngày: Khi bỏ phiếu, thay vì chọn người để LOẠI, bạn chọn người để BẢO VỆ.\n💪 Người được bạn chỉ vào sẽ KHÔNG THỂ bị treo cổ!\n⚠️ Nếu người được bảo vệ bị vote nhiều nhất, người có phiếu cao thứ 2 (≥2 phiếu) sẽ bị loại thay.\nMục tiêu: Bảo vệ đúng người phe Dân. Đừng tiết lộ mình là Cận Vệ — Sói sẽ tránh vote người được bảo vệ.',
+  },
+  // ─── Coming Soon ───
+  {
+    id: 'doppelganger', name: 'Doppelgänger', nameVi: 'Kẻ Giả Dạng', emoji: '🎭',
+    team: 'village', teamLabel: '???', nightOrder: 0, expansion: 'base',
+    comingSoon: true,
+    lore: 'Kẻ Giả Dạng là bóng ma giữa ban ngày — một thực thể có thể sao chép hoàn toàn danh tính của bất kỳ ai. Trong đêm, cô nhìn vào bài của một người chơi khác và ngay lập tức trở thành vai đó, thừa hưởng mọi khả năng và phe phái. Không ai biết cô là bản gốc hay bản sao. Cô có thể là Tiên Tri thứ hai, Ma Sói thứ ba, hoặc thậm chí là Thợ Thuộc Da. Kẻ Giả Dạng nhắc nhở chúng ta rằng trong ngôi làng này, không gì là như vẻ bề ngoài.',
+    nightAction: 'Xem bài của 1 người chơi và trở thành vai đó ngay lập tức.',
+    winCondition: 'Thắng theo phe của vai mà bạn sao chép.',
+    tips: 'Bạn hành động như vai đã sao chép. Nếu sao chép Sói, bạn là Sói!',
+    nightScript: '"Kẻ Giả Dạng, hãy mở mắt. Xem bài của 1 người chơi." — Kẻ Giả Dạng trở thành vai đó và thực hiện hành động tương ứng ngay lập tức. "Kẻ Giả Dạng, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Thức dậy ĐẦU TIÊN. Xem bài của 1 người → bạn trở thành vai đó.\n• Nếu vai có hành động đêm → bạn thực hiện ngay\n• Bạn thuộc phe của vai mới\nBan ngày: Hành xử theo vai đã sao chép.\nMục tiêu: Thắng theo phe của vai bạn đã trở thành.',
   },
 ];
 
@@ -248,13 +281,16 @@ function RoleList({ roles, onSelect }) {
                 <button
                   key={role.id}
                   onClick={() => onSelect(role.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all active:scale-[0.98] ${tc.bg} hover:brightness-125`}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all active:scale-[0.98] ${tc.bg} hover:brightness-125 relative overflow-hidden`}
                 >
                   <RoleIcon roleId={role.id} size={36} circular />
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm">{role.nameVi}</span>
                       <span className="text-white/30 text-xs">{role.name}</span>
+                      {role.comingSoon && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-moon-400/20 text-moon-400 border border-moon-400/30">SOON</span>
+                      )}
                     </div>
                     <p className="text-white/50 text-xs mt-0.5 line-clamp-1">{role.nightAction}</p>
                   </div>
@@ -284,19 +320,47 @@ function RoleDetail({ role, onBack }) {
       <button onClick={onBack} className="text-moon-400 text-sm mb-3 hover:text-moon-300">← Quay lại</button>
 
       {/* Role card — full portrait */}
-      <div className={`rounded-2xl border mb-4 ${tc.bg} overflow-hidden`}>
+      <div className={`rounded-2xl border mb-4 ${tc.bg} overflow-hidden relative`}>
         <div className="flex flex-col items-center p-4">
-          <RoleIcon roleId={role.id} size={140} className="shadow-lg !rounded-xl" />
+          <div className="relative">
+            <RoleIcon roleId={role.id} size={140} className="shadow-lg !rounded-xl" />
+            {role.comingSoon && (
+              <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-[2px]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.6), rgba(30,20,50,0.7))',
+                  border: '2px solid rgba(196,168,107,0.3)',
+                  boxShadow: '0 0 20px rgba(196,168,107,0.15)',
+                }}
+              >
+                <div className="text-center">
+                  <span className="text-3xl block mb-1">🎭</span>
+                  <span className="text-moon-400 text-xs font-bold tracking-widest uppercase">Coming Soon</span>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="text-center mt-3">
             <h3 className="text-xl font-bold text-white">{role.nameVi}</h3>
             <span className="text-white/40 text-sm">{role.name}</span>
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tc.badge}`}>{role.teamLabel}</span>
-              {role.nightOrder && <span className="text-white/30 text-[10px]">Đêm thứ {role.nightOrder}</span>}
+              {role.nightOrder != null && !role.comingSoon && <span className="text-white/30 text-[10px]">Đêm thứ {role.nightOrder}</span>}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Lore / Backstory */}
+      {role.lore && (
+        <div className="mb-4 p-4 rounded-xl overflow-hidden relative"
+          style={{
+            background: 'linear-gradient(135deg, rgba(196,168,107,0.06), rgba(255,255,255,0.02))',
+            border: '1px solid rgba(196,168,107,0.12)',
+          }}
+        >
+          <p className="text-moon-300/60 text-sm italic leading-relaxed">"{role.lore}"</p>
+        </div>
+      )}
 
       {/* Night script */}
       <Section icon="🌙" title="Kịch bản ban đêm" color="text-moon-400">
