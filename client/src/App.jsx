@@ -37,6 +37,7 @@ export default function App() {
     knownWerewolves: [],
     swappedPairs: [],
     myCurrentRole: null,
+    shieldedPlayer: null,
   });
 
   const [connectionLost, setConnectionLost] = useState(false);
@@ -130,7 +131,7 @@ export default function App() {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null });
     });
 
     socket.on('role_assigned', ({ roleId, role }) => {
@@ -168,6 +169,13 @@ export default function App() {
         setNightKnowledge(prev => ({
           ...prev,
           knownMasons: actionData.masons.map(m => m.id),
+        }));
+      }
+      // Capture sentinel shield from actionData (sent to roles after sentinel)
+      if (actionData.shieldedPlayer) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          shieldedPlayer: actionData.shieldedPlayer,
         }));
       }
     });
@@ -317,7 +325,7 @@ export default function App() {
       setMyRole(null);
       setResults(null);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null });
       setScreen('lobby');
       stopBGM();
     });
@@ -370,6 +378,12 @@ export default function App() {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, [socket.id, action.centerSlot]],
+      }));
+    }
+    if (role === 'sentinel' && action.targetPlayer) {
+      setNightKnowledge(prev => ({
+        ...prev,
+        shieldedPlayer: action.targetPlayer,
       }));
     }
     if (role === 'alphawolf' && action.targetPlayer) {
@@ -470,7 +484,7 @@ export default function App() {
     </>);
   }
   if (screen === 'results') {
-    return (<><SceneBackground scene="day" />{connectionOverlay}
+    return (<>{connectionOverlay}
       <ResultsScreen
         results={results}
         myId={socket.id}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import socket, { playerToken } from '../socket';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
@@ -9,6 +9,17 @@ import RoleLibrary from '../components/RoleLibrary';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
+
+const FAMOUS_QUOTES = [
+  { en: 'Man is a wolf to man.', author: 'Plautus', vi: 'Con người là sói đối với chính đồng loại mình.' },
+  { en: 'The only thing we have to fear is fear itself.', author: 'Franklin D. Roosevelt', vi: 'Điều đáng sợ nhất không phải bóng tối, mà là nỗi sợ bên trong mỗi người.' },
+  { en: "If you tell the truth, you don't have to remember anything.", author: 'Mark Twain', vi: 'Kẻ nói thật không cần nhớ mình đã bịa điều gì.' },
+  { en: 'He who fights with monsters should look to it that he himself does not become a monster.', author: 'Friedrich Nietzsche', vi: 'Kẻ săn quái vật phải coi chừng chính mình hóa thành quái vật.' },
+  { en: 'And when you gaze long into an abyss, the abyss also gazes into you.', author: 'Friedrich Nietzsche', vi: 'Khi nhìn quá lâu vào bóng tối, bóng tối cũng bắt đầu nhìn lại bạn.' },
+  { en: 'In order to be an irreproachable member of a flock of sheep, one must above all be a sheep oneself.', author: 'Albert Einstein', vi: 'Muốn không bị nghi ngờ giữa bầy cừu, trước hết hãy biết trở thành một con cừu.' },
+  { en: 'Truth is stranger than fiction.', author: 'Mark Twain', vi: 'Sự thật đôi khi còn khó tin hơn cả lời bịa đặt.' },
+  { en: 'A liar is not believed when he tells the truth.', author: 'Tục ngữ', vi: 'Kẻ nói dối sẽ chẳng còn được tin, ngay cả khi hắn nói thật.' },
+];
 
 function generateName() {
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
@@ -29,6 +40,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
   const [showLibrary, setShowLibrary] = useState(false);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
+  const quote = useMemo(() => FAMOUS_QUOTES[Math.floor(Math.random() * FAMOUS_QUOTES.length)], []);
 
   function handleCreate(e) {
     e.preventDefault();
@@ -100,13 +112,18 @@ export default function HomeScreen({ onJoin, error, setError }) {
 
       {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} />}
 
-      <div className="text-center mb-8 sm:mb-10 relative z-10">
+      <div className="text-center mb-6 sm:mb-8 relative z-10">
         <img
           src="/images/logo-game.png"
           alt="One Night Ultimate Werewolf"
-          className="w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-2 drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]"
+          className="w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-3 drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]"
           draggable={false}
         />
+        <div className="max-w-xs mx-auto">
+          <p className="text-white/30 text-xs italic leading-relaxed">"{quote.en}"</p>
+          <p className="text-moon-400/50 text-[11px] italic mt-0.5">{quote.vi}</p>
+          <p className="text-white/20 text-[10px] mt-1">— {quote.author}</p>
+        </div>
       </div>
 
       {!isLoggedIn && !mode ? (

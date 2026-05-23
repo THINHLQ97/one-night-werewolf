@@ -122,9 +122,11 @@ export default function GameTable({
                       <span className="absolute bottom-0 left-0 right-0 text-[7px] text-white font-bold text-center bg-black/60 py-0.5 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full relative overflow-hidden rounded-[6px]">
+                    <div className="flex items-center justify-center h-full relative overflow-hidden rounded-[6px]">
                       <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" />
-                      <span className={`relative text-[8px] mt-auto mb-0.5 font-bold ${isWolf ? 'text-wolf-400' : 'text-white/60'}`}>{isWolf ? '🐺 Alpha' : ''}</span>
+                      {isWolf && (
+                        <span className="relative z-10 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" style={{ fontSize: Math.round(cardW * 0.45) }}>🐺</span>
+                      )}
                     </div>
                   )}
                 </button>

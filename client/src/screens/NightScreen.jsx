@@ -189,7 +189,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     return selected.length === 1;
   })();
 
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null, shieldedPlayer = null } = nightKnowledge || {};
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
@@ -249,6 +249,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         onSelect={handleSelect}
         isNight={true}
         hasAlphaWolf={hasAlphaWolf}
+        shieldedPlayer={shieldedPlayer}
       />
 
       {/* Action Panel */}

@@ -1,7 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import RoleIcon, { CARD_BACK } from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
+
+const NIGHT_QUOTES = [
+  'Trong ngôi làng này, im lặng cũng có thể là một lời thú tội.',
+  'Kẻ đáng tin nhất đôi khi chỉ là kẻ nói dối giỏi nhất.',
+  'Sói không cần phá cửa. Chúng chỉ cần được mời vào bằng lòng tin.',
+  'Dân làng không sợ bóng tối. Họ sợ người đứng cạnh mình trong bóng tối.',
+  'Bình minh chỉ đến với những ai sống sót qua lời buộc tội cuối cùng.',
+  'Một lá phiếu có thể cứu cả làng, hoặc dâng nó cho bầy sói.',
+  'Ở đây, sự thật không thắng nhờ được nói ra — mà nhờ có người còn sống để nghe nó.',
+];
 
 const TEAM_STYLE = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Phe Sói', glow: 'shadow-[0_0_30px_rgba(231,76,60,0.3)]' },
@@ -13,6 +23,7 @@ export default function RoleRevealScreen({ myRole }) {
   const [revealed, setRevealed] = useState(false);
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const nightQuote = useMemo(() => NIGHT_QUOTES[Math.floor(Math.random() * NIGHT_QUOTES.length)], []);
 
   if (!myRole) {
     return (
@@ -83,14 +94,13 @@ export default function RoleRevealScreen({ myRole }) {
         </div>
       )}
 
-      <p className="text-white/30 text-sm mt-8 text-center max-w-xs">
-        Đêm sẽ bắt đầu sau 15 giây. Hãy nhớ vai của bạn và đừng tiết lộ cho người khác!
-      </p>
-
-      <div className="mt-4 flex gap-1">
-        {[...Array(15)].map((_, i) => (
-          <div key={i} className="w-2 h-2 rounded-full bg-white/20" />
-        ))}
+      <div className="mt-8 text-center max-w-xs px-4">
+        <p className="text-white/30 text-sm mb-3">
+          Đêm sẽ bắt đầu sau 15 giây. Hãy nhớ vai của bạn!
+        </p>
+        <p className="text-moon-400/40 text-xs italic leading-relaxed">
+          "{nightQuote}"
+        </p>
       </div>
 
       <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} />

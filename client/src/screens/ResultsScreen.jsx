@@ -33,6 +33,56 @@ const RESULT_SIGNS = {
   tanner_lose: '/images/result sign/tanner-lose.webp',
 };
 
+const WIN_SCENES = {
+  village: '/images/villages-win-scene.png',
+  werewolf: '/images/werewolves-win-scene.png',
+  tanner: '/images/tanner-win-scene.png',
+};
+
+const isWolfRole = r => ['werewolf', 'alphawolf', 'mysticwolf', 'dreamwolf'].includes(r);
+
+const WIN_NARRATIONS = {
+  no_wolves_village_killed: 'Đêm ấy, chẳng có con sói nào ẩn trong làng. Chỉ có nỗi sợ âm thầm lớn lên, cho đến khi dân làng tự nhuộm đỏ tay mình.',
+  no_wolves_tanner_killed: 'Không có Ma sói nào ẩn trong đêm ấy. Chỉ có một kẻ đã chán ghét sự sống đến tận cùng, và dân làng vô tình trao cho hắn chiến thắng mà hắn mong chờ nhất.',
+  no_wolves_minion_survived: 'Không có Ma sói trong bóng tối, nhưng kẻ phản bội vẫn còn đó. Hắn mỉm cười giữa đám đông, khi cả làng chẳng hay mình vừa để tội ác sống sót.',
+  no_wolves_minion_killed: 'Dù Ma sói không xuất hiện, bóng phản bội vẫn len lỏi giữa dân làng. Nhưng lần này, ánh mắt nghi ngờ đã chỉ đúng kẻ cần bị phán xét.',
+  wolves_wolf_killed: 'Khi bình minh rạch ngang màn đêm, con sói cuối cùng đã gục xuống. Ngôi làng sống sót, run rẩy nhưng vẫn còn nguyên tiếng chuông ngày mới.',
+  wolves_human_killed: 'Dân làng đã treo án cho nhầm người. Và trong khoảnh khắc họ nhận ra sự thật, tiếng tru của Ma sói đã vang lên từ phía sau lưng.',
+  wolves_tanner_killed: 'Giữa cơn săn đuổi của người và sói, hắn chỉ chờ một bản án dành cho mình. Và khi dân làng ra tay, kẻ Chán đời đã thắng bằng cái chết hắn hằng mong.',
+};
+
+function getWinScenario(results, players) {
+  const { eliminated, winners, finalCards } = results;
+  const wolvesInGame = players.some(p => isWolfRole(finalCards[p.id]));
+  const eliminatedTanner = eliminated.some(id => finalCards[id] === 'tanner');
+  const eliminatedWolf = eliminated.some(id => isWolfRole(finalCards[id]));
+  const minionInGame = players.some(p => finalCards[p.id] === 'minion');
+  const eliminatedMinion = eliminated.some(id => finalCards[id] === 'minion');
+
+  if (eliminatedTanner) {
+    return wolvesInGame ? 'wolves_tanner_killed' : 'no_wolves_tanner_killed';
+  }
+  if (wolvesInGame) {
+    return eliminatedWolf ? 'wolves_wolf_killed' : 'wolves_human_killed';
+  }
+  // No wolves
+  if (eliminated.length === 0) {
+    return minionInGame ? 'no_wolves_minion_survived' : null; // peace = no special narration
+  }
+  if (eliminatedMinion) return 'no_wolves_minion_killed';
+  return 'no_wolves_village_killed';
+}
+
+function getWinningTeam(results, players) {
+  const { winners, finalCards } = results;
+  if (!winners || winners.length === 0) return null;
+  const firstWinner = winners[0];
+  const role = finalCards[firstWinner];
+  if (isWolfRole(role) || role === 'minion') return 'werewolf';
+  if (role === 'tanner') return 'tanner';
+  return 'village';
+}
+
 export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [showContent, setShowContent] = useState(false);
@@ -51,6 +101,11 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   const isWinner = winners.includes(myId);
   const playerMap = {};
   players.forEach(p => { playerMap[p.id] = p.name; });
+
+  const winScenario = getWinScenario(results, players);
+  const narration = winScenario ? WIN_NARRATIONS[winScenario] : null;
+  const winningTeam = getWinningTeam(results, players);
+  const sceneBg = winningTeam ? WIN_SCENES[winningTeam] : null;
 
   // Determine result sign based on the player's OWN team
   const myTeam = TEAM_OF[finalCards[myId]] || 'village';
@@ -73,6 +128,9 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   return (
     <>
+      {/* Win scene background */}
+      {sceneBg && <ResultSceneBackground src={sceneBg} />}
+
       {/* Win confetti / Lose vignette overlay */}
       {isWinner ? <ConfettiOverlay /> : <LoseVignette />}
 
@@ -92,6 +150,13 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
             <div className="py-6">
               <p className="text-2xl font-bold text-white/60">Không ai thắng</p>
             </div>
+          )}
+
+          {/* Win/Lose narration */}
+          {narration && (
+            <p className="text-white/50 text-sm italic mt-3 max-w-sm mx-auto leading-relaxed">
+              "{narration}"
+            </p>
           )}
 
           {rankUpdates[myId] && (
@@ -282,9 +347,33 @@ function LoseVignette() {
   );
 }
 
+/* ─── Result scene background ─────────────────────────────────────────────── */
+
+function ResultSceneBackground({ src }) {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => setLoaded(true);
+  }, [src]);
+
+  return (
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-[1500ms] ease-in-out"
+        style={{
+          backgroundImage: loaded ? `url(${src})` : 'none',
+          opacity: loaded ? 1 : 0,
+        }}
+      />
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.40)' }} />
+    </div>
+  );
+}
+
 /* ─── Night log entry ──────────────────────────────────────────────────────── */
 
-const CENTER_LABEL = { center0: 'Center 1', center1: 'Center 2', center2: 'Center 3', centerWolf: 'Alpha' };
+const CENTER_LABEL = { center0: 'Giữa 1', center1: 'Giữa 2', center2: 'Giữa 3', centerWolf: 'Alpha' };
 
 function NightLogEntry({ entry, playerMap }) {
   const { role, playerName, action, result, targetName, target1Name, target2Name } = entry;
@@ -293,56 +382,56 @@ function NightLogEntry({ entry, playerMap }) {
   function describeAction() {
     switch (role) {
       case 'werewolf':
-        if (result.peeked) return `peeked at ${CENTER_LABEL[result.peeked.slot] || result.peeked.slot} -> ${ROLE_NAMES[result.peeked.role] || '?'}`;
-        if (result.werewolves) return `saw fellow wolves`;
-        return 'woke up';
-      case 'minion': return 'saw the werewolves';
-      case 'mason': return 'saw fellow masons';
+        if (result.peeked) return `xem ${CENTER_LABEL[result.peeked.slot] || result.peeked.slot} → ${ROLE_NAMES[result.peeked.role] || '?'}`;
+        if (result.werewolves) return 'nhìn thấy đồng bọn Sói';
+        return 'thức dậy';
+      case 'minion': return 'nhìn thấy các Sói';
+      case 'mason': return 'nhìn thấy Sinh Đôi';
       case 'seer':
-        if (result.seen?.type === 'player') return `saw ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}`;
+        if (result.seen?.type === 'player') return `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
         if (result.seen?.type === 'center') {
           const slots = result.seen.slots || [];
-          return `saw center: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+          return `xem giữa: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
         }
-        return 'looked';
+        return 'quan sát';
       case 'apprenticeseer':
-        if (result.seen?.slots) return `saw center: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot}=${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
-        return 'looked at center';
+        if (result.seen?.slots) return `xem giữa: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+        return 'xem bài ở giữa';
       case 'robber': {
         const name = targetName || playerMap[action.targetPlayer] || '?';
-        return action.targetPlayer ? `robbed ${name}${result.newRole ? ` -> became ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'did nothing';
+        return action.targetPlayer ? `cướp bài ${name}${result.newRole ? ` → thành ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'không hành động';
       }
       case 'troublemaker': {
         const n1 = target1Name || playerMap[action.target1] || '?';
         const n2 = target2Name || playerMap[action.target2] || '?';
-        return (action.target1 && action.target2) ? `swapped ${n1} <-> ${n2}` : 'did nothing';
+        return (action.target1 && action.target2) ? `hoán đổi ${n1} ↔ ${n2}` : 'không hành động';
       }
       case 'drunk':
-        return action.centerSlot ? `swapped with ${CENTER_LABEL[action.centerSlot] || action.centerSlot}` : 'did nothing';
+        return action.centerSlot ? `đổi bài với ${CENTER_LABEL[action.centerSlot] || action.centerSlot}` : 'không hành động';
       case 'insomniac':
-        return result.currentRole ? `woke up as ${ROLE_NAMES[result.currentRole] || '?'}` : 'checked role';
+        return result.currentRole ? `thức dậy, bài hiện tại: ${ROLE_NAMES[result.currentRole] || '?'}` : 'kiểm tra bài';
       case 'sentinel':
-        return action.targetPlayer ? `shielded ${targetName || playerMap[action.targetPlayer] || '?'}` : 'did nothing';
+        return action.targetPlayer ? `đặt khiên cho ${targetName || playerMap[action.targetPlayer] || '?'}` : 'không hành động';
       case 'alphawolf': {
         const name = targetName || playerMap[action.targetPlayer] || '?';
-        return action.targetPlayer ? (result.blocked ? `tried to turn ${name} (blocked)` : `turned ${name} into a werewolf`) : 'did nothing';
+        return action.targetPlayer ? (result.blocked ? `cố biến ${name} thành Sói (bị chặn)` : `biến ${name} thành Sói`) : 'không hành động';
       }
       case 'mysticwolf':
-        return result.seen ? `saw ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}` : 'looked';
+        return result.seen ? `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'quan sát';
       case 'paranormalinvestigator':
-        return result.seen ? `investigated ${playerMap[result.seen.id] || targetName || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'}` : 'investigated';
+        return result.seen ? `điều tra ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'điều tra';
       case 'witch':
-        if (result.seen && action.swap && action.targetPlayer) return `saw ${CENTER_LABEL[action.centerSlot] || '?'}=${ROLE_NAMES[result.seen.role] || '?'}, swapped with ${targetName || playerMap[action.targetPlayer] || '?'}`;
-        if (result.seen) return `saw ${CENTER_LABEL[action.centerSlot] || '?'} -> ${ROLE_NAMES[result.seen.role] || '?'} (no swap)`;
-        return 'looked at center';
+        if (result.seen && action.swap && action.targetPlayer) return `xem ${CENTER_LABEL[action.centerSlot] || '?'} = ${ROLE_NAMES[result.seen.role] || '?'}, đổi cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
+        if (result.seen) return `xem ${CENTER_LABEL[action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'} (không đổi)`;
+        return 'xem bài ở giữa';
       case 'revealer':
-        if (result.revealed && result.targetPlayer) return `revealed ${targetName || playerMap[result.targetPlayer] || '?'} -> ${ROLE_NAMES[result.role] || '?'}`;
-        if (result.blocked) return `tried to reveal ${targetName || '?'} (wolf/tanner - hidden)`;
-        return 'did nothing';
-      case 'villageidiot': return 'shifted all cards';
-      case 'bodyguard': return 'woke up';
-      case 'dreamwolf': return 'stayed asleep';
-      default: return 'woke up';
+        if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
+        if (result.blocked) return `cố lật bài ${targetName || '?'} (Sói/Tanner — ẩn)`;
+        return 'không hành động';
+      case 'villageidiot': return 'xoay tất cả bài sang trái';
+      case 'bodyguard': return 'thức dậy';
+      case 'dreamwolf': return 'ngủ say';
+      default: return 'thức dậy';
     }
   }
 
