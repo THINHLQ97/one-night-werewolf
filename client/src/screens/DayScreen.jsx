@@ -58,7 +58,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
       {/* Header */}
       <div className="text-center pt-2 pb-2">
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-3 mb-1">
           <span className="text-yellow-400"><Icon name="sun" size={28} /></span>
           <div>
             <h2 className="text-lg font-bold text-moon-300">Thảo luận & Bỏ phiếu</h2>
@@ -67,17 +67,18 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
               {mins}:{secs}
             </div>
           </div>
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => setRoleHidden(h => !h)}
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
-              title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
-            >
-              <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
-            </button>
-            <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
-            <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
-          </div>
+        </div>
+        {/* Toolbar row */}
+        <div className="flex items-center justify-center gap-1.5 mb-1">
+          <button
+            onClick={() => setRoleHidden(h => !h)}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+          >
+            <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
+          </button>
+          <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
         </div>
         <p className="text-white/40 text-xs mt-1">
           {votedCount}/{players.length} đã vote · {isBodyguard ? 'Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}

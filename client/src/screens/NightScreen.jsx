@@ -196,20 +196,21 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
       {/* Header */}
       <div className="text-center pt-2 pb-3">
-        <div className="flex items-center justify-center gap-2 mb-1">
+        <div className="flex items-center justify-center gap-2 mb-1.5">
           <span className="text-moon-400 pulse-moon"><Icon name="moon" size={28} /></span>
           <h2 className="text-lg font-semibold text-moon-300">Ban đêm</h2>
-          <div className="ml-2 flex gap-1.5">
-            <button
-              onClick={() => setRoleHidden(h => !h)}
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
-              title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
-            >
-              <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
-            </button>
-            <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
-            <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
-          </div>
+        </div>
+        {/* Toolbar row */}
+        <div className="flex items-center justify-center gap-1.5 mb-1">
+          <button
+            onClick={() => setRoleHidden(h => !h)}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 transition-colors"
+            title={roleHidden ? 'Hiện vai' : 'Ẩn vai'}
+          >
+            <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
+          </button>
+          <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
         </div>
         {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">
