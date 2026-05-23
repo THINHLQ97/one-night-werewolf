@@ -940,11 +940,52 @@ io.on('connection', socket => {
     cb?.({ ok: true });
   });
 
+  // ── Voice Chat (WebRTC signaling) ──
+  socket.on('voice_join', ({ roomCode }) => {
+    const room = getRoom(roomCode);
+    if (!room) return;
+    if (!room.voiceParticipants) room.voiceParticipants = new Set();
+    // Send current voice peers to the joiner
+    const existingPeers = [...room.voiceParticipants].filter(id => id !== socket.id);
+    socket.emit('voice_peers', { peers: existingPeers });
+    // Add to set and notify others
+    room.voiceParticipants.add(socket.id);
+    socket.to(roomCode).emit('voice_peer_joined', { peerId: socket.id });
+  });
+
+  socket.on('voice_leave', ({ roomCode }) => {
+    const room = getRoom(roomCode);
+    if (!room || !room.voiceParticipants) return;
+    room.voiceParticipants.delete(socket.id);
+    io.to(roomCode).emit('voice_peer_left', { peerId: socket.id });
+  });
+
+  socket.on('webrtc_signal', ({ to, signal }) => {
+    io.to(to).emit('webrtc_signal', { from: socket.id, signal });
+  });
+
+  socket.on('voice_mute_change', ({ roomCode, muted }) => {
+    socket.to(roomCode).emit('voice_muted', { peerId: socket.id, muted });
+  });
+
+  socket.on('voice_host_mute', ({ roomCode, targetId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.hostId !== socket.id) return;
+    // Send mute request to the target player
+    io.to(targetId).emit('voice_host_mute_request', { by: socket.id });
+  });
+
   // ── Disconnect ──
   socket.on('disconnect', () => {
     console.log('Disconnected:', socket.id);
     const room = getRoomByPlayerId(socket.id);
     if (!room) return;
+
+    // Clean up voice chat
+    if (room.voiceParticipants?.has(socket.id)) {
+      room.voiceParticipants.delete(socket.id);
+      io.to(room.code).emit('voice_peer_left', { peerId: socket.id });
+    }
 
     const player = room.players.find(p => p.id === socket.id);
 

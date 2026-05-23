@@ -4,6 +4,7 @@ import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import { sfxCardFlip, sfxReveal } from '../audio';
+import VoiceChatControls from '../components/VoiceChatControls';
 
 const ROLE_NAMES = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer',
@@ -16,7 +17,7 @@ const ROLE_NAMES = {
   revealer: 'Revealer', bodyguard: 'Bodyguard',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking }) {
   const { currentRole, isMyTurn, actionData, result } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -207,6 +208,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
             </button>
             <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+            <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
           </div>
         </div>
         {myRole && !roleHidden && (
@@ -250,6 +252,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         isNight={true}
         hasAlphaWolf={hasAlphaWolf}
         shieldedPlayer={shieldedPlayer}
+        voiceSpeaking={voiceSpeaking || {}}
       />
 
       {/* Action Panel */}

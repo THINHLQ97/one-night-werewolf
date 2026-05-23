@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import RoleIcon, { CARD_BACK } from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
+import VoiceChatControls from '../components/VoiceChatControls';
+import socket from '../socket';
 
 const NIGHT_QUOTES = [
   'Trong ngôi làng này, im lặng cũng có thể là một lời thú tội.',
@@ -19,7 +21,7 @@ const TEAM_STYLE = {
   tanner:   { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', label: 'Phe Riêng', glow: 'shadow-[0_0_30px_rgba(142,68,173,0.3)]' },
 };
 
-export default function RoleRevealScreen({ myRole }) {
+export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking }) {
   const [revealed, setRevealed] = useState(false);
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
@@ -55,6 +57,7 @@ export default function RoleRevealScreen({ myRole }) {
             </button>
           )}
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
         </div>
       </div>
 

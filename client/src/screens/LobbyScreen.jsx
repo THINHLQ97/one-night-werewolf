@@ -3,6 +3,7 @@ import socket from '../socket';
 import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RankBadge from '../components/RankBadge';
+import VoiceChatControls from '../components/VoiceChatControls';
 
 const ALL_ROLES = [
   // Base
@@ -142,7 +143,7 @@ const ROLE_DETAILS = {
   },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
@@ -222,6 +223,10 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           {roomCode}
         </button>
         <p className="text-white/40 text-xs mt-1">Nhấn để copy · Chia sẻ với bạn bè</p>
+        {/* Voice chat controls in lobby */}
+        <div className="flex items-center justify-center mt-3">
+          <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
+        </div>
       </div>
 
       {/* Players */}
@@ -241,6 +246,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                     : 'bg-white/10 text-white/80'
               }`}
             >
+              {voiceSpeaking?.[p.id] && <span className="inline-block w-2 h-2 rounded-full mr-1 align-middle" style={{ background: '#4ade80', boxShadow: '0 0 4px rgba(74,222,128,0.8)', animation: 'voicePulse 1s ease-in-out infinite' }} />}
               {p.isBot ? <><Icon name="robot" size={14} className="inline mr-1" /></> : p.id === hostId ? <><Icon name="crown" size={14} className="inline mr-1 text-moon-300" /></> : ''}{p.rank && <RankBadge rank={p.rank} size={16} className="inline-flex mr-1 align-middle" />}{p.name}
               {p.id === socket.id ? ' (Bạn)' : ''}
             </span>

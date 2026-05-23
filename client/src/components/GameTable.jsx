@@ -50,6 +50,7 @@ export default function GameTable({
   isNight = false,
   hasAlphaWolf = false,
   shieldedPlayer = null,
+  voiceSpeaking = {},
 }) {
   const containerRef = useRef(null);
   const rawSize = useContainerSize(containerRef);
@@ -258,6 +259,21 @@ export default function GameTable({
                 {/* Winner crown */}
                 {isWinner && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-sm">🏆</span>
+                )}
+
+                {/* Voice speaking indicator */}
+                {voiceSpeaking[p.id] && (
+                  <span
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      top: -2, right: -2,
+                      width: 12 * scale, height: 12 * scale,
+                      background: 'radial-gradient(circle, #4ade80 30%, rgba(74,222,128,0.4))',
+                      boxShadow: '0 0 6px rgba(74,222,128,0.8)',
+                      animation: 'voicePulse 1s ease-in-out infinite',
+                      zIndex: 10,
+                    }}
+                  />
                 )}
               </div>
 

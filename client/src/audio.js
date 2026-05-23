@@ -53,15 +53,16 @@ function fadeOut(audio, duration = 1500) {
 }
 
 function fadeIn(audio, targetVol, duration = 2000) {
+  const adjustedTarget = targetVol * bgmVolumeMaster;
   audio.volume = 0;
   audio.play().catch(() => {});
   const steps = Math.max(1, duration / 50);
-  const inc = targetVol / steps;
+  const inc = adjustedTarget / steps;
   const timer = setInterval(() => {
-    if (audio.volume < targetVol - inc) {
-      audio.volume = Math.min(targetVol, audio.volume + inc);
+    if (audio.volume < adjustedTarget - inc) {
+      audio.volume = Math.min(adjustedTarget, audio.volume + inc);
     } else {
-      audio.volume = targetVol;
+      audio.volume = adjustedTarget;
       clearInterval(timer);
     }
   }, 50);
@@ -144,6 +145,21 @@ export function sfxWin() {
 
 export function sfxLose() {
   playEffect('/audio/lose-effect.mp3', 0.5);
+}
+
+// ─── BGM volume control ─────────────────────────────────────────────────────
+
+let bgmVolumeMaster = 1.0; // 0..1 multiplier for BGM volume
+
+export function setBgmVolume(vol) {
+  bgmVolumeMaster = Math.max(0, Math.min(1, vol));
+  if (currentBgm && !currentBgm.paused) {
+    currentBgm.volume = 0.25 * bgmVolumeMaster;
+  }
+}
+
+export function getBgmVolume() {
+  return bgmVolumeMaster;
 }
 
 // ─── SFX (stubs — no more synthesized sounds) ────────────────────────────────

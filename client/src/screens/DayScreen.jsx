@@ -4,6 +4,7 @@ import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import TokenClaimBoard from '../components/TokenClaimBoard';
+import VoiceChatControls from '../components/VoiceChatControls';
 
 function useCountdown(timerEnd, paused, pausedRemaining) {
   const [remaining, setRemaining] = useState(0);
@@ -37,7 +38,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking }) {
   const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer } = dayState;
   const remaining = useCountdown(timerEnd, paused, pausedRemaining);
   const isBodyguard = myRole?.roleId === 'bodyguard';
@@ -75,6 +76,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
               <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
             </button>
             <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+            <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
           </div>
         </div>
         <p className="text-white/40 text-xs mt-1">
@@ -107,6 +109,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
         shieldedPlayer={shieldedPlayer}
+        voiceSpeaking={voiceSpeaking || {}}
       />
 
       {/* Token Claim Board */}

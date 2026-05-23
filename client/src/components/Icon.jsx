@@ -176,6 +176,45 @@ const icons = {
       <path d="M9 2h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="1" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M5 10a7 7 0 0014 0" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M12 17v4M8 21h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+  micOff: (
+    <>
+      <rect x="9" y="1" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M19 10a7 7 0 01-10.5 6.06M5 10a7 7 0 003.5 6.06" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M12 17v4M8 21h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M2 2l20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+  volume: (
+    <>
+      <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </>
+  ),
+  volumeOff: (
+    <>
+      <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+  volumeLow: (
+    <>
+      <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </>
+  ),
+  headphones: (
+    <>
+      <path d="M3 18v-6a9 9 0 0118 0v6" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3v5zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5z" stroke="currentColor" strokeWidth="2" fill="none" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 20, className = '' }) {

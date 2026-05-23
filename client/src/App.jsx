@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import socket, { playerToken } from './socket';
 import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxWin, sfxLose } from './audio';
 import { useAuth } from './contexts/AuthContext';
+import voiceChat from './voiceChat';
 import Icon from './components/Icon';
 import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
 import SceneBackground from './components/SceneBackground';
@@ -41,6 +42,7 @@ export default function App() {
   });
 
   const [connectionLost, setConnectionLost] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking] = useState({});
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -69,6 +71,15 @@ export default function App() {
       window.removeEventListener('touchstart', handler);
     };
   }, [ensureAudio]);
+
+  // Initialize voice chat manager
+  useEffect(() => {
+    voiceChat.init(socket);
+    voiceChat.onSpeakingChange = (states) => setVoiceSpeaking(states);
+    return () => {
+      voiceChat.destroy();
+    };
+  }, []);
 
   useEffect(() => {
     socket.connect();
@@ -432,6 +443,7 @@ export default function App() {
         onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
         onLeave={() => {
+          voiceChat.leave();
           socket.emit('leave_room', {}, () => {
             setScreen('home');
             setRoomCode('');
@@ -441,11 +453,12 @@ export default function App() {
             localStorage.removeItem('onw_room');
           });
         }}
+        voiceSpeaking={voiceSpeaking}
       />
     </>);
   }
   if (screen === 'role_reveal') {
-    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} /></>;
+    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} /></>;
   }
   if (screen === 'night') {
     return (<><SceneBackground scene={currentScene} />{connectionOverlay}
@@ -457,6 +470,9 @@ export default function App() {
         onAction={handleNightAction}
         nightKnowledge={nightKnowledge}
         hasAlphaWolf={hasAlphaWolf}
+        roomCode={roomCode}
+        isHost={isHost}
+        voiceSpeaking={voiceSpeaking}
       />
     </>);
   }
@@ -480,6 +496,8 @@ export default function App() {
         tokenClaims={tokenClaims}
         onDeductionSet={(position, roleId) => socket.emit('deduction_set', { position, roleId })}
         onDeductionClear={position => socket.emit('deduction_clear', { position })}
+        roomCode={roomCode}
+        voiceSpeaking={voiceSpeaking}
       />
     </>);
   }
