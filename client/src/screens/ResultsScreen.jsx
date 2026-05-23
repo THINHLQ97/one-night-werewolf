@@ -33,54 +33,192 @@ const RESULT_SIGNS = {
   tanner_lose: '/images/result sign/tanner-lose.webp',
 };
 
+const isWolfRole = r => ['werewolf', 'alphawolf', 'mysticwolf', 'dreamwolf'].includes(r);
+
+// Full-page background by winning team
 const WIN_SCENES = {
   village: '/images/villages-win-scene.png',
   werewolf: '/images/werewolves-win-scene.png',
   tanner: '/images/tanner-win-scene.png',
 };
 
-const isWolfRole = r => ['werewolf', 'alphawolf', 'mysticwolf', 'dreamwolf'].includes(r);
+// ─── End-scene banner images (2:1) ──────────────────────────────────────────
+// Each key maps to a specific vote outcome. Logic: getEndSceneKey().
+const END_SCENE_IMAGES = {
+  // Peace — no one dies (no majority, or bodyguard saved everyone)
+  no_one_die: '/images/endscene/no-one-die.webp',
 
-const WIN_NARRATIONS = {
-  no_wolves_village_killed: 'Đêm ấy, chẳng có con sói nào ẩn trong làng. Chỉ có nỗi sợ âm thầm lớn lên, cho đến khi dân làng tự nhuộm đỏ tay mình.',
-  no_wolves_tanner_killed: 'Không có Ma sói nào ẩn trong đêm ấy. Chỉ có một kẻ đã chán ghét sự sống đến tận cùng, và dân làng vô tình trao cho hắn chiến thắng mà hắn mong chờ nhất.',
-  no_wolves_minion_survived: 'Không có Ma sói trong bóng tối, nhưng kẻ phản bội vẫn còn đó. Hắn mỉm cười giữa đám đông, khi cả làng chẳng hay mình vừa để tội ác sống sót.',
-  no_wolves_minion_killed: 'Dù Ma sói không xuất hiện, bóng phản bội vẫn len lỏi giữa dân làng. Nhưng lần này, ánh mắt nghi ngờ đã chỉ đúng kẻ cần bị phán xét.',
-  wolves_wolf_killed: 'Khi bình minh rạch ngang màn đêm, con sói cuối cùng đã gục xuống. Ngôi làng sống sót, run rẩy nhưng vẫn còn nguyên tiếng chuông ngày mới.',
-  wolves_human_killed: 'Dân làng đã treo án cho nhầm người. Và trong khoảnh khắc họ nhận ra sự thật, tiếng tru của Ma sói đã vang lên từ phía sau lưng.',
-  wolves_tanner_killed: 'Giữa cơn săn đuổi của người và sói, hắn chỉ chờ một bản án dành cho mình. Và khi dân làng ra tay, kẻ Chán đời đã thắng bằng cái chết hắn hằng mong.',
+  // Single vote — wolves
+  vote_werewolf: '/images/endscene/werewolf-vote.webp',
+  vote_alpha_wolf: '/images/endscene/alpha-wolf-vote.webp',
+  vote_mystic_wolf: '/images/endscene/mystic-wolf-vote.webp',
+  vote_dream_wolf: '/images/endscene/dreamwolf-vote.webp',
+
+  // Single vote — tanner
+  vote_tanner: '/images/endscene/tanner-vote.webp',
+
+  // Single vote — minion (split by wolves in game)
+  vote_minion_have_wolves: '/images/endscene/minion-vote-have-wolves.webp',
+  vote_minion_no_wolf: '/images/endscene/minion-vote-no-wolf.webp',
+
+  // Single vote — villager team
+  vote_villager: '/images/endscene/vote-villager.webp',
+  vote_seer: '/images/endscene/vote-seer.webp',
+  vote_robber: '/images/endscene/vote-robber.webp',
+  vote_troublemaker: '/images/endscene/vote-troublemaker.webp',
+  vote_drunk: '/images/endscene/vote-drunk.webp',
+  vote_insomniac: '/images/endscene/vote-insomniac.webp',
+  vote_mason: '/images/endscene/vote-mason.webp',
+  // Fallback for sentinel, apprentice seer, P.I., witch, village idiot, revealer, bodyguard
+  vote_unknown_villager: '/images/endscene/vote-an-unknown-villager.webp',
+
+  // Hunter voted → cascade kill (image keyed by victim role)
+  hunter_kill_werewolf: '/images/endscene/vote-hunter-kill-werewolf.webp',
+  hunter_kill_alpha_wolf: '/images/endscene/vote-hunter-kill-alpha-wolf.webp',
+  hunter_kill_mystic_wolf: '/images/endscene/vote-hunter-kill-mystic-wolf.webp',
+  hunter_kill_dream_wolf: '/images/endscene/vote-hunter-kill-dream-wolf.webp',
+  hunter_kill_tanner: '/images/endscene/vote-hunter-kill-tanner.webp',
+  hunter_kill_minion_with_wolf: '/images/endscene/vote-hunter-kill-minion-with-wolf.webp',
+  hunter_kill_minion_no_wolf: '/images/endscene/vote-hunter-kill-minion-no-wolf.webp',
+  hunter_kill_villager: '/images/endscene/vote-hunter-kill-villager.webp',
+  hunter_kill_seer: '/images/endscene/vote-hunter-kill-seer.webp',
+  hunter_kill_robber: '/images/endscene/vote-hunter-kill-robber.webp',
+  hunter_kill_troublemaker: '/images/endscene/vote-hunter-kill-troublemaker.webp',
+  hunter_kill_drunk: '/images/endscene/vote-hunter-kill-drunk.webp',
+  hunter_kill_insomniac: '/images/endscene/vote-hunter-kill-insomniac.webp',
+  hunter_kill_mason: '/images/endscene/vote-hunter-kill-mason.webp',
+  // Doppelganger — image reserved for future, not yet wired into game logic
+  hunter_kill_doppelganger_villager: '/images/endscene/vote-hunter-kill-doppelganger-villager.webp',
+  hunter_kill_doppelganger_wolf: '/images/endscene/vote-hunter-kill-doppelganger-wolf.webp',
+
+  // Tie ≥ 2 voted out simultaneously
+  multi_tanner: '/images/endscene/vote-more-than-2-there-is-a-tanner.webp',
+  multi_wolf: '/images/endscene/vote-more-than-2-there-is-a-wolf.webp',
+  multi_no_wolf: '/images/endscene/vote-more-than-2-no-wolf-die.webp',
 };
 
-function getWinScenario(results, players) {
-  const { eliminated, winners, finalCards } = results;
-  const wolvesInGame = players.some(p => isWolfRole(finalCards[p.id]));
-  const eliminatedTanner = eliminated.some(id => finalCards[id] === 'tanner');
-  const eliminatedWolf = eliminated.some(id => isWolfRole(finalCards[id]));
-  const minionInGame = players.some(p => finalCards[p.id] === 'minion');
-  const eliminatedMinion = eliminated.some(id => finalCards[id] === 'minion');
+const END_SCENE_NARRATIONS = {
+  no_one_die: 'Không có sói, không có phản bội, cũng chẳng ai phải ngã xuống. Đêm dài khép lại bằng một cái thở phào hiếm hoi của cả làng.',
 
-  if (eliminatedTanner) {
-    return wolvesInGame ? 'wolves_tanner_killed' : 'no_wolves_tanner_killed';
-  }
-  if (wolvesInGame) {
-    return eliminatedWolf ? 'wolves_wolf_killed' : 'wolves_human_killed';
-  }
-  // No wolves
-  if (eliminated.length === 0) {
-    return minionInGame ? 'no_wolves_minion_survived' : null; // peace = no special narration
-  }
-  if (eliminatedMinion) return 'no_wolves_minion_killed';
-  return 'no_wolves_village_killed';
-}
+  vote_werewolf: 'Con sói bị lôi ra khỏi lớp ngụy trang sau cùng. Dân làng đã chọn đúng, và tiếng chuông bình minh vang lên trên mái ngói đỏ.',
+  vote_alpha_wolf: 'Khi thủ lĩnh bầy sói gục xuống, tiếng tru trong đêm cũng hóa thành im lặng. Dân làng sống sót qua cơn ác mộng cuối cùng.',
+  vote_mystic_wolf: 'Ma thuật xanh lịm tắt dần trong gió lạnh. Con sói thần bí đã bị vạch mặt, và lời nguyền trên ngôi làng bắt đầu rạn vỡ.',
+  vote_dream_wolf: 'Con sói ngủ mơ đã bị kéo ra khỏi màn đêm. Những giấc mộng của nó tan biến trước ánh bình minh đang trở lại.',
+
+  vote_tanner: 'Cả làng tưởng mình vừa thi hành công lý, nhưng kẻ bị kết án lại mỉm cười. Chán Đời đã nhận đúng cái kết mà hắn mong chờ.',
+
+  vote_minion_have_wolves: 'Kẻ phản bội đã ngã xuống, nhưng trong bóng tối, bầy sói vẫn còn thở. Dân làng đã xử sai quân cờ, và đêm chưa hề kết thúc.',
+  vote_minion_no_wolf: 'Không có sói nào ẩn náu trong làng, chỉ còn kẻ giữ lời nguyền thay chúng. Khi hắn bị phơi bày, bình yên cuối cùng cũng có lối trở về.',
+
+  vote_villager: 'Một dân làng bình thường bị biến thành vật tế cho nỗi sợ. Và khi đám đông còn đang hô vang, bầy sói đã đứng ngoài cổng.',
+  vote_seer: 'Nhà Tiên Tri bị kết án trước khi lời cảnh báo kịp trọn vẹn. Ánh sáng trong tay bà tắt đi, còn bóng tối thì bước tới.',
+  vote_robber: 'Kẻ Trộm bị chỉ mặt giữa quảng trường, nhưng tội lỗi của hắn không phải nanh vuốt. Trong lúc dân làng mải phán xét, sói vẫn còn ngoài kia.',
+  vote_troublemaker: 'Kẻ Gây Rối bị cuốn vào chính cơn hỗn loạn mình từng khuấy động. Nhưng lần này, cái sai của dân làng đã mở đường cho sói.',
+  vote_drunk: 'Gã say rượu ngã xuống trong men hoảng loạn của dân làng. Đáng tiếc, sự thật không nằm dưới đáy cốc của ông ta.',
+  vote_insomniac: 'Cô gái mất ngủ đã bị kết án giữa những ánh mắt run rẩy. Nhưng người thức suốt đêm không phải lúc nào cũng là kẻ có tội.',
+  vote_mason: 'Mason đứng giữa lời buộc tội mà không thể chứng minh lòng trung thành. Những viên đá ông từng đặt nay lạnh hơn bao giờ hết.',
+  vote_unknown_villager: 'Một người vô tội bị trùm mặt giữa vòng phán xét. Và khi dân làng nhận ra sai lầm, bầy sói đã tiến vào từ bóng tối.',
+
+  hunter_kill_werewolf: 'Thợ Săn gục xuống nhưng không đi một mình. Tiếng súng cuối cùng kéo theo con sói trở về với bóng tối.',
+  hunter_kill_alpha_wolf: 'Trước khi ngã xuống, Thợ Săn bóp cò lần cuối. Viên đạn ấy xé tan bóng đêm và kéo theo cả thủ lĩnh bầy sói.',
+  hunter_kill_mystic_wolf: 'Phát súng cuối cùng xuyên qua làn phép xanh. Sói Huyền Bí rơi khỏi vòng ma thuật, để lại những đốm sáng tắt dần trong đêm.',
+  hunter_kill_dream_wolf: 'Tiếng súng đánh thức giấc mơ cuối cùng của Sói Mộng. Nó choàng tỉnh chỉ để thấy mình đã rơi khỏi màn đêm.',
+  hunter_kill_tanner: 'Thợ Săn bóp cò, và Chán Đời đón nhận nó như một món quà. Có những kẻ chỉ thật sự thắng khi không còn phải đứng dậy.',
+  hunter_kill_minion_with_wolf: 'Kẻ phản bội ngã xuống dưới nòng súng, nhưng ánh mắt sói vẫn sáng ngoài mái nhà. Máu hắn không đủ để cứu dân làng.',
+  hunter_kill_minion_no_wolf: 'Thợ Săn đã bắn trúng kẻ phản bội — kẻ mang lời nguyền của sói, diệt đi mầm mống tai họa.',
+  hunter_kill_villager: 'Một dân làng vô tội ngã xuống sau phát súng trả thù. Đêm ấy, nỗi sợ đã giết nhiều hơn cả nanh vuốt.',
+  hunter_kill_seer: 'Nhà Tiên Tri đã thấy quá nhiều bí mật, nhưng không thấy phát súng dành cho mình. Quả cầu xanh tắt lịm trong tay bà.',
+  hunter_kill_robber: 'Kẻ Trộm từng quen lẩn giữa bóng tối, nhưng không trốn khỏi viên đạn cuối cùng. Lần này, hắn không còn thứ gì để đánh cắp.',
+  hunter_kill_troublemaker: 'Kẻ Gây Rối luôn thích đảo lộn số phận người khác. Nhưng phát súng cuối cùng đã khiến chính cô trở thành trò đùa của định mệnh.',
+  hunter_kill_drunk: 'Gã say rượu vừa kịp mở mắt trước ánh chớp của nòng súng. Cái kết đến nhanh hơn cả men còn đọng trên môi.',
+  hunter_kill_insomniac: 'Người không ngủ đã sống sót qua cả đêm, nhưng không thoát khỏi phát súng cuối cùng. Con gấu nhỏ rơi xuống cùng sự im lặng.',
+  hunter_kill_mason: 'Mason đã gục xuống trước phát súng oan nghiệt. Những bí mật của hội kín theo ông chìm vào nền đá lạnh.',
+  hunter_kill_doppelganger_villager: 'Phát súng cuối cùng của Thợ Săn tìm đến kẻ mang gương mặt dân làng. Một bản sao ngã xuống, để lại câu hỏi chẳng ai kịp trả lời.',
+  hunter_kill_doppelganger_wolf: 'Thợ Săn không nhìn nhầm con mồi cuối cùng. Dưới lớp biến hình của Doppelganger, bản năng sói đã bị viên đạn gọi tên.',
+
+  multi_tanner: 'Giữa những kẻ bị kết án, có một người chờ cái chết như chờ vương miện. Chán Đời đã ẩn trong đám đông để thắng bằng chính bản án ấy.',
+  multi_wolf: 'Trong nhóm người bị dẫn ra phán xét, một con sói thật đã lộ móng vuốt. Dân làng đã chọn đúng, và bình minh có quyền trở lại.',
+  multi_no_wolf: 'Nhiều người bị trùm mặt trước đám đông, nhưng không có con sói nào trong số họ. Khi bản án rơi xuống, bầy sói ngoài cổng bắt đầu mỉm cười.',
+};
+
+// Mapping helpers for getEndSceneKey()
+const VILLAGE_ROLE_KEYS = {
+  villager: 'vote_villager',
+  seer: 'vote_seer',
+  robber: 'vote_robber',
+  troublemaker: 'vote_troublemaker',
+  drunk: 'vote_drunk',
+  insomniac: 'vote_insomniac',
+  mason: 'vote_mason',
+};
+
+const HUNTER_VICTIM_KEYS = {
+  werewolf: 'hunter_kill_werewolf',
+  alphawolf: 'hunter_kill_alpha_wolf',
+  mysticwolf: 'hunter_kill_mystic_wolf',
+  dreamwolf: 'hunter_kill_dream_wolf',
+  tanner: 'hunter_kill_tanner',
+  villager: 'hunter_kill_villager',
+  seer: 'hunter_kill_seer',
+  robber: 'hunter_kill_robber',
+  troublemaker: 'hunter_kill_troublemaker',
+  drunk: 'hunter_kill_drunk',
+  insomniac: 'hunter_kill_insomniac',
+  mason: 'hunter_kill_mason',
+};
 
 function getWinningTeam(results, players) {
   const { winners, finalCards } = results;
   if (!winners || winners.length === 0) return null;
-  const firstWinner = winners[0];
-  const role = finalCards[firstWinner];
+  const role = finalCards[winners[0]];
   if (isWolfRole(role) || role === 'minion') return 'werewolf';
   if (role === 'tanner') return 'tanner';
   return 'village';
+}
+
+function getEndSceneKey(results, players) {
+  const { eliminated = [], initialEliminated = [], finalCards = {} } = results;
+
+  // No one dies (no majority, or bodyguard saved the only target)
+  if (eliminated.length === 0) return 'no_one_die';
+
+  const wolvesInGame = players.some(p => isWolfRole(finalCards[p.id]));
+
+  // Tie: ≥2 players voted out simultaneously
+  if (initialEliminated.length >= 2) {
+    const hasTanner = eliminated.some(id => finalCards[id] === 'tanner');
+    if (hasTanner) return 'multi_tanner';
+    const hasWolf = eliminated.some(id => isWolfRole(finalCards[id]));
+    if (hasWolf) return 'multi_wolf';
+    return 'multi_no_wolf';
+  }
+
+  const primary = initialEliminated[0] ?? eliminated[0];
+  const primaryRole = finalCards[primary];
+
+  // Hunter voted → cascade kill: image keyed by who Hunter dragged down
+  if (primaryRole === 'hunter') {
+    const hunterKills = eliminated.filter(id => !initialEliminated.includes(id));
+    const victimRole = hunterKills[0] ? finalCards[hunterKills[0]] : null;
+
+    if (!victimRole) return 'vote_unknown_villager'; // Hunter died without shooting
+    if (victimRole === 'minion') {
+      return wolvesInGame ? 'hunter_kill_minion_with_wolf' : 'hunter_kill_minion_no_wolf';
+    }
+    if (victimRole === 'doppelganger') return 'hunter_kill_doppelganger_villager';
+    return HUNTER_VICTIM_KEYS[victimRole] || 'vote_unknown_villager';
+  }
+
+  // Single non-hunter vote
+  if (primaryRole === 'werewolf') return 'vote_werewolf';
+  if (primaryRole === 'alphawolf') return 'vote_alpha_wolf';
+  if (primaryRole === 'mysticwolf') return 'vote_mystic_wolf';
+  if (primaryRole === 'dreamwolf') return 'vote_dream_wolf';
+  if (primaryRole === 'tanner') return 'vote_tanner';
+  if (primaryRole === 'minion') {
+    return wolvesInGame ? 'vote_minion_have_wolves' : 'vote_minion_no_wolf';
+  }
+  return VILLAGE_ROLE_KEYS[primaryRole] || 'vote_unknown_villager';
 }
 
 export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
@@ -102,8 +240,9 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   const playerMap = {};
   players.forEach(p => { playerMap[p.id] = p.name; });
 
-  const winScenario = getWinScenario(results, players);
-  const narration = winScenario ? WIN_NARRATIONS[winScenario] : null;
+  const sceneKey = getEndSceneKey(results, players);
+  const sceneSrc = sceneKey ? END_SCENE_IMAGES[sceneKey] : null;
+  const narration = END_SCENE_NARRATIONS[sceneKey] || null;
   const winningTeam = getWinningTeam(results, players);
   const sceneBg = winningTeam ? WIN_SCENES[winningTeam] : null;
 
@@ -128,7 +267,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   return (
     <>
-      {/* Win scene background */}
+      {/* Win scene background (per winning team) */}
       {sceneBg && <ResultSceneBackground src={sceneBg} />}
 
       {/* Win confetti / Lose vignette overlay */}
@@ -149,6 +288,24 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           ) : (
             <div className="py-6">
               <p className="text-2xl font-bold text-white/60">Không ai thắng</p>
+            </div>
+          )}
+
+          {/* End-scene banner (2:1) */}
+          {sceneSrc && (
+            <div
+              className="mx-auto mt-4 w-full max-w-md rounded-xl overflow-hidden animate-narratFadeIn"
+              style={{
+                border: '1px solid rgba(196,168,107,0.25)',
+                boxShadow: '0 6px 32px rgba(0,0,0,0.6)',
+              }}
+            >
+              <img
+                src={sceneSrc}
+                alt=""
+                className="block w-full aspect-[2/1] object-cover"
+                draggable={false}
+              />
             </div>
           )}
 
