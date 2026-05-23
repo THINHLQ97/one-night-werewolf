@@ -154,9 +154,19 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
           {/* Win/Lose narration */}
           {narration && (
-            <p className="text-white/50 text-sm italic mt-3 max-w-sm mx-auto leading-relaxed">
-              "{narration}"
-            </p>
+            <div className="mt-4 mx-auto max-w-sm rounded-xl overflow-hidden backdrop-blur-md animate-narratFadeIn"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(196,168,107,0.06))',
+                border: '1px solid rgba(196,168,107,0.12)',
+                boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
+              }}
+            >
+              <div className="px-5 py-3.5">
+                <p className="text-moon-300/80 text-sm italic leading-relaxed font-light">
+                  "{narration}"
+                </p>
+              </div>
+            </div>
           )}
 
           {rankUpdates[myId] && (

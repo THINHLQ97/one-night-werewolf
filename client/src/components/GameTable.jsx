@@ -223,9 +223,19 @@ export default function GameTable({
                   <span className="absolute -top-1 -left-1 text-xs">🤝</span>
                 )}
 
-                {/* Shield indicator */}
+                {/* Shield indicator — styled like Alpha Wolf token */}
                 {shieldedPlayer === p.id && (
-                  <span className="absolute -bottom-1 -left-1 text-xs">🛡️</span>
+                  <span
+                    className="absolute -bottom-1 -left-1 flex items-center justify-center rounded-full"
+                    style={{
+                      width: 18 * scale,
+                      height: 18 * scale,
+                      background: 'linear-gradient(135deg, rgba(59,130,246,0.8), rgba(37,99,235,0.9))',
+                      boxShadow: '0 0 8px rgba(59,130,246,0.6), 0 0 3px rgba(255,255,255,0.3)',
+                      border: '1.5px solid rgba(147,197,253,0.6)',
+                      fontSize: 10 * scale,
+                    }}
+                  >🛡️</span>
                 )}
 
                 {/* Swap indicator */}

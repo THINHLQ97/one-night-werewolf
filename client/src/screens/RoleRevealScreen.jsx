@@ -94,13 +94,26 @@ export default function RoleRevealScreen({ myRole }) {
         </div>
       )}
 
-      <div className="mt-8 text-center max-w-xs px-4">
-        <p className="text-white/30 text-sm mb-3">
-          Đêm sẽ bắt đầu sau 15 giây. Hãy nhớ vai của bạn!
-        </p>
-        <p className="text-moon-400/40 text-xs italic leading-relaxed">
-          "{nightQuote}"
-        </p>
+      <div className="mt-8 w-full max-w-sm mx-auto px-4">
+        <div className="relative rounded-2xl overflow-hidden backdrop-blur-md"
+          style={{
+            background: 'linear-gradient(135deg, rgba(196,168,107,0.08), rgba(255,255,255,0.03))',
+            border: '1px solid rgba(196,168,107,0.15)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+          }}
+        >
+          <div className="px-5 py-4 text-center">
+            <p className="text-white/40 text-xs mb-2.5 tracking-wide uppercase">
+              Đêm sẽ bắt đầu sau 15 giây
+            </p>
+            <div className="w-8 h-px bg-moon-400/30 mx-auto mb-3" />
+            <p className="text-moon-300/70 text-sm italic leading-relaxed font-light">
+              "{nightQuote}"
+            </p>
+          </div>
+          {/* Subtle animated border glow */}
+          <div className="absolute inset-0 rounded-2xl pointer-events-none animate-quoteGlow" />
+        </div>
       </div>
 
       <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} />

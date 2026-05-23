@@ -72,7 +72,7 @@ function getNightActionData(room, role) {
     case 'werewolf': {
       const wolvesFilter = r => (r === 'werewolf' || r === 'alphawolf' || r === 'mysticwolf');
       const werewolves = players.filter(p => wolvesFilter(room.originalCards[p.id])).map(p => ({ id: p.id, name: p.name }));
-      return { werewolves, isSolo: werewolves.length === 1 };
+      return { werewolves, isSolo: werewolves.length === 1, shieldedPlayer: room.shieldedPlayer };
     }
     case 'alphawolf': {
       const otherPlayers = players.filter(p => p.id !== undefined).map(p => ({ id: p.id, name: p.name }));
@@ -84,18 +84,18 @@ function getNightActionData(room, role) {
     }
     case 'minion': {
       const werewolves = players.filter(p => isWolfRole(room.originalCards[p.id])).map(p => ({ id: p.id, name: p.name }));
-      return { werewolves };
+      return { werewolves, shieldedPlayer: room.shieldedPlayer };
     }
     case 'mason': {
       const masons = players.filter(p => room.originalCards[p.id] === 'mason').map(p => ({ id: p.id, name: p.name }));
-      return { masons };
+      return { masons, shieldedPlayer: room.shieldedPlayer };
     }
     case 'sentinel': {
       const otherPlayers = players.map(p => ({ id: p.id, name: p.name }));
       return { otherPlayers };
     }
     case 'apprenticeseer':
-      return {};
+      return { shieldedPlayer: room.shieldedPlayer };
     case 'seer':
     case 'robber':
     case 'troublemaker': {
@@ -107,7 +107,7 @@ function getNightActionData(room, role) {
       return { otherPlayers, shieldedPlayer: room.shieldedPlayer, step: 1 };
     }
     case 'witch':
-      return { step: 1 };
+      return { step: 1, shieldedPlayer: room.shieldedPlayer };
     case 'villageidiot':
       return { shieldedPlayer: room.shieldedPlayer };
     case 'revealer': {
@@ -115,7 +115,11 @@ function getNightActionData(room, role) {
       return { otherPlayers, shieldedPlayer: room.shieldedPlayer };
     }
     case 'drunk':
+      return { shieldedPlayer: room.shieldedPlayer };
     case 'insomniac':
+      return { shieldedPlayer: room.shieldedPlayer };
+    case 'bodyguard':
+      return { shieldedPlayer: room.shieldedPlayer };
     default:
       return {};
   }
