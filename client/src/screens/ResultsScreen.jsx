@@ -170,7 +170,12 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           )}
 
           {rankUpdates[myId] && (
-            <div className="mt-2 flex items-center justify-center gap-2">
+            <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-sm"
+              style={{
+                background: 'rgba(0,0,0,0.45)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
               <RankBadge rank={rankUpdates[myId].rank} size={24} />
               <PointsBadge points={rankUpdates[myId].newPoints} delta={rankUpdates[myId].pointsDelta} />
             </div>
@@ -376,7 +381,6 @@ function ResultSceneBackground({ src }) {
           opacity: loaded ? 1 : 0,
         }}
       />
-      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.40)' }} />
     </div>
   );
 }
