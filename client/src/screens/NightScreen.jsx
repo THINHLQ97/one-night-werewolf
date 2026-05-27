@@ -183,7 +183,8 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     setActionStep('done');
   }
 
-  const isMyRoleCalled = currentRole === myRole?.roleId;
+  const isMyRoleCalled = currentRole === myRole?.roleId
+    || (currentRole === 'werewolf' && (myRole?.roleId === 'alphawolf' || myRole?.roleId === 'mysticwolf'));
   const canSubmit = (() => {
     if (currentRole === 'troublemaker') return selected.length === 2;
     if (currentRole === 'seer' && actionMode === 'center') return selected.length === 2;

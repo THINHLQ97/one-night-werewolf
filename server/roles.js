@@ -169,6 +169,11 @@ const ACTIVE_NIGHT_ROLES = [
 
 function getNightOrder(selectedRoles) {
   const roleSet = new Set(selectedRoles);
+  // Always include 'werewolf' phase if any wolf variant exists (alphawolf, mysticwolf)
+  // so they can wake up together and see each other
+  if (roleSet.has('alphawolf') || roleSet.has('mysticwolf')) {
+    roleSet.add('werewolf');
+  }
   return ACTIVE_NIGHT_ROLES.filter(r => roleSet.has(r));
 }
 
