@@ -881,6 +881,7 @@ io.on('connection', socket => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id || room.state !== 'day') return;
     if (room.dayPhase.paused) return;
+    if (room.dayPhase.votingPhase) return; // No pausing during voting
 
     // Store remaining time and clear auto-end timer
     const remaining = Math.max(0, room.dayPhase.timerEnd - Date.now());
@@ -895,15 +896,16 @@ io.on('connection', socket => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id || room.state !== 'day') return;
     if (!room.dayPhase.paused) return;
+    if (room.dayPhase.votingPhase) return;
 
     const remaining = room.dayPhase.pausedRemaining || 0;
     room.dayPhase.paused = false;
     room.dayPhase.pausedRemaining = null;
     room.dayPhase.timerEnd = Date.now() + remaining;
 
-    // Restart auto-end timer
+    // Restart auto-end timer → go to voting phase (not endGame)
     room.dayPhase.autoEndTimer = setTimeout(() => {
-      if (room.state === 'day') endGame(room);
+      if (room.state === 'day') startVotingPhase(room);
     }, remaining);
 
     io.to(room.code).emit('timer_update', { paused: false, timerEnd: room.dayPhase.timerEnd });
@@ -912,6 +914,7 @@ io.on('connection', socket => {
   socket.on('timer_adjust', ({ seconds }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id || room.state !== 'day') return;
+    if (room.dayPhase.votingPhase) return; // No adjusting during voting
     const delta = parseInt(seconds);
     if (isNaN(delta)) return;
 
@@ -925,7 +928,7 @@ io.on('connection', socket => {
       if (room.dayPhase.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
       const remaining = room.dayPhase.timerEnd - Date.now();
       room.dayPhase.autoEndTimer = setTimeout(() => {
-        if (room.state === 'day') endGame(room);
+        if (room.state === 'day') startVotingPhase(room);
       }, remaining);
 
       io.to(room.code).emit('timer_update', { paused: false, timerEnd: room.dayPhase.timerEnd });
