@@ -940,6 +940,23 @@ io.on('connection', socket => {
     cb?.({ ok: true });
   });
 
+  // ── Chat ──
+  socket.on('chat_send', ({ roomCode, text }) => {
+    if (!text?.trim() || !roomCode) return;
+    const room = getRoom(roomCode);
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const msg = {
+      id: socket.id,
+      name: player.name,
+      text: text.trim().slice(0, 200),
+      time: Date.now(),
+      type: 'chat',
+    };
+    io.to(roomCode).emit('chat_message', msg);
+  });
+
   // ── Voice Chat (WebRTC signaling) ──
   socket.on('voice_join', ({ roomCode }) => {
     const room = getRoom(roomCode);

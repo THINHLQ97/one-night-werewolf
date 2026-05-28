@@ -3,6 +3,7 @@ import RoleIcon, { CARD_BACK } from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import VoiceChatControls from '../components/VoiceChatControls';
+import ChatPanel from '../components/ChatPanel';
 import socket from '../socket';
 
 const NIGHT_QUOTES = [
@@ -59,6 +60,7 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
           )}
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
+          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} />
         </div>
       </div>
 

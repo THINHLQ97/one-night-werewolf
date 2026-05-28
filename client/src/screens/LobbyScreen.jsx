@@ -4,6 +4,7 @@ import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RankBadge from '../components/RankBadge';
 import VoiceChatControls from '../components/VoiceChatControls';
+import ChatPanel from '../components/ChatPanel';
 
 const ALL_ROLES = [
   // Base
@@ -223,9 +224,10 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           {roomCode}
         </button>
         <p className="text-white/40 text-xs mt-1">Nhấn để copy · Chia sẻ với bạn bè</p>
-        {/* Voice chat controls in lobby */}
-        <div className="flex items-center justify-center mt-3">
+        {/* Voice chat & chat controls in lobby */}
+        <div className="flex items-center justify-center gap-1.5 mt-3">
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
+          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} />
         </div>
       </div>
 

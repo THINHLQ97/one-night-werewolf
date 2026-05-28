@@ -5,6 +5,7 @@ import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import TokenClaimBoard from '../components/TokenClaimBoard';
 import VoiceChatControls from '../components/VoiceChatControls';
+import ChatPanel from '../components/ChatPanel';
 
 function useCountdown(timerEnd, paused, pausedRemaining) {
   const [remaining, setRemaining] = useState(0);
@@ -79,6 +80,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
           </button>
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
+          <ChatPanel roomCode={roomCode} myId={myId} players={players} />
         </div>
         <p className="text-white/40 text-xs mt-1">
           {votedCount}/{players.length} đã vote · {isBodyguard ? 'Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}

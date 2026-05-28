@@ -5,6 +5,7 @@ import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import { sfxCardFlip, sfxReveal } from '../audio';
 import VoiceChatControls from '../components/VoiceChatControls';
+import ChatPanel from '../components/ChatPanel';
 
 const ROLE_NAMES = {
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer',
@@ -212,6 +213,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           </button>
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
+          <ChatPanel roomCode={roomCode} myId={myId} players={players} />
         </div>
         {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">
