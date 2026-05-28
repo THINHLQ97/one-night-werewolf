@@ -107,7 +107,7 @@ export default function App() {
                 setMyRole({ roleId: res.roleId, ...res.role });
               }
               if (res.state === 'day') {
-                setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players, paused: res.timerPaused || false, pausedRemaining: res.timerPausedRemaining || null });
+                setDayState({ timerEnd: res.timerEnd, votes: res.votes, players: res.players, paused: res.timerPaused || false, pausedRemaining: res.timerPausedRemaining || null, votingPhase: res.votingPhase || false, votingTimerEnd: res.votingTimerEnd || null });
                 if (res.tokenClaims) setTokenClaims(res.tokenClaims);
                 setScreen('day');
               } else if (res.state === 'night' || res.state === 'role_reveal') {
@@ -262,10 +262,14 @@ export default function App() {
         const existing = playersRef.current.find(p => p.id === dp.id);
         return existing ? { ...existing, ...dp } : dp;
       });
-      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null });
+      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null });
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
+    });
+
+    socket.on('voting_phase_start', ({ votingTimerEnd }) => {
+      setDayState(prev => ({ ...prev, votingPhase: true, votingTimerEnd, paused: false, pausedRemaining: null }));
     });
 
     socket.on('vote_update', ({ votes, bodyguardProtect, players: votePlayers }) => {

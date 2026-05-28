@@ -40,8 +40,10 @@ function centerName(slot) {
 }
 
 export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking }) {
-  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer } = dayState;
-  const remaining = useCountdown(timerEnd, paused, pausedRemaining);
+  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd } = dayState;
+  // Use voting timer when in voting phase, otherwise discussion timer
+  const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
+  const remaining = useCountdown(activeTimerEnd, votingPhase ? false : paused, votingPhase ? null : pausedRemaining);
   const isBodyguard = myRole?.roleId === 'bodyguard';
   const myVote = isBodyguard ? null : votes[myId];
   const myProtect = isBodyguard ? bodyguardProtect?.targetId : null;
@@ -60,11 +62,17 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
       {/* Header */}
       <div className="text-center pt-2 pb-2">
         <div className="flex items-center justify-center gap-3 mb-1">
-          <span className="text-yellow-400"><Icon name="sun" size={28} /></span>
+          <span className={votingPhase ? 'text-wolf-400' : 'text-yellow-400'}>
+            <Icon name={votingPhase ? 'lightning' : 'sun'} size={28} />
+          </span>
           <div>
-            <h2 className="text-lg font-bold text-moon-300">Thảo luận & Bỏ phiếu</h2>
-            <div className={`text-2xl font-mono font-bold flex items-center justify-center gap-1.5 ${paused ? 'text-yellow-400 animate-pulse' : remaining < 60 ? 'text-wolf-400' : 'text-white/80'}`}>
-              {paused && <Icon name="pause" size={16} />}
+            <h2 className={`text-lg font-bold ${votingPhase ? 'text-wolf-300' : 'text-moon-300'}`}>
+              {votingPhase ? 'Bỏ phiếu' : 'Thảo luận'}
+            </h2>
+            <div className={`text-2xl font-mono font-bold flex items-center justify-center gap-1.5 ${
+              votingPhase ? 'text-wolf-400' : paused ? 'text-yellow-400 animate-pulse' : remaining < 60 ? 'text-wolf-400' : 'text-white/80'
+            }`}>
+              {paused && !votingPhase && <Icon name="pause" size={16} />}
               {mins}:{secs}
             </div>
           </div>
@@ -83,7 +91,10 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
           <ChatPanel roomCode={roomCode} myId={myId} players={players} />
         </div>
         <p className="text-white/40 text-xs mt-1">
-          {votedCount}/{players.length} đã vote · {isBodyguard ? 'Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}
+          {votingPhase
+            ? `${votedCount}/${players.length} đã vote · ${isBodyguard ? 'Chạm vào người chơi để BẢO VỆ' : 'Chạm vào người chơi để vote'}`
+            : 'Hãy thảo luận, thời gian bỏ phiếu sẽ bắt đầu sau khi hết giờ'
+          }
         </p>
       </div>
 
@@ -105,9 +116,9 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         knownMasons={roleHidden ? [] : knownMasons}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
-        selectable="player"
+        selectable={votingPhase ? 'player' : 'none'}
         selected={isBodyguard ? (myProtect ? [myProtect] : []) : (myVote ? [myVote] : [])}
-        onSelect={isBodyguard ? onBodyguardProtect : onVote}
+        onSelect={votingPhase ? (isBodyguard ? onBodyguardProtect : onVote) : () => {}}
         votes={votes}
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
@@ -131,12 +142,12 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
 
       {/* Vote status */}
       <div className="mt-3 flex-1">
-        {isBodyguard && myProtect && (
+        {votingPhase && isBodyguard && myProtect && (
           <p className="text-center text-village-400/60 text-xs mb-2 flex items-center justify-center gap-1.5">
             <Icon name="shield" size={14} /> Bạn đang bảo vệ người này. Chạm người khác để đổi.
           </p>
         )}
-        {!isBodyguard && myVote && (
+        {votingPhase && !isBodyguard && myVote && (
           <p className="text-center text-white/40 text-xs mb-2">
             Bạn đã vote. Chạm vào người khác để đổi ý.
           </p>
@@ -154,40 +165,42 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
 
         {isHost && (
           <div className="space-y-2">
-            {/* Timer controls */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={paused ? onTimerResume : onTimerPause}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
-                  paused
-                    ? 'bg-village-500/20 border border-village-400/30 text-village-300'
-                    : 'bg-yellow-500/20 border border-yellow-400/30 text-yellow-300'
-                }`}
-              >
-                <Icon name={paused ? 'play' : 'pause'} size={12} />
-                {paused ? 'Tiếp tục' : 'Tạm dừng'}
-              </button>
-              <button
-                onClick={() => onTimerAdjust(-30)}
-                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
-              >
-                −30s
-              </button>
-              <button
-                onClick={() => onTimerAdjust(30)}
-                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
-              >
-                +30s
-              </button>
-              <button
-                onClick={() => onTimerAdjust(60)}
-                className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
-              >
-                +1m
-              </button>
-            </div>
+            {/* Timer controls — only during discussion phase */}
+            {!votingPhase && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={paused ? onTimerResume : onTimerPause}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+                    paused
+                      ? 'bg-village-500/20 border border-village-400/30 text-village-300'
+                      : 'bg-yellow-500/20 border border-yellow-400/30 text-yellow-300'
+                  }`}
+                >
+                  <Icon name={paused ? 'play' : 'pause'} size={12} />
+                  {paused ? 'Tiếp tục' : 'Tạm dừng'}
+                </button>
+                <button
+                  onClick={() => onTimerAdjust(-30)}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+                >
+                  −30s
+                </button>
+                <button
+                  onClick={() => onTimerAdjust(30)}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+                >
+                  +30s
+                </button>
+                <button
+                  onClick={() => onTimerAdjust(60)}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs hover:bg-white/10"
+                >
+                  +1m
+                </button>
+              </div>
+            )}
             <button className="btn-danger w-full text-sm flex items-center justify-center gap-1.5" onClick={onEndDay}>
-              <Icon name="lightning" size={16} /> Kết thúc bỏ phiếu ngay
+              <Icon name="lightning" size={16} /> {votingPhase ? 'Kết thúc bỏ phiếu ngay' : 'Bỏ phiếu ngay'}
             </button>
           </div>
         )}

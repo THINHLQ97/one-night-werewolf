@@ -254,6 +254,8 @@ function startDayPhase(room) {
   room.dayPhase = {
     votes: {},
     timerEnd: Date.now() + 5 * 60 * 1000,
+    votingPhase: false,       // false = discussion, true = voting
+    votingTimerEnd: null,
     tokenClaims: {
       pool,
       deductions: {},  // { playerId: { position: roleId, ... } }
@@ -266,19 +268,40 @@ function startDayPhase(room) {
     players: room.players.map(p => ({ id: p.id, name: p.name })),
     tokenPool: pool,
     shieldedPlayer: room.shieldedPlayer || null,
+    votingPhase: false,
   });
 
-  // Auto-end after 5 minutes
+  // After discussion ends → start 1-minute voting phase
+  room.dayPhase.autoEndTimer = setTimeout(() => {
+    if (room.state === 'day') startVotingPhase(room);
+  }, 5 * 60 * 1000);
+}
+
+function startVotingPhase(room) {
+  if (room.state !== 'day') return;
+
+  room.dayPhase.votingPhase = true;
+  room.dayPhase.paused = false;
+  room.dayPhase.pausedRemaining = null;
+  room.dayPhase.votingTimerEnd = Date.now() + 60 * 1000; // 1 minute
+
+  io.to(room.code).emit('voting_phase_start', {
+    votingTimerEnd: room.dayPhase.votingTimerEnd,
+  });
+
+  // Auto-end after 1 minute voting
+  if (room.dayPhase.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
   room.dayPhase.autoEndTimer = setTimeout(() => {
     if (room.state === 'day') endGame(room);
-  }, 5 * 60 * 1000);
+  }, 60 * 1000);
 
-  // Bot auto-votes with staggered delays
+  // Bot auto-votes with staggered delays during voting phase
   const bots = room.players.filter(p => p.isBot);
   bots.forEach((bot, i) => {
     const delay = 3000 + i * 1500 + Math.random() * 2000;
     setTimeout(() => {
       if (room.state !== 'day') return;
+      if (!room.dayPhase.votingPhase) return;
       if (room.dayPhase.votes[bot.id]) return;
 
       const currentRole = room.currentCards[bot.id];
@@ -607,6 +630,8 @@ io.on('connection', socket => {
       timerEnd: room.dayPhase?.timerEnd || null,
       timerPaused: room.dayPhase?.paused || false,
       timerPausedRemaining: room.dayPhase?.pausedRemaining || null,
+      votingPhase: room.dayPhase?.votingPhase || false,
+      votingTimerEnd: room.dayPhase?.votingTimerEnd || null,
       hasAlphaWolf: room.hasAlphaWolf || false,
       tokenClaims: tc ? sanitizeTokenClaims(tc, room) : null,
     });
@@ -749,6 +774,7 @@ io.on('connection', socket => {
   socket.on('vote', ({ targetId }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.state !== 'day') return;
+    if (!room.dayPhase.votingPhase) return; // Block votes during discussion
     if (!room.players.some(p => p.id === targetId)) return;
     if (socket.id === targetId) return;
 
@@ -767,6 +793,7 @@ io.on('connection', socket => {
   socket.on('bodyguard_protect', ({ targetId }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.state !== 'day') return;
+    if (!room.dayPhase.votingPhase) return; // Block during discussion
     if (!room.players.some(p => p.id === targetId)) return;
     if (socket.id === targetId) return;
 
@@ -905,11 +932,18 @@ io.on('connection', socket => {
     }
   });
 
-  // ── Force end day (host only) ──
+  // ── Force skip to voting / force end voting (host only) ──
   socket.on('end_day', () => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id || room.state !== 'day') return;
-    endGame(room);
+    if (!room.dayPhase.votingPhase) {
+      // In discussion → skip to voting phase
+      if (room.dayPhase.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
+      startVotingPhase(room);
+    } else {
+      // In voting → end game now
+      endGame(room);
+    }
   });
 
   // ── New game (host only) ──
