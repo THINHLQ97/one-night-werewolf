@@ -16,6 +16,27 @@
     overscroll-behavior: none;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
+
+  /* Prevent image dragging and saving */
+  img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none;
+  }
+
+  /* Re-enable pointer events on interactive images (buttons containing images) */
+  button img, a img, [role="button"] img {
+    pointer-events: none;
+  }
+  button, a, [role="button"], input, textarea, select {
+    user-select: auto;
+  }
+  input, textarea {
+    user-select: text;
+  }
 }
 
 @layer components {

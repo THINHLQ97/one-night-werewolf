@@ -96,6 +96,25 @@ function sanitizeUser(u) {
 }
 
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
+
+// Block direct directory browsing of /images and add cache headers to discourage saving
+app.use('/images', (req, res, next) => {
+  // Block directory listing attempts (no trailing file extension)
+  if (!path.extname(req.path)) {
+    return res.status(403).end();
+  }
+  // Block hotlinking from other sites
+  const referer = req.headers.referer || '';
+  const host = req.headers.host || '';
+  if (referer && !referer.includes(host) && !referer.includes('localhost')) {
+    return res.status(403).end();
+  }
+  // No-cache headers to discourage browser caching of assets
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+});
+
 app.use(express.static(clientDist));
 app.get('*', (req, res, next) => {
   if (req.url.startsWith('/socket.io') || req.url.startsWith('/api/')) return next();
