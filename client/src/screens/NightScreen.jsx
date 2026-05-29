@@ -8,6 +8,7 @@ import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
 
 const ROLE_NAMES = {
+  doppelganger: 'Doppelgänger',
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer',
   robber: 'Robber', troublemaker: 'Troublemaker', drunk: 'Drunk',
   insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
@@ -29,6 +30,10 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [libraryOpen, setLibraryOpen] = useState(false);
 
   const step = actionData?.step || 1;
+  // For doppelganger step 2+, effectiveRole = the copied role
+  const effectiveRole = (currentRole === 'doppelganger' && step >= 2 && actionData?.copiedRole)
+    ? actionData.copiedRole : currentRole;
+  const isDoppelAction = currentRole === 'doppelganger' && step >= 2;
   const actionKey = `${currentRole}-${step}`;
 
   if (submitted && actionKey !== submittedKey) {
@@ -42,7 +47,18 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   useEffect(() => {
     if (!isMyTurn || submitted) return;
 
-    switch (currentRole) {
+    // Doppelganger step 1: always pick a player
+    if (currentRole === 'doppelganger' && step === 1) {
+      setActionMode('player');
+      setActionStep('choose');
+      setSelected([]);
+      return;
+    }
+
+    // For step 2+, use the copied role to determine mode
+    const modeRole = effectiveRole;
+
+    switch (modeRole) {
       case 'seer':
         setActionMode(null);
         setActionStep('choose');
@@ -66,7 +82,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         setActionStep('choose');
         break;
       case 'witch':
-        if (step === 1) {
+        if (!actionData?.centerRole) {
           setActionMode('center');
           setActionStep('choose');
         } else {
@@ -95,17 +111,17 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         setActionStep('done');
     }
     setSelected([]);
-  }, [isMyTurn, currentRole, submitted, actionData, step]);
+  }, [isMyTurn, currentRole, submitted, actionData, step, effectiveRole]);
 
   function handleSelect(id) {
     sfxCardFlip();
-    if (currentRole === 'troublemaker') {
+    if (effectiveRole === 'troublemaker') {
       setSelected(prev => {
         if (prev.includes(id)) return prev.filter(x => x !== id);
         if (prev.length >= 2) return prev;
         return [...prev, id];
       });
-    } else if (currentRole === 'seer' && actionMode === 'center') {
+    } else if (effectiveRole === 'seer' && actionMode === 'center') {
       setSelected(prev => {
         if (prev.includes(id)) return prev.filter(x => x !== id);
         if (prev.length >= 2) return prev;
@@ -119,7 +135,19 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   function handleSubmitAction() {
     let action = {};
 
-    switch (currentRole) {
+    // For doppelganger step 1: pick a player to copy
+    if (currentRole === 'doppelganger' && step === 1) {
+      if (selected.length === 1) action = { targetPlayer: selected[0], step: 1 };
+      onAction(currentRole, action);
+      setSubmitted(true);
+      setSubmittedKey(actionKey);
+      setActionStep('done');
+      sfxReveal();
+      return;
+    }
+
+    // Use effectiveRole for building the action (works for both regular roles and doppel step 2+)
+    switch (effectiveRole) {
       case 'werewolf':
         if (actionData?.isSolo && selected.length === 1) {
           action = { peekCenter: selected[0] };
@@ -154,12 +182,15 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         if (selected.length === 1) action = { centerSlot: selected[0] };
         break;
       case 'paranormalinvestigator':
-        if (selected.length === 1) action = { targetPlayer: selected[0], step };
+        if (selected.length === 1) {
+          const piStep = isDoppelAction ? (actionData?.piStep || 1) : step;
+          action = { targetPlayer: selected[0], step: piStep };
+        }
         break;
       case 'witch':
-        if (step === 1 && selected.length === 1) {
+        if (!actionData?.centerRole && selected.length === 1) {
           action = { centerSlot: selected[0], step: 1 };
-        } else if (step === 2 && selected.length === 1) {
+        } else if (actionData?.centerRole && selected.length === 1) {
           action = { swap: true, targetPlayer: selected[0], step: 2 };
         }
         break;
@@ -170,6 +201,11 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         break;
     }
 
+    // For doppelganger step 2+, wrap in doppelganger envelope
+    if (isDoppelAction) {
+      action.step = step;
+    }
+
     onAction(currentRole, action);
     setSubmitted(true);
     setSubmittedKey(actionKey);
@@ -178,17 +214,26 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   }
 
   function handleAutoSubmit(extraAction = {}) {
+    if (isDoppelAction) {
+      extraAction.step = step;
+    }
     onAction(currentRole, extraAction);
     setSubmitted(true);
     setSubmittedKey(actionKey);
     setActionStep('done');
   }
 
+  const doppelCopied = nightKnowledge?.doppelgangerCopiedRole;
   const isMyRoleCalled = currentRole === myRole?.roleId
-    || (currentRole === 'werewolf' && (myRole?.roleId === 'alphawolf' || myRole?.roleId === 'mysticwolf'));
+    || (currentRole === 'werewolf' && (myRole?.roleId === 'alphawolf' || myRole?.roleId === 'mysticwolf'))
+    // Doppelganger highlight for join-later phases
+    || (myRole?.roleId === 'doppelganger' && doppelCopied && (
+      currentRole === doppelCopied
+      || (currentRole === 'werewolf' && ['werewolf', 'alphawolf', 'mysticwolf'].includes(doppelCopied))
+    ));
   const canSubmit = (() => {
-    if (currentRole === 'troublemaker') return selected.length === 2;
-    if (currentRole === 'seer' && actionMode === 'center') return selected.length === 2;
+    if (effectiveRole === 'troublemaker') return selected.length === 2;
+    if (effectiveRole === 'seer' && actionMode === 'center') return selected.length === 2;
     return selected.length === 1;
   })();
 
@@ -263,7 +308,21 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       <div className="mt-3 flex-1">
         {isMyTurn && !submitted && (
           <div className="card fade-in">
-            {currentRole === 'seer' && !actionMode && (
+            {/* Doppelganger step 1: pick a player to copy */}
+            {currentRole === 'doppelganger' && step === 1 && (
+              <div className="text-center">
+                <p className="text-purple-400 text-sm font-semibold mb-1">🎭 Hóa Thân</p>
+                <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài và trở thành vai đó</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+              </div>
+            )}
+
+            {/* Doppelganger step 2+ header */}
+            {isDoppelAction && (
+              <p className="text-purple-300 text-xs mb-2 text-center font-semibold">🎭 Hóa Thân → {ROLE_NAMES[actionData?.copiedRole]}</p>
+            )}
+
+            {effectiveRole === 'seer' && !actionMode && (
               <div className="text-center">
                 <p className="text-white/70 text-sm mb-3">Bạn muốn xem gì?</p>
                 <div className="flex gap-3 justify-center">
@@ -276,7 +335,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 </div>
               </div>
             )}
-            {currentRole === 'seer' && actionMode === 'player' && (
+            {effectiveRole === 'seer' && actionMode === 'player' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi trên bàn để xem bài</p>
                 <div className="flex gap-2 justify-center">
@@ -287,7 +346,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 </div>
               </div>
             )}
-            {currentRole === 'seer' && actionMode === 'center' && (
+            {effectiveRole === 'seer' && actionMode === 'center' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 2 bài ở giữa bàn ({selected.length}/2)</p>
                 <div className="flex gap-2 justify-center">
@@ -299,7 +358,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'robber' && (
+            {effectiveRole === 'robber' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để đổi bài</p>
                 <div className="flex gap-2 justify-center">
@@ -309,7 +368,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'troublemaker' && (
+            {effectiveRole === 'troublemaker' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 2 người để hoán đổi bài ({selected.length}/2)</p>
                 <div className="flex gap-2 justify-center">
@@ -319,14 +378,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'drunk' && (
+            {effectiveRole === 'drunk' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để đổi (bạn sẽ không biết bài mới)</p>
                 <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
               </div>
             )}
 
-            {currentRole === 'werewolf' && actionData?.isSolo && actionStep === 'choose' && (
+            {effectiveRole === 'werewolf' && actionData?.isSolo && actionStep === 'choose' && (
               <div className="text-center">
                 <p className="text-wolf-400 text-sm font-semibold mb-1">Bạn là Sói duy nhất!</p>
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
@@ -334,7 +393,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'mason' && (
+            {effectiveRole === 'mason' && (
               <div className="text-center">
                 <div className="mb-3">
                   {actionData?.masons?.length > 1 ? (
@@ -347,13 +406,13 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {((currentRole === 'werewolf' && !actionData?.isSolo) ||
-              currentRole === 'minion' || currentRole === 'insomniac') && (
+            {((effectiveRole === 'werewolf' && !actionData?.isSolo) ||
+              effectiveRole === 'minion' || effectiveRole === 'insomniac') && (
               <div className="text-center">
-                {currentRole === 'werewolf' && actionData?.werewolves?.length > 1 && (
+                {effectiveRole === 'werewolf' && actionData?.werewolves?.length > 1 && (
                   <p className="text-white/60 text-sm mb-3">Đồng bọn trên bàn đang sáng đỏ</p>
                 )}
-                {currentRole === 'minion' && (
+                {effectiveRole === 'minion' && (
                   <div className="mb-3">
                     {actionData?.werewolves?.length > 0 ? (
                       <p className="text-white/60 text-sm">Người Sói trên bàn đang sáng đỏ</p>
@@ -362,14 +421,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                     )}
                   </div>
                 )}
-                {currentRole === 'insomniac' && (
+                {effectiveRole === 'insomniac' && (
                   <p className="text-white/60 text-sm mb-2">Bài hiện tại của bạn hiện trên bàn</p>
                 )}
                 <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
               </div>
             )}
 
-            {currentRole === 'sentinel' && (
+            {effectiveRole === 'sentinel' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2 flex items-center justify-center gap-1.5">
                   <Icon name="shield" size={16} className="text-village-400" /> Chạm vào người chơi để đặt khiên bảo vệ
@@ -381,7 +440,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'alphawolf' && (
+            {effectiveRole === 'alphawolf' && (
               <div className="text-center">
                 <p className="text-wolf-400 text-sm font-semibold mb-1">Sói Đầu Đàn</p>
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để đổi bài giữa với bài của họ</p>
@@ -392,7 +451,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'mysticwolf' && (
+            {effectiveRole === 'mysticwolf' && (
               <div className="text-center">
                 <p className="text-wolf-400 text-sm font-semibold mb-1">Sói Thần Bí</p>
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài của họ</p>
@@ -403,17 +462,17 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'apprenticeseer' && (
+            {effectiveRole === 'apprenticeseer' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
                 <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
               </div>
             )}
 
-            {currentRole === 'paranormalinvestigator' && (
+            {effectiveRole === 'paranormalinvestigator' && (
               <div className="text-center">
                 <p className="text-purple-400 text-sm font-semibold mb-1">
-                  Thám Tử {step === 2 ? '(lượt 2)' : '(lượt 1)'}
+                  Thám Tử {(isDoppelAction ? actionData?.piStep : step) === 2 ? '(lượt 2)' : '(lượt 1)'}
                 </p>
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài</p>
                 <p className="text-white/40 text-xs mb-2">Nếu thấy Sói/Tanner, bạn sẽ biến thành vai đó!</p>
@@ -424,14 +483,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'witch' && step === 1 && (
+            {effectiveRole === 'witch' && !actionData?.centerRole && (
               <div className="text-center">
                 <p className="text-purple-400 text-sm font-semibold mb-1">Phù Thủy (bước 1)</p>
                 <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem</p>
                 <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
               </div>
             )}
-            {currentRole === 'witch' && step === 2 && (
+            {effectiveRole === 'witch' && actionData?.centerRole && (
               <div className="text-center">
                 <p className="text-purple-400 text-sm font-semibold mb-1">Phù Thủy (bước 2)</p>
                 {actionData?.centerRole && (
@@ -441,13 +500,13 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 )}
                 <p className="text-white/60 text-sm mb-2">Chạm người chơi để đổi bài giữa với bài của họ</p>
                 <div className="flex gap-2 justify-center">
-                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit({ swap: false, step: 2 })}>Bỏ qua</button>
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit({ swap: false, step: 2, targetPlayer: 'skip' })}>Bỏ qua</button>
                   <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
                 </div>
               </div>
             )}
 
-            {currentRole === 'villageidiot' && (
+            {effectiveRole === 'villageidiot' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-3">Chọn hướng xoay bài của tất cả người khác:</p>
                 <div className="flex gap-3 justify-center">
@@ -462,7 +521,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
-            {currentRole === 'revealer' && (
+            {effectiveRole === 'revealer' && (
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để lật bài</p>
                 <p className="text-white/40 text-xs mb-2">Nếu không phải Sói/Tanner — công khai cho tất cả!</p>
@@ -509,7 +568,10 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
 function ActionResultInline({ role, result, step }) {
   if (!result) return null;
+  // For doppelganger, use the copiedRole to display the right result
+  const displayRole = (role === 'doppelganger' && result.copiedRole) ? result.copiedRole : role;
   const ROLE_SHORT = {
+    doppelganger: 'Doppelgänger',
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
     drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
     sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
@@ -522,10 +584,18 @@ function ActionResultInline({ role, result, step }) {
     return CENTER[parseInt(slot.replace('center', ''))] || slot;
   }
 
-  if (role === 'werewolf' && result.peeked) {
+  // Doppelganger step 1 result: show which role was copied
+  if (role === 'doppelganger' && result.copiedRole && !displayRole) {
+    return <p className="text-purple-300 text-sm mt-1">Bạn đã trở thành: <strong>{ROLE_SHORT[result.copiedRole]}</strong></p>;
+  }
+  if (role === 'doppelganger' && result.copiedRole && !result.seen && !result.newRole && !result.currentRole && !result.peeked && !result.rotated && !result.revealed && !result.swapped && !result.blocked) {
+    return <p className="text-purple-300 text-sm mt-1">🎭 Bạn đã trở thành: <strong>{ROLE_SHORT[result.copiedRole]}</strong></p>;
+  }
+
+  if (displayRole === 'werewolf' && result.peeked) {
     return <p className="text-white/70 text-sm mt-1">{cLabel(result.peeked.slot)}: <strong className="text-moon-300">{ROLE_SHORT[result.peeked.role]}</strong></p>;
   }
-  if (role === 'seer' && result.seen) {
+  if (displayRole === 'seer' && result.seen) {
     if (result.seen.type === 'player') {
       return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
     }
@@ -537,24 +607,24 @@ function ActionResultInline({ role, result, step }) {
       </div>
     );
   }
-  if (role === 'robber' && result.newRole) {
+  if (displayRole === 'robber' && result.newRole) {
     return <p className="text-white/70 text-sm mt-1">Bài mới: <strong className="text-moon-300">{ROLE_SHORT[result.newRole]}</strong></p>;
   }
-  if (role === 'insomniac' && result.currentRole) {
+  if (displayRole === 'insomniac' && result.currentRole) {
     return <p className="text-white/70 text-sm mt-1">Bài hiện tại: <strong className="text-moon-300">{ROLE_SHORT[result.currentRole]}</strong></p>;
   }
-  if (role === 'sentinel' && result.shielded) {
+  if (displayRole === 'sentinel' && result.shielded) {
     return <p className="text-white/70 text-sm mt-1">Đã đặt khiên bảo vệ</p>;
   }
-  if (role === 'mysticwolf' && result.seen) {
+  if (displayRole === 'mysticwolf' && result.seen) {
     return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>;
   }
-  if (role === 'apprenticeseer' && result.seen?.slots) {
+  if (displayRole === 'apprenticeseer' && result.seen?.slots) {
     const s = result.seen.slots[0];
     const label = s.slot === 'centerWolf' ? 'Alpha' : CENTER[parseInt(s.slot.replace('center', ''))];
     return <p className="text-white/70 text-sm mt-1">{label}: <strong className="text-moon-300">{ROLE_SHORT[s.role]}</strong></p>;
   }
-  if (role === 'paranormalinvestigator' && result.seen) {
+  if (displayRole === 'paranormalinvestigator' && result.seen) {
     return (
       <div className="text-white/70 text-sm mt-1">
         <p>Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role]}</strong></p>
@@ -563,7 +633,7 @@ function ActionResultInline({ role, result, step }) {
       </div>
     );
   }
-  if (role === 'witch') {
+  if (displayRole === 'witch') {
     if (result.seen && result.step === 1) {
       return (
         <div className="text-white/70 text-sm mt-1">
@@ -576,10 +646,10 @@ function ActionResultInline({ role, result, step }) {
       return <p className="text-white/70 text-sm mt-1">Đã đổi bài</p>;
     }
   }
-  if (role === 'villageidiot' && result.rotated) {
+  if (displayRole === 'villageidiot' && result.rotated) {
     return <p className="text-white/70 text-sm mt-1">Đã xoay bài sang {result.direction === 'left' ? 'trái' : 'phải'}</p>;
   }
-  if (role === 'revealer') {
+  if (displayRole === 'revealer') {
     if (result.revealed) {
       return <p className="text-white/70 text-sm mt-1">Đã lật: <strong className="text-moon-300">{ROLE_SHORT[result.role]}</strong> (công khai!)</p>;
     }
@@ -595,6 +665,7 @@ function KnowledgeSummary({ knowledge, players }) {
   const nameMap = {};
   players.forEach(p => { nameMap[p.id] = p.name; });
   const ROLE_SHORT = {
+    doppelganger: 'Doppelgänger',
     werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
     drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
     sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
@@ -610,6 +681,7 @@ function KnowledgeSummary({ knowledge, players }) {
 
   const items = [];
 
+  if (knowledge.doppelgangerCopiedRole) items.push(`🎭 Hóa Thân → ${ROLE_SHORT[knowledge.doppelgangerCopiedRole] || knowledge.doppelgangerCopiedRole}`);
   if (knownWerewolves.length > 0) items.push(`Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
   Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id] || id}: ${ROLE_SHORT[role] || role}`));

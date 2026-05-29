@@ -50,6 +50,7 @@ function startGame(room) {
   room.hasAlphaWolf = settings.selectedRoles.includes('alphawolf');
   room.revealedToAll = {};
   room.piTransformed = {};
+  room.doppelgangerData = {}; // { playerId: { copiedRole, copiedFromId } }
   room.nightPhase = {
     roleOrder: getNightOrder(settings.selectedRoles),
     currentRoleIndex: -1,
@@ -69,9 +70,22 @@ function getNightActionData(room, role) {
   const { players } = room;
 
   switch (role) {
+    case 'doppelganger': {
+      const otherPlayers = players.map(p => ({ id: p.id, name: p.name }));
+      return { otherPlayers, step: 1 };
+    }
     case 'werewolf': {
-      const wolvesFilter = r => (r === 'werewolf' || r === 'alphawolf' || r === 'mysticwolf');
-      const werewolves = players.filter(p => wolvesFilter(room.originalCards[p.id])).map(p => ({ id: p.id, name: p.name }));
+      const wolvesFilter = (p) => {
+        const r = room.originalCards[p.id];
+        if (r === 'werewolf' || r === 'alphawolf' || r === 'mysticwolf') return true;
+        // Include doppelganger who copied a wolf variant
+        if (r === 'doppelganger' && room.doppelgangerData?.[p.id]) {
+          const cr = room.doppelgangerData[p.id].copiedRole;
+          return cr === 'werewolf' || cr === 'alphawolf' || cr === 'mysticwolf';
+        }
+        return false;
+      };
+      const werewolves = players.filter(wolvesFilter).map(p => ({ id: p.id, name: p.name }));
       return { werewolves, isSolo: werewolves.length === 1, shieldedPlayer: room.shieldedPlayer };
     }
     case 'alphawolf': {
@@ -83,11 +97,21 @@ function getNightActionData(room, role) {
       return { otherPlayers, shieldedPlayer: room.shieldedPlayer };
     }
     case 'minion': {
-      const werewolves = players.filter(p => isWolfRole(room.originalCards[p.id])).map(p => ({ id: p.id, name: p.name }));
+      const werewolves = players.filter(p => {
+        if (isWolfRole(room.originalCards[p.id])) return true;
+        if (room.originalCards[p.id] === 'doppelganger' && room.doppelgangerData?.[p.id]) {
+          return isWolfRole(room.doppelgangerData[p.id].copiedRole);
+        }
+        return false;
+      }).map(p => ({ id: p.id, name: p.name }));
       return { werewolves, shieldedPlayer: room.shieldedPlayer };
     }
     case 'mason': {
-      const masons = players.filter(p => room.originalCards[p.id] === 'mason').map(p => ({ id: p.id, name: p.name }));
+      const masons = players.filter(p => {
+        if (room.originalCards[p.id] === 'mason') return true;
+        if (room.originalCards[p.id] === 'doppelganger' && room.doppelgangerData?.[p.id]?.copiedRole === 'mason') return true;
+        return false;
+      }).map(p => ({ id: p.id, name: p.name }));
       return { masons, shieldedPlayer: room.shieldedPlayer };
     }
     case 'sentinel': {
@@ -129,6 +153,17 @@ function processNightAction(room, playerId, role, action) {
   const { currentCards } = room;
 
   switch (role) {
+    case 'doppelganger': {
+      if (!action.targetPlayer || !isValidPlayerId(room, action.targetPlayer)) return {};
+      if (action.targetPlayer === playerId) return {};
+      const copiedRole = currentCards[action.targetPlayer];
+      if (!room.doppelgangerData) room.doppelgangerData = {};
+      room.doppelgangerData[playerId] = { copiedRole, copiedFromId: action.targetPlayer };
+      // Doppelganger's card becomes the copied role (affects swaps & end-game)
+      currentCards[playerId] = copiedRole;
+      return { copiedRole, copiedFromId: action.targetPlayer };
+    }
+
     case 'sentinel': {
       if (!action.targetPlayer || !isValidPlayerId(room, action.targetPlayer)) return {};
       if (action.targetPlayer === playerId) return {};

@@ -1,5 +1,13 @@
 const ROLES = {
   // ─── BASE GAME ───────────────────────────────────────────────────────────────
+  doppelganger: {
+    id: 'doppelganger', name: 'Doppelgänger', nameVi: 'Hóa Thân', team: 'village',
+    nightOrder: 0, hasNightAction: true, maxCount: 1, emoji: '🎭', expansion: 'base',
+    multiStep: true,
+    description: 'Hóa Thân! Xem bài 1 người và trở thành vai đó ngay lập tức. Nếu vai có hành động đêm, thực hiện ngay.',
+    nightInstruction: 'Hóa Thân, hãy mở mắt. Chọn 1 người để xem bài và trở thành vai đó.',
+    nightClose: 'Hóa Thân, hãy nhắm mắt lại.',
+  },
   werewolf: {
     id: 'werewolf', name: 'Werewolf', nameVi: 'Người Sói', team: 'werewolf',
     nightOrder: 2, hasNightAction: true, maxCount: 5, emoji: '🐺', expansion: 'base',
@@ -158,6 +166,7 @@ function isWolfRole(roleId) {
 }
 
 const ACTIVE_NIGHT_ROLES = [
+  'doppelganger',
   'sentinel',
   'werewolf', 'alphawolf', 'mysticwolf',
   'minion', 'mason',

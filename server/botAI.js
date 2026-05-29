@@ -34,6 +34,9 @@ function decideBotNightAction(room, botId, role) {
   const centers = getValidCenterSlots(room);
 
   switch (role) {
+    case 'doppelganger':
+      return { targetPlayer: pickRandom(others), step: 1 };
+
     case 'sentinel':
       return { targetPlayer: pickRandom(others) };
 
@@ -107,6 +110,11 @@ function decideBotNightAction(room, botId, role) {
   }
 }
 
+function decideBotDoppelgangerStep2(room, botId, copiedRole) {
+  // Delegate to the copied role's AI
+  return decideBotNightAction(room, botId, copiedRole);
+}
+
 function decideBotNightActionStep2(room, botId, role, step1Result) {
   const others = getOtherPlayerIds(room, botId);
 
@@ -178,6 +186,7 @@ module.exports = {
   generateBotName,
   decideBotNightAction,
   decideBotNightActionStep2,
+  decideBotDoppelgangerStep2,
   decideBotVote,
   decideBotBodyguardProtect,
   decideBotHunterShoot,

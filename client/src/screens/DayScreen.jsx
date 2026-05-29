@@ -26,6 +26,7 @@ function useCountdown(timerEnd, paused, pausedRemaining) {
 }
 
 const ROLE_SHORT = {
+  doppelganger: 'Doppelgänger',
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber', troublemaker: 'Troublemaker',
   drunk: 'Drunk', insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
   sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',

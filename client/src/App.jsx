@@ -39,6 +39,7 @@ export default function App() {
     swappedPairs: [],
     myCurrentRole: null,
     shieldedPlayer: null,
+    doppelgangerCopiedRole: null,
   });
 
   const [connectionLost, setConnectionLost] = useState(false);
@@ -142,7 +143,7 @@ export default function App() {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null });
     });
 
     socket.on('role_assigned', ({ roleId, role }) => {
@@ -164,19 +165,22 @@ export default function App() {
     socket.on('night_action_request', ({ role, ...actionData }) => {
       setNightState(prev => ({ ...prev, isMyTurn: true, actionData, result: null }));
 
-      if (role === 'werewolf' && actionData.werewolves) {
+      // For doppelganger step 2+, use copiedRole for knowledge updates
+      const reqEffective = (role === 'doppelganger' && actionData.copiedRole) ? actionData.copiedRole : role;
+
+      if (reqEffective === 'werewolf' && actionData.werewolves) {
         setNightKnowledge(prev => ({
           ...prev,
           knownWerewolves: actionData.werewolves.map(w => w.id),
         }));
       }
-      if (role === 'minion' && actionData.werewolves) {
+      if (reqEffective === 'minion' && actionData.werewolves) {
         setNightKnowledge(prev => ({
           ...prev,
           knownWerewolves: actionData.werewolves.map(w => w.id),
         }));
       }
-      if (role === 'mason' && actionData.masons) {
+      if (reqEffective === 'mason' && actionData.masons) {
         setNightKnowledge(prev => ({
           ...prev,
           knownMasons: actionData.masons.map(m => m.id),
@@ -201,10 +205,18 @@ export default function App() {
     socket.on('night_action_result', ({ role, result }) => {
       setNightState(prev => ({ ...prev, result }));
 
+      // For doppelganger, use the copiedRole to process knowledge
+      const effectiveRole = (role === 'doppelganger' && result.copiedRole) ? result.copiedRole : role;
+
       setNightKnowledge(prev => {
         const next = { ...prev };
 
-        if (role === 'seer' && result.seen) {
+        // Track doppelganger's copied role
+        if (role === 'doppelganger' && result.copiedRole && !prev.doppelgangerCopiedRole) {
+          next.doppelgangerCopiedRole = result.copiedRole;
+        }
+
+        if (effectiveRole === 'seer' && result.seen) {
           if (result.seen.type === 'player') {
             next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
           } else if (result.seen.type === 'center') {
@@ -214,37 +226,37 @@ export default function App() {
           }
         }
 
-        if (role === 'werewolf' && result.peeked) {
+        if (effectiveRole === 'werewolf' && result.peeked) {
           next.revealedCenter = { ...prev.revealedCenter, [result.peeked.slot]: result.peeked.role };
         }
 
-        if (role === 'robber' && result.newRole) {
+        if (effectiveRole === 'robber' && result.newRole) {
           next.myCurrentRole = result.newRole;
         }
 
-        if (role === 'insomniac' && result.currentRole) {
+        if (effectiveRole === 'insomniac' && result.currentRole) {
           next.myCurrentRole = result.currentRole;
         }
 
-        if (role === 'mysticwolf' && result.seen) {
+        if (effectiveRole === 'mysticwolf' && result.seen) {
           next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
         }
 
-        if (role === 'apprenticeseer' && result.seen) {
+        if (effectiveRole === 'apprenticeseer' && result.seen) {
           const rc = { ...prev.revealedCenter };
           result.seen.slots.forEach(s => { rc[s.slot] = s.role; });
           next.revealedCenter = rc;
         }
 
-        if (role === 'paranormalinvestigator' && result.seen) {
+        if (effectiveRole === 'paranormalinvestigator' && result.seen) {
           next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
         }
 
-        if (role === 'witch' && result.seen) {
+        if (effectiveRole === 'witch' && result.seen) {
           next.revealedCenter = { ...prev.revealedCenter, [result.seen.slot]: result.seen.role };
         }
 
-        if (role === 'revealer' && result.revealed) {
+        if (effectiveRole === 'revealer' && result.revealed) {
           next.revealedPlayers = { ...prev.revealedPlayers, [result.targetPlayer]: result.role };
         }
 
@@ -340,7 +352,7 @@ export default function App() {
       setMyRole(null);
       setResults(null);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null });
       setScreen('lobby');
       stopBGM();
     });
