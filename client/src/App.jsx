@@ -49,9 +49,11 @@ export default function App() {
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
   const playersRef = useRef(players);
+  const nightKnowledgeRef = useRef(nightKnowledge);
   screenRef.current = screen;
   roomCodeRef.current = roomCode;
   playersRef.current = players;
+  nightKnowledgeRef.current = nightKnowledge;
 
   const audioInitialized = useRef(false);
 
@@ -399,37 +401,42 @@ export default function App() {
   const handleNightAction = useCallback((role, action) => {
     socket.emit('night_action', { role, action });
 
-    if (role === 'troublemaker' && action.target1 && action.target2) {
+    // For doppelganger step 2+, use the copied role to determine what action was taken
+    const effectiveRole = (role === 'doppelganger' && action.step >= 2)
+      ? nightKnowledgeRef.current?.doppelgangerCopiedRole
+      : role;
+
+    if (effectiveRole === 'troublemaker' && action.target1 && action.target2) {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, [action.target1, action.target2]],
       }));
     }
-    if (role === 'robber' && action.targetPlayer) {
+    if (effectiveRole === 'robber' && action.targetPlayer) {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, [socket.id, action.targetPlayer]],
       }));
     }
-    if (role === 'drunk' && action.centerSlot) {
+    if (effectiveRole === 'drunk' && action.centerSlot) {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, [socket.id, action.centerSlot]],
       }));
     }
-    if (role === 'sentinel' && action.targetPlayer) {
+    if (effectiveRole === 'sentinel' && action.targetPlayer) {
       setNightKnowledge(prev => ({
         ...prev,
         shieldedPlayer: action.targetPlayer,
       }));
     }
-    if (role === 'alphawolf' && action.targetPlayer) {
+    if (effectiveRole === 'alphawolf' && action.targetPlayer) {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, ['center', action.targetPlayer]],
       }));
     }
-    if (role === 'witch' && action.swap && action.targetPlayer) {
+    if (effectiveRole === 'witch' && action.swap && action.targetPlayer) {
       setNightKnowledge(prev => ({
         ...prev,
         swappedPairs: [...prev.swappedPairs, ['center', action.targetPlayer]],
