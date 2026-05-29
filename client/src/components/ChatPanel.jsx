@@ -152,7 +152,7 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
                       </div>
                     )}
 
-                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex flex-col max-w-[75%] min-w-0 ${isMe ? 'items-end' : 'items-start'}`}>
                       {!isMe && (
                         <span className="text-moon-400/60 text-[10px] font-medium mb-0.5 ml-1">{msg.name}</span>
                       )}
@@ -164,7 +164,7 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
                           className="w-24 h-24 object-contain drop-shadow-lg"
                         />
                       ) : (
-                        <div className={`px-3 py-1.5 rounded-2xl break-words max-w-[75%] ${
+                        <div className={`px-3 py-1.5 rounded-2xl break-words ${
                           isMe
                             ? 'bg-moon-400/20 text-moon-200 rounded-br-md'
                             : 'bg-white/10 text-white/80 rounded-bl-md'
