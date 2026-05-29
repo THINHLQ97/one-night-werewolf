@@ -154,13 +154,13 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         if (selected.length === 1) action = { centerSlot: selected[0] };
         break;
       case 'paranormalinvestigator':
-        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        if (selected.length === 1) action = { targetPlayer: selected[0], step };
         break;
       case 'witch':
         if (step === 1 && selected.length === 1) {
-          action = { centerSlot: selected[0] };
+          action = { centerSlot: selected[0], step: 1 };
         } else if (step === 2 && selected.length === 1) {
-          action = { swap: true, targetPlayer: selected[0] };
+          action = { swap: true, targetPlayer: selected[0], step: 2 };
         }
         break;
       case 'revealer':
@@ -441,7 +441,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 )}
                 <p className="text-white/60 text-sm mb-2">Chạm người chơi để đổi bài giữa với bài của họ</p>
                 <div className="flex gap-2 justify-center">
-                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit({ swap: false })}>Bỏ qua</button>
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit({ swap: false, step: 2 })}>Bỏ qua</button>
                   <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
                 </div>
               </div>
