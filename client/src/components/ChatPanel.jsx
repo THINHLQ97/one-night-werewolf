@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Icon from './Icon';
 import socket from '../socket';
 
-const STICKER_COUNT = 24;
-function stickerUrl(id) { return `/images/icon/icon%20(${id}).png`; }
-const STICKER_PATHS = Array.from({ length: STICKER_COUNT }, (_, i) => stickerUrl(i + 1));
+// Available sticker IDs (some numbers missing from asset set)
+const STICKER_IDS = [1,2,3,4,5,9,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+function stickerUrl(id) { return `/images/icon/icon${id}.png`; }
 
 export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
   const [input, setInput] = useState('');
@@ -185,14 +185,14 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
             {/* Sticker picker */}
             {stickerOpen && (
               <div className="bg-night-800/95 border-x border-white/10 px-2 py-2 overflow-y-auto" style={{ maxHeight: 160 }}>
-                <div className="grid grid-cols-6 gap-1">
-                  {STICKER_PATHS.map((path, i) => (
+                <div className="grid grid-cols-5 gap-1">
+                  {STICKER_IDS.map(id => (
                     <button
-                      key={i}
-                      onClick={() => sendSticker(i + 1)}
+                      key={id}
+                      onClick={() => sendSticker(id)}
                       className="w-full aspect-square rounded-lg bg-white/5 hover:bg-white/15 active:scale-90 transition-all flex items-center justify-center p-1"
                     >
-                      <img src={path} alt={`sticker ${i + 1}`} className="w-full h-full object-contain" loading="lazy" />
+                      <img src={stickerUrl(id)} alt={`sticker ${id}`} className="w-full h-full object-contain" loading="lazy" />
                     </button>
                   ))}
                 </div>

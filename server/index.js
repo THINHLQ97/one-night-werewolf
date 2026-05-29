@@ -1215,7 +1215,7 @@ io.on('connection', socket => {
   socket.on('chat_sticker', ({ roomCode, stickerId }) => {
     if (!roomCode || !stickerId) return;
     const stickerNum = parseInt(stickerId);
-    if (isNaN(stickerNum) || stickerNum < 1 || stickerNum > 24) return;
+    if (isNaN(stickerNum) || stickerNum < 1 || stickerNum > 30) return;
     const room = getRoom(roomCode);
     if (!room) return;
     const player = room.players.find(p => p.id === socket.id);
