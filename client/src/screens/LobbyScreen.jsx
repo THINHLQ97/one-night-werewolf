@@ -8,6 +8,7 @@ import ChatPanel from '../components/ChatPanel';
 
 const ALL_ROLES = [
   // Base
+  { id: 'doppelganger', name: 'Doppelgänger', emoji: '🎭', team: 'village', max: 1, expansion: 'base' },
   { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5, expansion: 'base' },
   { id: 'minion',   name: 'Minion',   emoji: '🦹', team: 'werewolf', max: 1, expansion: 'base' },
   { id: 'mason',    name: 'Mason',    emoji: '🤝', team: 'village',  max: 2, expansion: 'base' },
