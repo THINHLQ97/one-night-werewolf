@@ -22,7 +22,7 @@ const TEAM_STYLE = {
   tanner:   { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', label: 'Phe Riêng', glow: 'shadow-[0_0_30px_rgba(142,68,173,0.3)]' },
 };
 
-export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking }) {
+export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking, chatMessages }) {
   const [revealed, setRevealed] = useState(false);
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
           )}
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
-          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} />
+          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} messages={chatMessages} />
         </div>
       </div>
 

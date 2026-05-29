@@ -19,7 +19,7 @@ const ROLE_NAMES = {
   revealer: 'Revealer', bodyguard: 'Bodyguard',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages }) {
   const { currentRole, isMyTurn, actionData, result } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -258,7 +258,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           </button>
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
-          <ChatPanel roomCode={roomCode} myId={myId} players={players} />
+          <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} />
         </div>
         {myRole && !roleHidden && (
           <div className="flex items-center justify-center gap-2">

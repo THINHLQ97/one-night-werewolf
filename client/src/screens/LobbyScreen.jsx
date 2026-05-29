@@ -150,7 +150,7 @@ const ROLE_DETAILS = {
   },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
@@ -233,7 +233,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
         {/* Voice chat & chat controls in lobby */}
         <div className="flex items-center justify-center gap-1.5 mt-3">
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={socket.id} />
-          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} />
+          <ChatPanel roomCode={roomCode} myId={socket.id} players={players} messages={chatMessages} />
         </div>
       </div>
 

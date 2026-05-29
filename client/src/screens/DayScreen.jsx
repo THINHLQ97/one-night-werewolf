@@ -40,7 +40,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages }) {
   const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd } = dayState;
   // Use voting timer when in voting phase, otherwise discussion timer
   const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
@@ -89,7 +89,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
           </button>
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
-          <ChatPanel roomCode={roomCode} myId={myId} players={players} />
+          <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} />
         </div>
         <p className="text-white/40 text-xs mt-1">
           {votingPhase

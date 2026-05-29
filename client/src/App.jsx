@@ -44,6 +44,7 @@ export default function App() {
 
   const [connectionLost, setConnectionLost] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking] = useState({});
+  const [chatMessages, setChatMessages] = useState([]);
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -150,9 +151,15 @@ export default function App() {
       setMyRole({ roleId, ...role });
     });
 
+    // ── Chat messages (persisted across screens) ──
+    socket.on('chat_message', (msg) => {
+      setChatMessages(prev => [...prev.slice(-99), msg]);
+    });
+
     socket.on('night_start', () => {
       setScreen('night');
       setNightState({ currentRole: null, isMyTurn: false, actionData: null, result: null });
+      setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
       startNightBGM();
     });
@@ -276,12 +283,14 @@ export default function App() {
       });
       setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null });
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
+      setChatMessages(prev => [...prev, { type: 'phase', text: '☀️ Ban ngày — Thảo luận', time: Date.now() }]);
       stopBGM();
       setTimeout(() => startDayBGM(), 500);
     });
 
     socket.on('voting_phase_start', ({ votingTimerEnd }) => {
       setDayState(prev => ({ ...prev, votingPhase: true, votingTimerEnd, paused: false, pausedRemaining: null }));
+      setChatMessages(prev => [...prev, { type: 'phase', text: '🗳️ Bỏ phiếu bắt đầu', time: Date.now() }]);
     });
 
     socket.on('vote_update', ({ votes, bodyguardProtect, players: votePlayers }) => {
@@ -353,6 +362,7 @@ export default function App() {
       setResults(null);
       setTokenClaims(null);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null });
+      setChatMessages([]);
       setScreen('lobby');
       stopBGM();
     });
@@ -470,11 +480,12 @@ export default function App() {
           });
         }}
         voiceSpeaking={voiceSpeaking}
+        chatMessages={chatMessages}
       />
     </>);
   }
   if (screen === 'role_reveal') {
-    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} /></>;
+    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} chatMessages={chatMessages} /></>;
   }
   if (screen === 'night') {
     return (<><SceneBackground scene={currentScene} />{connectionOverlay}
@@ -489,6 +500,7 @@ export default function App() {
         roomCode={roomCode}
         isHost={isHost}
         voiceSpeaking={voiceSpeaking}
+        chatMessages={chatMessages}
       />
     </>);
   }
@@ -514,6 +526,7 @@ export default function App() {
         onDeductionClear={position => socket.emit('deduction_clear', { position })}
         roomCode={roomCode}
         voiceSpeaking={voiceSpeaking}
+        chatMessages={chatMessages}
       />
     </>);
   }

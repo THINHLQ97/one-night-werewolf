@@ -47,8 +47,9 @@ const WIN_SCENES = {
 // ─── End-scene banner images (2:1) ──────────────────────────────────────────
 // Each key maps to a specific vote outcome. Logic: getEndSceneKey().
 const END_SCENE_IMAGES = {
-  // Peace — no one dies (no majority, or bodyguard saved everyone)
+  // Peace — no one dies
   no_one_die: '/images/endscene/no-one-die.webp',
+  no_one_die_wolves_survive: '/images/endscene/no-one-die-but-there-wolves.webp',
 
   // Single vote — wolves
   vote_werewolf: '/images/endscene/werewolf-vote.webp',
@@ -101,6 +102,7 @@ const END_SCENE_IMAGES = {
 
 const END_SCENE_NARRATIONS = {
   no_one_die: 'Không có sói, không có phản bội, cũng chẳng ai phải ngã xuống. Đêm dài khép lại bằng một cái thở phào hiếm hoi của cả làng.',
+  no_one_die_wolves_survive: 'Dân làng đã tha cho nhau, nhưng bóng tối vẫn rình rập ngoài cổng. Bầy sói mỉm cười trong màn đêm — chúng sống sót mà không cần cắn ai.',
 
   vote_werewolf: 'Con sói bị lôi ra khỏi lớp ngụy trang sau cùng. Dân làng đã chọn đúng, và tiếng chuông bình minh vang lên trên mái ngói đỏ.',
   vote_alpha_wolf: 'Khi thủ lĩnh bầy sói gục xuống, tiếng tru trong đêm cũng hóa thành im lặng. Dân làng sống sót qua cơn ác mộng cuối cùng.',
@@ -184,7 +186,10 @@ function getEndSceneKey(results, players) {
   const { eliminated = [], initialEliminated = [], finalCards = {}, originalCards = {} } = results;
 
   // No one dies (no majority, or bodyguard saved the only target)
-  if (eliminated.length === 0) return 'no_one_die';
+  if (eliminated.length === 0) {
+    const wolvesOrMinion = players.some(p => isWolfRole(finalCards[p.id]) || finalCards[p.id] === 'minion');
+    return wolvesOrMinion ? 'no_one_die_wolves_survive' : 'no_one_die';
+  }
 
   const wolvesInGame = players.some(p => isWolfRole(finalCards[p.id]));
 

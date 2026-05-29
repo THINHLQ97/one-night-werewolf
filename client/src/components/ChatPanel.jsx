@@ -2,44 +2,32 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Icon from './Icon';
 import socket from '../socket';
 
-export default function ChatPanel({ roomCode, myId, players }) {
-  const [messages, setMessages] = useState([]);
+export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
   const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const [lastSeenCount, setLastSeenCount] = useState(0);
   const listRef = useRef(null);
   const inputRef = useRef(null);
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
 
-  useEffect(() => {
-    const handler = ({ id, name, text, time, type }) => {
-      setMessages(prev => [...prev.slice(-99), { id, name, text, time, type }]);
-      if (!isOpenRef.current) {
-        setUnread(u => u + 1);
-      }
-    };
-    socket.on('chat_message', handler);
-    return () => socket.off('chat_message', handler);
-  }, []);
+  const unread = isOpen ? 0 : Math.max(0, messages.length - lastSeenCount);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages when open
   useEffect(() => {
     if (listRef.current && isOpen) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, isOpen]);
 
-  // Clear unread when opening
+  // Mark as read when opening
   const toggleOpen = useCallback(() => {
     setIsOpen(prev => {
       if (!prev) {
-        setUnread(0);
+        setLastSeenCount(messages.length);
         setTimeout(() => inputRef.current?.focus(), 100);
       }
       return !prev;
     });
-  }, []);
+  }, [messages.length]);
 
   const sendMessage = useCallback(() => {
     const text = input.trim();
@@ -55,9 +43,9 @@ export default function ChatPanel({ roomCode, myId, players }) {
     }
   }, [sendMessage]);
 
-  // Build name map
-  const nameMap = {};
-  players?.forEach(p => { nameMap[p.id] = p.name; });
+  // Build player lookup
+  const playerMap = {};
+  players?.forEach(p => { playerMap[p.id] = p; });
 
   return (
     <>
@@ -88,13 +76,13 @@ export default function ChatPanel({ roomCode, myId, players }) {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-2 bg-night-800 border-t border-x border-white/10 rounded-t-2xl">
               <span className="text-white/60 text-xs font-semibold flex items-center gap-1.5">
-                <Icon name="chat" size={14} /> Chat
+                <Icon name="chat" size={14} /> Trò chuyện
               </span>
               <button
                 onClick={toggleOpen}
                 className="text-white/40 hover:text-white/70 text-xs"
               >
-                Thu gon
+                Thu gọn
               </button>
             </div>
 
@@ -105,13 +93,24 @@ export default function ChatPanel({ roomCode, myId, players }) {
               style={{ overscrollBehavior: 'contain' }}
             >
               {messages.length === 0 && (
-                <p className="text-white/20 text-xs text-center py-8">Chua co tin nhan nao</p>
+                <p className="text-white/20 text-xs text-center py-8">Chưa có tin nhắn nào</p>
               )}
               {messages.map((msg, i) => {
                 const isMe = msg.id === myId;
-                const isSystem = msg.type === 'system';
 
-                if (isSystem) {
+                // Phase divider
+                if (msg.type === 'phase') {
+                  return (
+                    <div key={i} className="flex items-center gap-2 py-1.5 my-1">
+                      <div className="flex-1 h-px bg-white/10" />
+                      <span className="text-white/40 text-[10px] font-semibold whitespace-nowrap">{msg.text}</span>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+                  );
+                }
+
+                // System message
+                if (msg.type === 'system') {
                   return (
                     <div key={i} className="text-center">
                       <span className="text-white/30 text-[10px] italic">{msg.text}</span>
@@ -119,21 +118,41 @@ export default function ChatPanel({ roomCode, myId, players }) {
                   );
                 }
 
+                // User message
+                const player = playerMap[msg.id];
+                const avatarLetter = (msg.name || '?')[0].toUpperCase();
+                const avatarUrl = player?.avatarUrl;
+
                 return (
-                  <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                  <div key={i} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    {/* Avatar */}
                     {!isMe && (
-                      <span className="text-moon-400/60 text-[10px] font-medium mb-0.5 ml-1">{msg.name}</span>
+                      <div className="flex-shrink-0 mt-4">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-moon-400/20 flex items-center justify-center text-moon-400 text-[11px] font-bold">
+                            {avatarLetter}
+                          </div>
+                        )}
+                      </div>
                     )}
-                    <div className={`px-3 py-1.5 rounded-2xl max-w-[80%] break-words ${
-                      isMe
-                        ? 'bg-moon-400/20 text-moon-200 rounded-br-md'
-                        : 'bg-white/10 text-white/80 rounded-bl-md'
-                    }`}>
-                      <span className="text-sm leading-relaxed">{msg.text}</span>
+
+                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                      {!isMe && (
+                        <span className="text-moon-400/60 text-[10px] font-medium mb-0.5 ml-1">{msg.name}</span>
+                      )}
+                      <div className={`px-3 py-1.5 rounded-2xl break-words ${
+                        isMe
+                          ? 'bg-moon-400/20 text-moon-200 rounded-br-md'
+                          : 'bg-white/10 text-white/80 rounded-bl-md'
+                      }`}>
+                        <span className="text-sm leading-relaxed">{msg.text}</span>
+                      </div>
+                      <span className="text-white/20 text-[9px] mt-0.5 mx-1">
+                        {new Date(msg.time).toLocaleTimeString('vi', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
-                    <span className="text-white/20 text-[9px] mt-0.5 mx-1">
-                      {new Date(msg.time).toLocaleTimeString('vi', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
                   </div>
                 );
               })}
@@ -147,7 +166,7 @@ export default function ChatPanel({ roomCode, myId, players }) {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Nhap tin nhan..."
+                placeholder="Nhập tin nhắn..."
                 maxLength={200}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-moon-400/50"
                 style={{ userSelect: 'text' }}
