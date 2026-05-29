@@ -5,6 +5,7 @@ import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import RankBadge, { PointsBadge } from '../components/RankBadge';
 
 const ROLE_NAMES = {
+  doppelganger: 'Doppelgänger',
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer',
   robber: 'Robber', troublemaker: 'Troublemaker', drunk: 'Drunk',
   insomniac: 'Insomniac', villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner',
@@ -16,6 +17,7 @@ const ROLE_NAMES = {
 };
 
 const TEAM_OF = {
+  doppelganger: 'village', // If card swapped back to doppelganger, it's village
   werewolf: 'werewolf', minion: 'werewolf', alphawolf: 'werewolf', mysticwolf: 'werewolf', dreamwolf: 'werewolf',
   seer: 'village', robber: 'village', troublemaker: 'village',
   drunk: 'village', insomniac: 'village', villager: 'village', hunter: 'village', mason: 'village',
@@ -143,6 +145,7 @@ const END_SCENE_NARRATIONS = {
 
 // Mapping helpers for getEndSceneKey()
 const VILLAGE_ROLE_KEYS = {
+  doppelganger: 'vote_unknown_villager',
   villager: 'vote_villager',
   seer: 'vote_seer',
   robber: 'vote_robber',
@@ -153,6 +156,7 @@ const VILLAGE_ROLE_KEYS = {
 };
 
 const HUNTER_VICTIM_KEYS = {
+  doppelganger: 'hunter_kill_doppelganger_villager',
   werewolf: 'hunter_kill_werewolf',
   alphawolf: 'hunter_kill_alpha_wolf',
   mysticwolf: 'hunter_kill_mystic_wolf',
@@ -177,7 +181,7 @@ function getWinningTeam(results, players) {
 }
 
 function getEndSceneKey(results, players) {
-  const { eliminated = [], initialEliminated = [], finalCards = {} } = results;
+  const { eliminated = [], initialEliminated = [], finalCards = {}, originalCards = {} } = results;
 
   // No one dies (no majority, or bodyguard saved the only target)
   if (eliminated.length === 0) return 'no_one_die';
@@ -206,6 +210,13 @@ function getEndSceneKey(results, players) {
       return wolvesInGame ? 'hunter_kill_minion_with_wolf' : 'hunter_kill_minion_no_wolf';
     }
     if (victimRole === 'doppelganger') return 'hunter_kill_doppelganger_villager';
+    // Victim whose originalCard was doppelganger but finalCard is a wolf role
+    if (originalCards) {
+      const victimId = hunterKills[0];
+      if (originalCards[victimId] === 'doppelganger' && isWolfRole(victimRole)) {
+        return 'hunter_kill_doppelganger_wolf';
+      }
+    }
     return HUNTER_VICTIM_KEYS[victimRole] || 'vote_unknown_villager';
   }
 
