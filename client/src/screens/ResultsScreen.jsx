@@ -562,8 +562,115 @@ function ResultSceneBackground({ src }) {
 
 const CENTER_LABEL = { center0: 'Giữa 1', center1: 'Giữa 2', center2: 'Giữa 3', centerWolf: 'Alpha' };
 
+function describeCopiedAction(copiedRole, action, result, playerMap, targetName, target1Name, target2Name) {
+  switch (copiedRole) {
+    case 'seer':
+      if (result.seen?.type === 'player') return `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+      if (result.seen?.type === 'center') {
+        const slots = result.seen.slots || [];
+        return `xem giữa: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+      }
+      return 'quan sát';
+    case 'apprenticeseer':
+      if (result.seen?.slots) return `xem giữa: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+      return 'xem bài ở giữa';
+    case 'robber': {
+      const name = targetName || playerMap[action.targetPlayer] || '?';
+      return action.targetPlayer ? `cướp bài ${name}${result.newRole ? ` → thành ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'không hành động';
+    }
+    case 'troublemaker': {
+      const n1 = target1Name || playerMap[action.target1] || '?';
+      const n2 = target2Name || playerMap[action.target2] || '?';
+      return (action.target1 && action.target2) ? `hoán đổi ${n1} ↔ ${n2}` : 'không hành động';
+    }
+    case 'drunk':
+      return action.centerSlot ? `đổi bài với ${CENTER_LABEL[action.centerSlot] || action.centerSlot}` : 'không hành động';
+    case 'sentinel':
+      return action.targetPlayer ? `đặt khiên cho ${targetName || playerMap[action.targetPlayer] || '?'}` : 'không hành động';
+    case 'alphawolf': {
+      const name = targetName || playerMap[action.targetPlayer] || '?';
+      return action.targetPlayer ? (result.blocked ? `biến ${name} thành Sói (bị chặn)` : `biến ${name} thành Sói`) : 'không hành động';
+    }
+    case 'mysticwolf':
+      return result.seen ? `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'quan sát';
+    case 'paranormalinvestigator':
+      return result.seen ? `điều tra ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'điều tra';
+    case 'witch':
+      if (result.swapped && action.targetPlayer) return `đổi bài giữa cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
+      if (result.seen) return `xem ${CENTER_LABEL[result.seen.slot || action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+      return 'xem bài ở giữa';
+    case 'revealer':
+      if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
+      if (result.blocked) return `cố lật bài (Sói/Tanner — ẩn)`;
+      return 'lật bài';
+    case 'villageidiot':
+      return result.rotated ? `xoay bài sang ${result.rotated === 'left' ? 'trái' : 'phải'}` : 'xoay bài';
+    case 'insomniac':
+      return result.currentRole ? `kiểm tra bài → ${ROLE_NAMES[result.currentRole] || '?'}` : 'kiểm tra bài';
+    case 'werewolf':
+      if (result.peeked) return `xem ${CENTER_LABEL[result.peeked.slot] || '?'} → ${ROLE_NAMES[result.peeked.role] || '?'}`;
+      return 'nhìn đồng bọn Sói';
+    case 'minion': return 'nhìn thấy các Sói';
+    case 'mason': return 'nhìn Sinh Đôi';
+    default: return null;
+  }
+}
+
 function NightLogEntry({ entry, playerMap }) {
   const { role, playerName, action, result, targetName, target1Name, target2Name } = entry;
+
+  // ── Doppelganger: merge step 1 (copy) + step 2 (action) into one readable entry ──
+  if (role === 'doppelganger') {
+    const copiedRole = result.copiedRole;
+
+    // Step 1: copied a role (result has copiedRole but no action-specific data)
+    if (copiedRole && !result.seen && !result.newRole && !result.peeked && !result.currentRole && !result.rotated && !result.revealed && !result.swapped && !result.blocked) {
+      const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
+      const fromName = targetName || playerMap[action.targetPlayer] || playerMap[result.copiedFromId] || '?';
+      return (
+        <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-purple-500/[0.06] border border-purple-500/10">
+          <RoleIcon roleId="doppelganger" size={22} circular className="flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <span className="text-white/70 text-xs font-medium">{playerName}</span>
+            <span className="text-purple-400/60 text-xs"> (Doppelgänger)</span>
+            <p className="text-purple-300/70 text-[11px] leading-tight">🎭 hóa thân thành <strong className="text-purple-300">{copiedName}</strong> (copy {fromName})</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Step 2+: performing the copied role's action
+    if (copiedRole) {
+      const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
+      const desc = describeCopiedAction(copiedRole, action, result, playerMap, targetName, target1Name, target2Name);
+      if (desc) {
+        return (
+          <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-purple-500/[0.04]">
+            <RoleIcon roleId={copiedRole} size={22} circular className="flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <span className="text-white/70 text-xs font-medium">{playerName}</span>
+              <span className="text-purple-400/50 text-xs"> (🎭→{copiedName})</span>
+              <p className="text-white/50 text-[11px] leading-tight">{desc}</p>
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // Fallback
+    return (
+      <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03]">
+        <RoleIcon roleId="doppelganger" size={22} circular className="flex-shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <span className="text-white/70 text-xs font-medium">{playerName}</span>
+          <span className="text-white/30 text-xs"> (Doppelgänger)</span>
+          <p className="text-white/50 text-[11px] leading-tight">thức dậy</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Regular roles ──
   const roleName = ROLE_NAMES[role] || role;
 
   function describeAction() {
@@ -615,7 +722,8 @@ function NightLogEntry({ entry, playerMap }) {
         if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
         if (result.blocked) return `cố lật bài ${targetName || '?'} (Sói/Tanner — ẩn)`;
         return 'không hành động';
-      case 'villageidiot': return 'xoay tất cả bài sang trái';
+      case 'villageidiot':
+        return result.rotated ? `xoay bài sang ${result.rotated === 'left' ? 'trái' : 'phải'}` : 'xoay bài';
       case 'bodyguard': return 'thức dậy';
       case 'dreamwolf': return 'ngủ say';
       default: return 'thức dậy';
