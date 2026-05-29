@@ -1212,6 +1212,24 @@ io.on('connection', socket => {
     io.to(roomCode).emit('chat_message', msg);
   });
 
+  socket.on('chat_sticker', ({ roomCode, stickerId }) => {
+    if (!roomCode || !stickerId) return;
+    const stickerNum = parseInt(stickerId);
+    if (isNaN(stickerNum) || stickerNum < 1 || stickerNum > 24) return;
+    const room = getRoom(roomCode);
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const msg = {
+      id: socket.id,
+      name: player.name,
+      stickerId: stickerNum,
+      time: Date.now(),
+      type: 'sticker',
+    };
+    io.to(roomCode).emit('chat_message', msg);
+  });
+
   // ── Voice Chat (WebRTC signaling) ──
   socket.on('voice_join', ({ roomCode }) => {
     const room = getRoom(roomCode);

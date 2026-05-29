@@ -2,9 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Icon from './Icon';
 import socket from '../socket';
 
+const STICKER_COUNT = 24;
+const STICKER_PATHS = Array.from({ length: STICKER_COUNT }, (_, i) => `/images/icon/icon (${i + 1}).png`);
+
 export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
   const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [stickerOpen, setStickerOpen] = useState(false);
   const [lastSeenCount, setLastSeenCount] = useState(0);
   const listRef = useRef(null);
   const inputRef = useRef(null);
@@ -23,6 +27,7 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
     setIsOpen(prev => {
       if (!prev) {
         setLastSeenCount(messages.length);
+        setStickerOpen(false);
         setTimeout(() => inputRef.current?.focus(), 100);
       }
       return !prev;
@@ -34,7 +39,14 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
     if (!text || !roomCode) return;
     socket.emit('chat_send', { roomCode, text: text.slice(0, 200) });
     setInput('');
+    setStickerOpen(false);
   }, [input, roomCode]);
+
+  const sendSticker = useCallback((stickerId) => {
+    if (!roomCode) return;
+    socket.emit('chat_sticker', { roomCode, stickerId });
+    setStickerOpen(false);
+  }, [roomCode]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -70,7 +82,7 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
         <div className="fixed inset-0 z-40" onClick={toggleOpen}>
           <div
             className="absolute bottom-0 left-0 right-0 max-w-xl mx-auto flex flex-col"
-            style={{ height: '50vh', maxHeight: 400 }}
+            style={{ height: stickerOpen ? '70vh' : '50vh', maxHeight: stickerOpen ? 520 : 400, transition: 'height 0.2s ease' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -118,10 +130,11 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
                   );
                 }
 
-                // User message
+                // User message (text or sticker)
                 const player = playerMap[msg.id];
                 const avatarLetter = (msg.name || '?')[0].toUpperCase();
                 const avatarUrl = player?.avatarUrl;
+                const isSticker = msg.type === 'sticker';
 
                 return (
                   <div key={i} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
@@ -138,17 +151,27 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
                       </div>
                     )}
 
-                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                       {!isMe && (
                         <span className="text-moon-400/60 text-[10px] font-medium mb-0.5 ml-1">{msg.name}</span>
                       )}
-                      <div className={`px-3 py-1.5 rounded-2xl break-words ${
-                        isMe
-                          ? 'bg-moon-400/20 text-moon-200 rounded-br-md'
-                          : 'bg-white/10 text-white/80 rounded-bl-md'
-                      }`}>
-                        <span className="text-sm leading-relaxed">{msg.text}</span>
-                      </div>
+
+                      {isSticker ? (
+                        <img
+                          src={`/images/icon/icon (${msg.stickerId}).png`}
+                          alt="sticker"
+                          className="w-24 h-24 object-contain drop-shadow-lg"
+                        />
+                      ) : (
+                        <div className={`px-3 py-1.5 rounded-2xl break-words max-w-[75%] ${
+                          isMe
+                            ? 'bg-moon-400/20 text-moon-200 rounded-br-md'
+                            : 'bg-white/10 text-white/80 rounded-bl-md'
+                        }`}>
+                          <span className="text-sm leading-relaxed">{msg.text}</span>
+                        </div>
+                      )}
+
                       <span className="text-white/20 text-[9px] mt-0.5 mx-1">
                         {new Date(msg.time).toLocaleTimeString('vi', { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -158,23 +181,50 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
               })}
             </div>
 
+            {/* Sticker picker */}
+            {stickerOpen && (
+              <div className="bg-night-800/95 border-x border-white/10 px-2 py-2 overflow-y-auto" style={{ maxHeight: 160 }}>
+                <div className="grid grid-cols-6 gap-1">
+                  {STICKER_PATHS.map((path, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendSticker(i + 1)}
+                      className="w-full aspect-square rounded-lg bg-white/5 hover:bg-white/15 active:scale-90 transition-all flex items-center justify-center p-1"
+                    >
+                      <img src={path} alt={`sticker ${i + 1}`} className="w-full h-full object-contain" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Input */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-night-800 border border-white/10 rounded-b-2xl">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-night-800 border border-white/10 rounded-b-2xl">
+              <button
+                onClick={() => setStickerOpen(prev => !prev)}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                  stickerOpen ? 'bg-moon-400/30 text-moon-300' : 'bg-white/5 text-white/40 hover:bg-white/15'
+                }`}
+                title="Sticker"
+              >
+                <span className="text-lg">😀</span>
+              </button>
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setStickerOpen(false)}
                 placeholder="Nhập tin nhắn..."
                 maxLength={200}
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-moon-400/50"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-moon-400/50 min-w-0"
                 style={{ userSelect: 'text' }}
               />
               <button
                 onClick={sendMessage}
                 disabled={!input.trim()}
-                className="w-9 h-9 rounded-full bg-moon-400/20 text-moon-400 flex items-center justify-center disabled:opacity-30 hover:bg-moon-400/30 transition-colors"
+                className="w-9 h-9 rounded-full bg-moon-400/20 text-moon-400 flex items-center justify-center disabled:opacity-30 hover:bg-moon-400/30 transition-colors flex-shrink-0"
               >
                 <Icon name="send" size={16} />
               </button>
