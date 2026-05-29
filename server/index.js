@@ -225,20 +225,21 @@ async function runNightPhase(room) {
                 room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
 
                 if (result.copiedRole && DOPPEL_IMMEDIATE_ROLES.includes(result.copiedRole)) {
-                  const action2 = decideBotDoppelgangerStep2(room, bot.id, result.copiedRole);
-                  const result2 = processNightAction(room, bot.id, result.copiedRole, action2);
-                  room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2 } });
+                  const dCopied = result.copiedRole;
+                  const action2 = decideBotDoppelgangerStep2(room, bot.id, dCopied);
+                  const result2 = processNightAction(room, bot.id, dCopied, action2);
+                  room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2, copiedRole: dCopied } });
 
                   // Multi-step within copied role (PI, Witch)
-                  if (result.copiedRole === 'paranormalinvestigator' && result2.canContinue) {
-                    const action3 = decideBotNightActionStep2(room, bot.id, result.copiedRole, result2);
-                    const result3 = processNightAction(room, bot.id, result.copiedRole, action3);
-                    room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action3 }, result: { ...result3 } });
+                  if (dCopied === 'paranormalinvestigator' && result2.canContinue) {
+                    const action3 = decideBotNightActionStep2(room, bot.id, dCopied, result2);
+                    const result3 = processNightAction(room, bot.id, dCopied, action3);
+                    room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action3 }, result: { ...result3, copiedRole: dCopied } });
                   }
-                  if (result.copiedRole === 'witch' && result2.step === 1 && result2.canSwap) {
-                    const action3 = decideBotNightActionStep2(room, bot.id, result.copiedRole, result2);
-                    const result3 = processNightAction(room, bot.id, result.copiedRole, action3);
-                    room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action3 }, result: { ...result3 } });
+                  if (dCopied === 'witch' && result2.step === 1 && result2.canSwap) {
+                    const action3 = decideBotNightActionStep2(room, bot.id, dCopied, result2);
+                    const result3 = processNightAction(room, bot.id, dCopied, action3);
+                    room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { ...action3 }, result: { ...result3, copiedRole: dCopied } });
                   }
                   if (result.copiedRole === 'revealer' && result2.revealed && result2.targetPlayer) {
                     io.to(room.code).emit('night_public_reveal', { playerId: result2.targetPlayer, role: result2.role });
@@ -303,7 +304,7 @@ async function runNightPhase(room) {
       );
       for (const dp of doppelInsomniacs) {
         const result = processNightAction(room, dp.id, 'insomniac', {});
-        room.nightLog.push({ role: 'doppelganger', playerId: dp.id, playerName: dp.name, action: {}, result: { ...result } });
+        room.nightLog.push({ role: 'doppelganger', playerId: dp.id, playerName: dp.name, action: {}, result: { ...result, copiedRole: 'insomniac' } });
         if (!dp.isBot) {
           io.to(dp.id).emit('night_action_result', {
             role: 'doppelganger',
@@ -358,7 +359,7 @@ async function runNightPhase(room) {
                 const others = players.filter(p => p.id !== bot.id);
                 const target = others[Math.floor(Math.random() * others.length)];
                 const result = processNightAction(room, bot.id, 'revealer', { targetPlayer: target.id });
-                room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { targetPlayer: target.id }, result: { ...result } });
+                room.nightLog.push({ role: 'doppelganger', playerId: bot.id, playerName: bot.name, action: { targetPlayer: target.id }, result: { ...result, copiedRole: 'revealer' } });
                 if (result.revealed && result.targetPlayer) {
                   io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
                 }
@@ -878,7 +879,7 @@ io.on('connection', socket => {
         if (!copiedRole) return;
 
         const result = processNightAction(room, socket.id, copiedRole, action);
-        room.nightLog.push({ role: 'doppelganger', playerId: socket.id, playerName, action: { ...action }, result: { ...result } });
+        room.nightLog.push({ role: 'doppelganger', playerId: socket.id, playerName, action: { ...action }, result: { ...result, copiedRole } });
 
         if (Object.keys(result).length > 0) {
           socket.emit('night_action_result', { role: 'doppelganger', result: { ...result, copiedRole } });
