@@ -2,6 +2,7 @@ import { useState } from 'react';
 import RoleIcon from './RoleIcon';
 
 const ROLE_NAME = {
+  doppelganger: 'Doppelgänger',
   werewolf: 'Werewolf', minion: 'Minion', seer: 'Seer', robber: 'Robber',
   troublemaker: 'Troublemaker', drunk: 'Drunk', insomniac: 'Insomniac',
   villager: 'Villager', hunter: 'Hunter', tanner: 'Tanner', mason: 'Mason',
@@ -11,6 +12,7 @@ const ROLE_NAME = {
 };
 
 const ROLE_ABBR = {
+  doppelganger: 'Dop',
   werewolf: 'Wolf', minion: 'Min', seer: 'Seer', robber: 'Rob',
   troublemaker: 'TM', drunk: 'Drnk', insomniac: 'Inso',
   villager: 'Vill', hunter: 'Hunt', tanner: 'Tan', mason: 'Msn',
@@ -155,8 +157,8 @@ export default function TokenClaimBoard({
           </div>
 
           {/* Deduction Table */}
-          <div className="overflow-x-auto scrollbar-thin rounded-lg border border-white/5">
-            <table className="border-collapse" style={{ minWidth: allPositions.length * 50 + 60 }}>
+          <div className="overflow-x-auto scrollbar-thin rounded-lg border border-white/5" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <table className="border-collapse w-full" style={{ minWidth: allPositions.length * 50 + 60 }}>
               <thead>
                 <tr className="bg-night-900/80">
                   <th className="sticky left-0 z-10 bg-night-900 w-[56px] min-w-[56px]" />
@@ -242,8 +244,8 @@ export default function TokenClaimBoard({
                         return (
                           <td
                             key={pos}
-                            onClick={() => isEditable && setPickerTarget(pos)}
-                            className={`px-0.5 py-1 text-center min-w-[48px] max-w-[52px] transition-colors
+                            onClick={(e) => { if (isEditable) { e.stopPropagation(); setPickerTarget(pos); } }}
+                            className={`px-0.5 py-1 text-center min-w-[48px] transition-colors relative
                               ${firstCenter ? 'border-l border-white/10' : ''}
                               ${isEditable ? 'cursor-pointer active:bg-white/10' : ''}
                               ${isSelf ? 'bg-moon-400/8' : ''}
