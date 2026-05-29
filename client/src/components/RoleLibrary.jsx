@@ -5,6 +5,16 @@ import Icon from './Icon';
 const ROLES = [
   // ─── Base ───
   {
+    id: 'doppelganger', name: 'Doppelgänger', nameVi: 'Hóa Thân', emoji: '🎭',
+    team: 'village', teamLabel: 'Phe ???', nightOrder: 0, expansion: 'base',
+    lore: 'Hóa Thân là bóng ma giữa ban ngày — một thực thể có thể sao chép hoàn toàn danh tính của bất kỳ ai. Trong đêm, cô nhìn vào bài của một người chơi khác và ngay lập tức trở thành vai đó, thừa hưởng mọi khả năng và phe phái. Không ai biết cô là bản gốc hay bản sao. Cô có thể là Tiên Tri thứ hai, Ma Sói thứ ba, hoặc thậm chí là Thợ Thuộc Da. Hóa Thân nhắc nhở chúng ta rằng trong ngôi làng này, không gì là như vẻ bề ngoài.',
+    nightAction: 'Thức dậy ĐẦU TIÊN. Xem bài 1 người và trở thành vai đó ngay lập tức.',
+    winCondition: 'Thắng theo phe của vai mà bạn sao chép. Nếu copy Sói → bạn là Sói. Copy Tanner → bạn là Tanner.',
+    tips: 'Bạn hành động như vai đã sao chép. Hãy nhớ vai gốc là Hóa Thân — nếu bài bị đổi, kết quả cuối game dựa trên bài hiện tại.',
+    nightScript: '"Hóa Thân, hãy mở mắt. Xem bài của 1 người chơi." — Hóa Thân trở thành vai đó. Nếu vai có hành động đêm, thực hiện ngay. "Hóa Thân, hãy nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Thức dậy ĐẦU TIÊN (trước tất cả). Xem bài 1 người → trở thành vai đó.\n\n📋 Tùy vai copy, bạn sẽ:\n• Seer, Robber, Troublemaker, Drunk, Sentinel, Village Idiot, Apprentice Seer, PI, Witch, Alpha Wolf, Mystic Wolf → Thực hiện hành động của vai đó NGAY LẬP TỨC\n• Werewolf, Minion, Mason → Tham gia phase của vai đó SAU (thấy đồng bọn)\n• Insomniac → Xem bài cuối đêm (sau Insomniac thường)\n• Revealer → Lật bài cuối đêm (sau Revealer thường)\n• Villager, Hunter, Tanner, Bodyguard, Dream Wolf → Không làm gì thêm\n\n⚠️ Bạn thuộc PHE của vai mới! Copy Sói = bạn là Sói!\nBan ngày: Hành xử theo vai đã copy.\nMục tiêu: Thắng theo phe của vai bạn đã trở thành.',
+  },
+  {
     id: 'werewolf', name: 'Werewolf', nameVi: 'Ma Sói', emoji: '🐺',
     team: 'werewolf', teamLabel: 'Phe Sói', nightOrder: 2, expansion: 'base',
     lore: 'Từ bao đời nay, Ma Sói đã ẩn mình giữa ngôi làng dưới lớp vỏ con người hiền lành. Ban ngày, chúng cười nói, chia sẻ bữa ăn với hàng xóm. Nhưng khi màn đêm buông xuống, bản năng hoang dã trỗi dậy — đôi mắt phát sáng trong bóng tối, tìm kiếm con mồi tiếp theo. Không ai biết Ma Sói thật sự là ai, cho đến khi quá muộn. Sức mạnh lớn nhất của chúng không nằm ở nanh vuốt, mà ở khả năng khiến mọi người tin tưởng — rồi phản bội niềm tin ấy.',
@@ -215,18 +225,6 @@ const ROLES = [
     nightScript: 'Cận Vệ không thức dậy ban đêm.',
     howToPlay: 'Ban đêm: Không có hành động.\nBan ngày: Khi bỏ phiếu, thay vì chọn người để LOẠI, bạn chọn người để BẢO VỆ.\n💪 Người được bạn chỉ vào sẽ KHÔNG THỂ bị treo cổ!\n⚠️ Nếu người được bảo vệ bị vote nhiều nhất, người có phiếu cao thứ 2 (≥2 phiếu) sẽ bị loại thay.\nMục tiêu: Bảo vệ đúng người phe Dân. Đừng tiết lộ mình là Cận Vệ — Sói sẽ tránh vote người được bảo vệ.',
   },
-  // ─── Coming Soon ───
-  {
-    id: 'doppelganger', name: 'Doppelgänger', nameVi: 'Kẻ Giả Dạng', emoji: '🎭',
-    team: 'village', teamLabel: '???', nightOrder: 0, expansion: 'base',
-    comingSoon: true,
-    lore: 'Kẻ Giả Dạng là bóng ma giữa ban ngày — một thực thể có thể sao chép hoàn toàn danh tính của bất kỳ ai. Trong đêm, cô nhìn vào bài của một người chơi khác và ngay lập tức trở thành vai đó, thừa hưởng mọi khả năng và phe phái. Không ai biết cô là bản gốc hay bản sao. Cô có thể là Tiên Tri thứ hai, Ma Sói thứ ba, hoặc thậm chí là Thợ Thuộc Da. Kẻ Giả Dạng nhắc nhở chúng ta rằng trong ngôi làng này, không gì là như vẻ bề ngoài.',
-    nightAction: 'Xem bài của 1 người chơi và trở thành vai đó ngay lập tức.',
-    winCondition: 'Thắng theo phe của vai mà bạn sao chép.',
-    tips: 'Bạn hành động như vai đã sao chép. Nếu sao chép Sói, bạn là Sói!',
-    nightScript: '"Kẻ Giả Dạng, hãy mở mắt. Xem bài của 1 người chơi." — Kẻ Giả Dạng trở thành vai đó và thực hiện hành động tương ứng ngay lập tức. "Kẻ Giả Dạng, hãy nhắm mắt lại."',
-    howToPlay: 'Ban đêm: Thức dậy ĐẦU TIÊN. Xem bài của 1 người → bạn trở thành vai đó.\n• Nếu vai có hành động đêm → bạn thực hiện ngay\n• Bạn thuộc phe của vai mới\nBan ngày: Hành xử theo vai đã sao chép.\nMục tiêu: Thắng theo phe của vai bạn đã trở thành.',
-  },
 ];
 
 const TEAM_COLOR = {
@@ -288,9 +286,6 @@ function RoleList({ roles, onSelect }) {
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm">{role.nameVi}</span>
                       <span className="text-white/30 text-xs">{role.name}</span>
-                      {role.comingSoon && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-moon-400/20 text-moon-400 border border-moon-400/30">SOON</span>
-                      )}
                     </div>
                     <p className="text-white/50 text-xs mt-0.5 line-clamp-1">{role.nightAction}</p>
                   </div>
@@ -302,11 +297,51 @@ function RoleList({ roles, onSelect }) {
         );
       })}
 
+      {/* Night order */}
       <div className="mt-4 p-3 bg-white/5 rounded-xl">
-        <p className="text-moon-400 text-xs font-semibold mb-1">🌙 Thứ tự ban đêm</p>
-        <p className="text-white/40 text-[11px] leading-relaxed">
-          {roles.filter(r => r.nightOrder).sort((a, b) => a.nightOrder - b.nightOrder).map(r => `${r.nightOrder}. ${r.nameVi}`).join(' → ')}
-        </p>
+        <p className="text-moon-400 text-xs font-semibold mb-2">🌙 Thứ tự thức dậy ban đêm</p>
+        <div className="space-y-1">
+          {roles
+            .filter(r => r.nightOrder != null)
+            .sort((a, b) => a.nightOrder - b.nightOrder)
+            .map((r, i) => (
+              <div key={r.id} className="flex items-center gap-2">
+                <span className="text-moon-400/60 text-[10px] font-mono w-4 text-right">{i + 1}</span>
+                <RoleIcon roleId={r.id} size={16} circular />
+                <span className="text-white/60 text-[11px]">{r.nameVi}</span>
+                {i < roles.filter(r2 => r2.nightOrder != null && !r2.comingSoon).length - 1 && (
+                  <span className="text-white/20 text-[10px] ml-auto">↓</span>
+                )}
+              </div>
+            ))}
+        </div>
+      </div>
+
+      {/* Game flow guide */}
+      <div className="mt-3 p-3 bg-moon-400/5 border border-moon-400/10 rounded-xl">
+        <p className="text-moon-400 text-xs font-semibold mb-2">📖 Luồng chơi</p>
+        <div className="space-y-2 text-[11px] leading-relaxed">
+          <div>
+            <p className="text-village-400 font-semibold">1. Nhận bài (15 giây)</p>
+            <p className="text-white/40">Mỗi người nhận 1 bài ngẫu nhiên. 3 bài dư nằm ở giữa bàn. Lật bài để xem vai của bạn.</p>
+          </div>
+          <div>
+            <p className="text-moon-400 font-semibold">2. Ban đêm</p>
+            <p className="text-white/40">Các vai thức dậy theo thứ tự và thực hiện hành động. Kết thúc đêm, bài có thể đã bị hoán đổi — vai hiện tại có thể KHÁC vai ban đầu!</p>
+          </div>
+          <div>
+            <p className="text-yellow-400 font-semibold">3. Thảo luận (5 phút)</p>
+            <p className="text-white/40">Tất cả mở mắt, bàn luận. Khai báo vai, đối chất, tìm mâu thuẫn. Chưa được vote trong giai đoạn này.</p>
+          </div>
+          <div>
+            <p className="text-wolf-400 font-semibold">4. Bỏ phiếu (1 phút)</p>
+            <p className="text-white/40">Hết giờ thảo luận → chuyển sang vote. Chạm vào người bạn muốn loại. Ai bị vote nhiều nhất (≥2 phiếu) sẽ bị treo cổ.</p>
+          </div>
+          <div>
+            <p className="text-purple-400 font-semibold">5. Kết quả</p>
+            <p className="text-white/40">Lật bài toàn bộ. Phe Dân thắng nếu loại được Sói. Phe Sói thắng nếu không ai bị loại hoặc chỉ Dân bị loại. Tanner thắng nếu bị loại.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -324,27 +359,13 @@ function RoleDetail({ role, onBack }) {
         <div className="flex flex-col items-center p-4">
           <div className="relative">
             <RoleIcon roleId={role.id} size={140} className="shadow-lg !rounded-xl" />
-            {role.comingSoon && (
-              <div className="absolute inset-0 rounded-xl flex items-center justify-center backdrop-blur-[2px]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.6), rgba(30,20,50,0.7))',
-                  border: '2px solid rgba(196,168,107,0.3)',
-                  boxShadow: '0 0 20px rgba(196,168,107,0.15)',
-                }}
-              >
-                <div className="text-center">
-                  <span className="text-3xl block mb-1">🎭</span>
-                  <span className="text-moon-400 text-xs font-bold tracking-widest uppercase">Coming Soon</span>
-                </div>
-              </div>
-            )}
           </div>
           <div className="text-center mt-3">
             <h3 className="text-xl font-bold text-white">{role.nameVi}</h3>
             <span className="text-white/40 text-sm">{role.name}</span>
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tc.badge}`}>{role.teamLabel}</span>
-              {role.nightOrder != null && !role.comingSoon && <span className="text-white/30 text-[10px]">Đêm thứ {role.nightOrder}</span>}
+              {role.nightOrder != null && <span className="text-white/30 text-[10px]">{role.nightOrder === 0 ? 'Đầu tiên' : `Đêm thứ ${role.nightOrder}`}</span>}
             </div>
           </div>
         </div>
