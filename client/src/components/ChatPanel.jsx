@@ -3,7 +3,8 @@ import Icon from './Icon';
 import socket from '../socket';
 
 const STICKER_COUNT = 24;
-const STICKER_PATHS = Array.from({ length: STICKER_COUNT }, (_, i) => `/images/icon/icon (${i + 1}).png`);
+function stickerUrl(id) { return `/images/icon/icon%20(${id}).png`; }
+const STICKER_PATHS = Array.from({ length: STICKER_COUNT }, (_, i) => stickerUrl(i + 1));
 
 export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
   const [input, setInput] = useState('');
@@ -158,7 +159,7 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
 
                       {isSticker ? (
                         <img
-                          src={`/images/icon/icon (${msg.stickerId}).png`}
+                          src={stickerUrl(msg.stickerId)}
                           alt="sticker"
                           className="w-24 h-24 object-contain drop-shadow-lg"
                         />
