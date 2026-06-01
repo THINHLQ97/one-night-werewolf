@@ -900,9 +900,8 @@ io.on('connection', socket => {
         const result = processNightAction(room, socket.id, copiedRole, action);
         room.nightLog.push({ role: 'doppelganger', playerId: socket.id, playerName, action: { ...action }, result: { ...result, copiedRole } });
 
-        if (Object.keys(result).length > 0) {
-          socket.emit('night_action_result', { role: 'doppelganger', result: { ...result, copiedRole } });
-        }
+        // Always emit result for doppelganger (copiedRole needed even if result is empty)
+        socket.emit('night_action_result', { role: 'doppelganger', result: { ...result, copiedRole } });
 
         // Revealer broadcast
         if (copiedRole === 'revealer' && result.revealed && result.targetPlayer) {
