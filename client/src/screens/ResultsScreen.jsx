@@ -596,7 +596,10 @@ function describeCopiedAction(copiedRole, action, result, playerMap, targetName,
     case 'paranormalinvestigator':
       return result.seen ? `điều tra ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'điều tra';
     case 'witch':
-      if (result.swapped && action.targetPlayer) return `đổi bài giữa cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
+      if (result.step === 2 || result.swapped != null) {
+        if (result.swapped && action.targetPlayer && action.targetPlayer !== 'skip') return `đổi bài giữa cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
+        return 'không đổi bài';
+      }
       if (result.seen) return `xem ${CENTER_LABEL[result.seen.slot || action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
       return 'xem bài ở giữa';
     case 'revealer':
@@ -715,8 +718,11 @@ function NightLogEntry({ entry, playerMap }) {
       case 'paranormalinvestigator':
         return result.seen ? `điều tra ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'điều tra';
       case 'witch':
-        if (result.seen && action.swap && action.targetPlayer) return `xem ${CENTER_LABEL[action.centerSlot] || '?'} = ${ROLE_NAMES[result.seen.role] || '?'}, đổi cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
-        if (result.seen) return `xem ${CENTER_LABEL[action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'} (không đổi)`;
+        if (result.step === 2 || result.swapped != null) {
+          if (result.swapped && action.targetPlayer && action.targetPlayer !== 'skip') return `đổi bài giữa cho ${targetName || playerMap[action.targetPlayer] || '?'}`;
+          return 'không đổi bài';
+        }
+        if (result.seen) return `xem ${CENTER_LABEL[result.seen.slot || action.centerSlot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
         return 'xem bài ở giữa';
       case 'revealer':
         if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
