@@ -38,32 +38,53 @@ export { CARD_IMAGES };
  * @param {boolean} circular - If true, render as a circular face crop
  * @param {string} className - Additional CSS classes
  */
-export default function RoleIcon({ roleId, size = 80, circular = false, className = '' }) {
+export default function RoleIcon({ roleId, size = 80, circular = false, className = '', isDoppel = false }) {
   const src = CARD_IMAGES[roleId];
+
+  // Doppelganger overlay: purple tint + 🎭 badge
+  const doppelOverlay = isDoppel ? (
+    <>
+      <div className="absolute inset-0 rounded-[inherit]" style={{ background: 'rgba(139, 92, 246, 0.25)', mixBlendMode: 'color', pointerEvents: 'none' }} />
+      <span className="absolute flex items-center justify-center rounded-full bg-purple-600 border border-purple-400/60 shadow-lg" style={{
+        bottom: -2, right: -2,
+        width: Math.max(14, size * 0.32), height: Math.max(14, size * 0.32),
+        fontSize: Math.max(8, size * 0.18), lineHeight: 1, pointerEvents: 'none',
+      }}>🎭</span>
+    </>
+  ) : null;
 
   if (circular) {
     if (!src) {
       return (
         <div
-          className={`flex items-center justify-center bg-night-700 rounded-full text-lg ${className}`}
+          className={`flex items-center justify-center bg-night-700 rounded-full text-lg relative ${className}`}
           style={{ width: size, height: size }}
         >
-          🃏
+          🃏{doppelOverlay}
         </div>
       );
     }
-    // Circular crop — face area only, no title text
     return (
       <div
-        className={`rounded-full overflow-hidden flex-shrink-0 bg-night-800 ${className}`}
+        className={`rounded-full overflow-visible flex-shrink-0 relative ${className}`}
         style={{ width: size, height: size }}
       >
-        <img
-          src={src}
-          alt={roleId}
-          style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' }}
-          draggable={false}
-        />
+        <div className="rounded-full overflow-hidden bg-night-800" style={{ width: size, height: size }}>
+          <img
+            src={src}
+            alt={roleId}
+            style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' }}
+            draggable={false}
+          />
+          {isDoppel && <div className="absolute inset-0 rounded-full" style={{ background: 'rgba(139, 92, 246, 0.25)', mixBlendMode: 'color', pointerEvents: 'none' }} />}
+        </div>
+        {isDoppel && (
+          <span className="absolute flex items-center justify-center rounded-full bg-purple-600 border border-purple-400/60 shadow-lg" style={{
+            bottom: -1, right: -1,
+            width: Math.max(12, size * 0.35), height: Math.max(12, size * 0.35),
+            fontSize: Math.max(7, size * 0.2), lineHeight: 1, pointerEvents: 'none', zIndex: 2,
+          }}>🎭</span>
+        )}
       </div>
     );
   }
@@ -71,21 +92,24 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
   if (!src) {
     return (
       <div
-        className={`flex items-center justify-center bg-night-700 rounded-lg text-2xl ${className}`}
+        className={`flex items-center justify-center bg-night-700 rounded-lg text-2xl relative ${className}`}
         style={{ width: size, height: Math.round(size * 1.4) }}
       >
-        🃏
+        🃏{doppelOverlay}
       </div>
     );
   }
 
   return (
-    <img
-      src={src}
-      alt={roleId}
-      className={`rounded-lg object-cover ${className}`}
-      style={{ width: size, height: Math.round(size * 1.4) }}
-      draggable={false}
-    />
+    <div className={`relative inline-block ${className}`} style={{ width: size, height: Math.round(size * 1.4) }}>
+      <img
+        src={src}
+        alt={roleId}
+        className="rounded-lg object-cover"
+        style={{ width: size, height: Math.round(size * 1.4) }}
+        draggable={false}
+      />
+      {doppelOverlay}
+    </div>
   );
 }

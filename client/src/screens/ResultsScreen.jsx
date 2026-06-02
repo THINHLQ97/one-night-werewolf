@@ -393,6 +393,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
               const final = finalCards[p.id];
               const changed = orig !== final;
               const isWin = winners.includes(p.id);
+              const wasDoppel = orig === 'doppelganger' && final !== 'doppelganger';
 
               return (
                 <div key={p.id} className={`flex items-center justify-between px-3 py-2 rounded-xl ${isWin ? 'bg-village-500/10' : 'bg-white/5'}`}>
@@ -407,8 +408,11 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
                       {changed && (
                         <div className="text-white/30 text-xs">Ban đầu: {ROLE_NAMES[orig]}</div>
                       )}
+                      {wasDoppel && !changed && (
+                        <div className="text-purple-400/60 text-xs">Ban đầu: Doppelgänger</div>
+                      )}
                     </div>
-                    <RoleIcon roleId={final} size={34} circular />
+                    <RoleIcon roleId={final} size={34} circular isDoppel={wasDoppel} />
                   </div>
                 </div>
               );
@@ -626,8 +630,9 @@ function NightLogEntry({ entry, playerMap }) {
   if (role === 'doppelganger') {
     const copiedRole = result.copiedRole;
 
-    // Step 1: copied a role (result has copiedRole but no action-specific data)
-    if (copiedRole && !result.seen && !result.newRole && !result.peeked && !result.currentRole && !result.rotated && !result.revealed && !result.swapped && !result.blocked) {
+    // Step 1: copied a role — identified by copiedFromId in result (set only in step 1)
+    const isStep1 = result.copiedFromId || (action.step === 1);
+    if (copiedRole && isStep1) {
       const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
       const fromName = targetName || playerMap[action.targetPlayer] || playerMap[result.copiedFromId] || '?';
       return (
@@ -649,7 +654,7 @@ function NightLogEntry({ entry, playerMap }) {
       if (desc) {
         return (
           <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-purple-500/[0.04]">
-            <RoleIcon roleId={copiedRole} size={22} circular className="flex-shrink-0 mt-0.5" />
+            <RoleIcon roleId={copiedRole} size={22} circular isDoppel className="flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
               <span className="text-white/70 text-xs font-medium">{playerName}</span>
               <span className="text-purple-400/50 text-xs"> (🎭→{copiedName})</span>
