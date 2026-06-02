@@ -30,61 +30,70 @@ export { CARD_IMAGES };
 
 /**
  * Renders a role card image.
- * Default: portrait aspect ratio (~3:4).
- * circular: crops into a circle focusing on the upper (face) area.
- *
- * @param {string} roleId - Role identifier
- * @param {number} size - Width in px (height auto = size * 1.4 for card mode)
- * @param {boolean} circular - If true, render as a circular face crop
- * @param {string} className - Additional CSS classes
+ * isDoppel: shows purple ring + 🎭 badge to indicate the original
+ *           card was Doppelgänger that copied this role.
  */
 export default function RoleIcon({ roleId, size = 80, circular = false, className = '', isDoppel = false }) {
   const src = CARD_IMAGES[roleId];
 
-  // Doppelganger overlay: purple tint + 🎭 badge
-  const doppelOverlay = isDoppel ? (
-    <>
-      <div className="absolute inset-0 rounded-[inherit]" style={{ background: 'rgba(139, 92, 246, 0.25)', mixBlendMode: 'color', pointerEvents: 'none' }} />
-      <span className="absolute flex items-center justify-center rounded-full bg-purple-600 border border-purple-400/60 shadow-lg" style={{
-        bottom: -2, right: -2,
-        width: Math.max(14, size * 0.32), height: Math.max(14, size * 0.32),
-        fontSize: Math.max(8, size * 0.18), lineHeight: 1, pointerEvents: 'none',
-      }}>🎭</span>
-    </>
-  ) : null;
+  // Purple ring shadow + saturated overlay for doppelganger
+  const doppelShadow = '0 0 0 2px rgb(168, 85, 247), 0 0 12px rgba(168, 85, 247, 0.6)';
+  const badgeSize = Math.max(14, size * 0.4);
+
+  // 🎭 Badge component (always sized relative to icon)
+  const renderBadge = () => isDoppel && (
+    <span
+      className="absolute flex items-center justify-center rounded-full bg-purple-600 shadow-lg"
+      style={{
+        bottom: -Math.max(2, size * 0.05),
+        right: -Math.max(2, size * 0.05),
+        width: badgeSize,
+        height: badgeSize,
+        fontSize: badgeSize * 0.6,
+        lineHeight: 1,
+        border: '1.5px solid #1a1a2e',
+        pointerEvents: 'none',
+        zIndex: 3,
+      }}
+    >
+      🎭
+    </span>
+  );
 
   if (circular) {
     if (!src) {
       return (
         <div
           className={`flex items-center justify-center bg-night-700 rounded-full text-lg relative ${className}`}
-          style={{ width: size, height: size }}
+          style={{ width: size, height: size, boxShadow: isDoppel ? doppelShadow : undefined }}
         >
-          🃏{doppelOverlay}
+          🃏{renderBadge()}
         </div>
       );
     }
     return (
       <div
-        className={`rounded-full overflow-visible flex-shrink-0 relative ${className}`}
+        className={`flex-shrink-0 relative ${className}`}
         style={{ width: size, height: size }}
       >
-        <div className="rounded-full overflow-hidden bg-night-800" style={{ width: size, height: size }}>
+        <div
+          className="rounded-full overflow-hidden bg-night-800"
+          style={{ width: size, height: size, boxShadow: isDoppel ? doppelShadow : undefined }}
+        >
           <img
             src={src}
             alt={roleId}
             style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' }}
             draggable={false}
           />
-          {isDoppel && <div className="absolute inset-0 rounded-full" style={{ background: 'rgba(139, 92, 246, 0.25)', mixBlendMode: 'color', pointerEvents: 'none' }} />}
+          {isDoppel && (
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(139, 92, 246, 0.15))', pointerEvents: 'none' }}
+            />
+          )}
         </div>
-        {isDoppel && (
-          <span className="absolute flex items-center justify-center rounded-full bg-purple-600 border border-purple-400/60 shadow-lg" style={{
-            bottom: -1, right: -1,
-            width: Math.max(12, size * 0.35), height: Math.max(12, size * 0.35),
-            fontSize: Math.max(7, size * 0.2), lineHeight: 1, pointerEvents: 'none', zIndex: 2,
-          }}>🎭</span>
-        )}
+        {renderBadge()}
       </div>
     );
   }
@@ -93,9 +102,9 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
     return (
       <div
         className={`flex items-center justify-center bg-night-700 rounded-lg text-2xl relative ${className}`}
-        style={{ width: size, height: Math.round(size * 1.4) }}
+        style={{ width: size, height: Math.round(size * 1.4), boxShadow: isDoppel ? doppelShadow : undefined }}
       >
-        🃏{doppelOverlay}
+        🃏{renderBadge()}
       </div>
     );
   }
@@ -106,10 +115,20 @@ export default function RoleIcon({ roleId, size = 80, circular = false, classNam
         src={src}
         alt={roleId}
         className="rounded-lg object-cover"
-        style={{ width: size, height: Math.round(size * 1.4) }}
+        style={{
+          width: size,
+          height: Math.round(size * 1.4),
+          boxShadow: isDoppel ? doppelShadow : undefined,
+        }}
         draggable={false}
       />
-      {doppelOverlay}
+      {isDoppel && (
+        <div
+          className="absolute inset-0 rounded-lg"
+          style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(139, 92, 246, 0.15))', pointerEvents: 'none' }}
+        />
+      )}
+      {renderBadge()}
     </div>
   );
 }

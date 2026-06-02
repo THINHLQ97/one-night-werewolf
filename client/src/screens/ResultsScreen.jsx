@@ -423,18 +423,26 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           <div className="mt-3 pt-3 border-t border-white/10">
             <p className="text-white/40 text-xs mb-2">Bài ở giữa:</p>
             <div className="flex gap-2 flex-wrap">
-              {['center0', 'center1', 'center2'].map((slot, i) => (
-                <span key={slot} className="text-xs px-2 py-1 bg-white/5 rounded-lg text-white/50 flex items-center gap-1.5">
-                  <RoleIcon roleId={finalCards[slot]} size={18} circular />
-                  Giữa {i + 1}: {ROLE_NAMES[finalCards[slot]]}
-                </span>
-              ))}
-              {finalCards['centerWolf'] && (
-                <span className="text-xs px-2 py-1 bg-wolf-500/20 rounded-lg text-wolf-300 border border-wolf-500/30 flex items-center gap-1.5">
-                  <RoleIcon roleId={finalCards['centerWolf']} size={18} circular />
-                  Alpha: {ROLE_NAMES[finalCards['centerWolf']]}
-                </span>
-              )}
+              {['center0', 'center1', 'center2'].map((slot, i) => {
+                const slotWasDoppel = originalCards[slot] === 'doppelganger' && finalCards[slot] !== 'doppelganger';
+                return (
+                  <span key={slot} className="text-xs px-2 py-1 bg-white/5 rounded-lg text-white/50 flex items-center gap-1.5">
+                    <RoleIcon roleId={finalCards[slot]} size={18} circular isDoppel={slotWasDoppel} />
+                    Giữa {i + 1}: {ROLE_NAMES[finalCards[slot]]}
+                    {slotWasDoppel && <span className="text-purple-400/70 text-[10px]">(ban đầu Dop)</span>}
+                  </span>
+                );
+              })}
+              {finalCards['centerWolf'] && (() => {
+                const wolfWasDoppel = originalCards['centerWolf'] === 'doppelganger' && finalCards['centerWolf'] !== 'doppelganger';
+                return (
+                  <span className="text-xs px-2 py-1 bg-wolf-500/20 rounded-lg text-wolf-300 border border-wolf-500/30 flex items-center gap-1.5">
+                    <RoleIcon roleId={finalCards['centerWolf']} size={18} circular isDoppel={wolfWasDoppel} />
+                    Alpha: {ROLE_NAMES[finalCards['centerWolf']]}
+                    {wolfWasDoppel && <span className="text-purple-400/70 text-[10px]">(ban đầu Dop)</span>}
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>
