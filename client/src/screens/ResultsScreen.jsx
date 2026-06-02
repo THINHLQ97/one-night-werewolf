@@ -608,8 +608,9 @@ function describeCopiedAction(copiedRole, action, result, playerMap, targetName,
       return 'xem bài ở giữa';
     case 'revealer':
       if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
-      if (result.blocked) return `cố lật bài (Sói/Tanner — ẩn)`;
-      return 'lật bài';
+      if (result.blocked) return `cố lật bài (bị khiên Lính Canh chặn)`;
+      if (result.targetPlayer && result.revealed === false) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} (Sói/Tanner — không công khai)`;
+      return 'không hành động';
     case 'villageidiot':
       return result.rotated ? `xoay bài sang ${result.rotated === 'left' ? 'trái' : 'phải'}` : 'xoay bài';
     case 'insomniac':
@@ -731,7 +732,8 @@ function NightLogEntry({ entry, playerMap }) {
         return 'xem bài ở giữa';
       case 'revealer':
         if (result.revealed && result.targetPlayer) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
-        if (result.blocked) return `cố lật bài ${targetName || '?'} (Sói/Tanner — ẩn)`;
+        if (result.blocked) return `cố lật bài ${targetName || '?'} (bị khiên Lính Canh chặn)`;
+        if (result.targetPlayer && result.revealed === false) return `lật bài ${targetName || playerMap[result.targetPlayer] || '?'} (Sói/Tanner — không công khai)`;
         return 'không hành động';
       case 'villageidiot':
         return result.rotated ? `xoay bài sang ${result.rotated === 'left' ? 'trái' : 'phải'}` : 'xoay bài';

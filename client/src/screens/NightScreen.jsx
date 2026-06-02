@@ -653,8 +653,11 @@ function ActionResultInline({ role, result, step }) {
     if (result.revealed) {
       return <p className="text-white/70 text-sm mt-1">Đã lật: <strong className="text-moon-300">{ROLE_SHORT[result.role]}</strong> (công khai!)</p>;
     }
-    if (result.role) {
-      return <p className="text-white/70 text-sm mt-1">Bài là Sói/Tanner — không công khai</p>;
+    if (result.blocked) {
+      return <p className="text-village-400/70 text-sm mt-1">Bị khiên Lính Canh chặn</p>;
+    }
+    if (result.targetPlayer && result.revealed === false) {
+      return <p className="text-wolf-400/70 text-sm mt-1">Bài là Sói/Tanner — không công khai</p>;
     }
   }
   return null;
