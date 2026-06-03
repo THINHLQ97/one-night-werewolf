@@ -161,10 +161,11 @@ function getNightActionData(room, role) {
       return { shieldedPlayer: room.shieldedPlayer };
     case 'auraseer': {
       // Build list of player IDs touched by this point in the night
+      // Note: Aura Seer doesn't add themselves to auraTouched, so no need to filter self
       const players2 = room.players;
       const nameMap = {};
       players2.forEach(p => { nameMap[p.id] = p.name; });
-      const touched = [...(room.auraTouched || [])].filter(id => id !== playerId).map(id => ({ id, name: nameMap[id] || '?' }));
+      const touched = [...(room.auraTouched || [])].map(id => ({ id, name: nameMap[id] || '?' }));
       return { touched, shieldedPlayer: room.shieldedPlayer };
     }
     default:

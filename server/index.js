@@ -130,6 +130,14 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
+// Prevent server crash on unhandled errors (e.g., bugs in game logic)
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[unhandledRejection]', reason);
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function broadcastPlayerList(room) {
