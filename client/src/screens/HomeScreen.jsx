@@ -98,7 +98,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
     socket.emit('create_simulation', { name: displayName, token: playerToken, authToken, botCount }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
-      onJoin(res.code, res.players, res.settings, res.hostId);
+      onJoin(res.code, res.players, res.settings, res.hostId, undefined, res);
     });
   }
 
