@@ -6,6 +6,7 @@ import FallingCards from '../components/FallingCards';
 import ProfileBar, { GoogleLoginButton } from '../components/ProfileBar';
 import Leaderboard from '../components/Leaderboard';
 import RoleLibrary from '../components/RoleLibrary';
+import UpdatePopup from '../components/UpdatePopup';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -332,6 +333,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
       </p>
 
       <RoleLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
+      <UpdatePopup />
     </div>
   );
 }
