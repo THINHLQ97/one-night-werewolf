@@ -6,7 +6,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
-const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer } = require('./rooms');
+const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
@@ -146,6 +146,48 @@ async function broadcastPlayerList(room) {
     return base;
   }));
   io.to(room.code).emit('player_list', { players: playerData, hostId: room.hostId });
+}
+
+// Track sockets subscribed to room list updates (on home screen)
+const roomListSubscribers = new Set();
+
+function broadcastRoomList() {
+  const list = listPublicRooms();
+  for (const socketId of roomListSubscribers) {
+    io.to(socketId).emit('room_list', { rooms: list });
+  }
+}
+
+// Check if any human in the room has an active socket; if not, delete the room
+function checkAndDeleteEmptyRoom(room, delayMs = 30000) {
+  if (!room) return;
+  if (room._deletionTimer) clearTimeout(room._deletionTimer);
+
+  room._deletionTimer = setTimeout(() => {
+    // Re-check: any human player still has an active socket?
+    const stillHasHuman = room.players.some(p => {
+      if (p.isBot) return false;
+      return io.sockets.sockets.has(p.id);
+    });
+    if (stillHasHuman) {
+      room._deletionTimer = null;
+      return;
+    }
+    // No humans connected — delete the room
+    console.log(`Auto-deleting empty room ${room.code} (all humans disconnected)`);
+    if (room.dayPhase?.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
+    if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
+    if (room.nightPhase?.timer) clearTimeout(room.nightPhase.timer);
+    deleteRoom(room.code);
+    broadcastRoomList();
+  }, delayMs);
+}
+
+function cancelDeletionTimer(room) {
+  if (room && room._deletionTimer) {
+    clearTimeout(room._deletionTimer);
+    room._deletionTimer = null;
+  }
 }
 
 function broadcastSettings(room) {
@@ -635,6 +677,16 @@ async function finishGame(room) {
 io.on('connection', socket => {
   console.log('Connected:', socket.id);
 
+  // ── Room list subscription (home screen) ──
+  socket.on('subscribe_rooms', () => {
+    roomListSubscribers.add(socket.id);
+    socket.emit('room_list', { rooms: listPublicRooms() });
+  });
+
+  socket.on('unsubscribe_rooms', () => {
+    roomListSubscribers.delete(socket.id);
+  });
+
   // ── Create room ──
   socket.on('create_room', async ({ name, token, authToken }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
@@ -650,6 +702,7 @@ io.on('connection', socket => {
       hostId: room.hostId,
     });
     broadcastPlayerList(room);
+    broadcastRoomList();
   });
 
   // ── Create simulation room ──
@@ -675,6 +728,7 @@ io.on('connection', socket => {
       hostId: room.hostId,
     });
     broadcastPlayerList(room);
+    broadcastRoomList();
   });
 
   // ── Add/remove bot in lobby ──
@@ -718,6 +772,8 @@ io.on('connection', socket => {
     socket.join(room.code);
     socket.roomCode = room.code;
     broadcastPlayerList(room);
+    broadcastRoomList();
+    cancelDeletionTimer(room);
 
     cb({
       code: room.code,
@@ -789,6 +845,7 @@ io.on('connection', socket => {
 
     socket.join(room.code);
     socket.roomCode = room.code;
+    cancelDeletionTimer(room);
 
     const roleId = room.originalCards[socket.id];
     const currentRoleId = room.currentCards[socket.id];
@@ -856,6 +913,8 @@ io.on('connection', socket => {
         role: ROLES[room.originalCards[p.id]],
       });
     });
+
+    broadcastRoomList(); // Remove from public list since game started
 
     io.to(room.code).emit('game_started', {
       state: 'role_reveal',
@@ -1219,6 +1278,7 @@ io.on('connection', socket => {
       settings: room.settings,
       hostId: room.hostId,
     });
+    broadcastRoomList();
   });
 
   // ── Leave room (back to home) ──
@@ -1229,6 +1289,7 @@ io.on('connection', socket => {
     socket.leave(room.code);
     const updated = removePlayer(room, socket.id);
     if (updated) broadcastPlayerList(updated);
+    broadcastRoomList();
     cb?.({ ok: true });
   });
 
@@ -1305,6 +1366,7 @@ io.on('connection', socket => {
   // ── Disconnect ──
   socket.on('disconnect', () => {
     console.log('Disconnected:', socket.id);
+    roomListSubscribers.delete(socket.id);
     const room = getRoomByPlayerId(socket.id);
     if (!room) return;
 
@@ -1333,6 +1395,12 @@ io.on('connection', socket => {
           }
         }
       }
+
+      // Schedule room deletion if all humans disconnected (grace period for rejoin)
+      const stillHasHuman = room.players.some(p => !p.isBot && p.id !== socket.id && io.sockets.sockets.has(p.id));
+      if (!stillHasHuman) {
+        checkAndDeleteEmptyRoom(room, 60000); // 60s grace period during game
+      }
       return;
     }
 
@@ -1340,6 +1408,7 @@ io.on('connection', socket => {
     if (updated) {
       broadcastPlayerList(updated);
     }
+    broadcastRoomList();
   });
 });
 

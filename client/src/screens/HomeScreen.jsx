@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import socket, { playerToken } from '../socket';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
@@ -38,6 +38,22 @@ export default function HomeScreen({ onJoin, error, setError }) {
   const [botCount, setBotCount] = useState(4);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [publicRooms, setPublicRooms] = useState([]);
+
+  // Subscribe to room list when on main menu (logged in) or join mode
+  useEffect(() => {
+    if (mode !== null && mode !== 'join') return;
+    if (!isLoggedIn) return;
+
+    const handler = ({ rooms }) => setPublicRooms(rooms || []);
+    socket.on('room_list', handler);
+    socket.emit('subscribe_rooms');
+
+    return () => {
+      socket.off('room_list', handler);
+      socket.emit('unsubscribe_rooms');
+    };
+  }, [mode, isLoggedIn]);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
   const quote = useMemo(() => FAMOUS_QUOTES[Math.floor(Math.random() * FAMOUS_QUOTES.length)], []);
@@ -176,8 +192,13 @@ export default function HomeScreen({ onJoin, error, setError }) {
           <button className="btn-primary text-lg py-4 flex items-center justify-center gap-2.5" onClick={() => { setMode('create'); setError(''); }}>
             <Icon name="sparkle" size={22} /> Tạo phòng mới
           </button>
-          <button className="btn-ghost text-lg py-4 flex items-center justify-center gap-2.5" onClick={() => { setMode('join'); setError(''); }}>
+          <button className="btn-ghost text-lg py-4 flex items-center justify-center gap-2.5 relative" onClick={() => { setMode('join'); setError(''); }}>
             <Icon name="door" size={22} /> Vào phòng
+            {publicRooms.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-moon-400/20 text-moon-300 text-xs font-bold">
+                {publicRooms.length}
+              </span>
+            )}
           </button>
           <button className="btn-ghost text-lg py-4 border-dashed flex items-center justify-center gap-2.5" onClick={() => { setMode('simulation'); setError(''); }}>
             <Icon name="robot" size={22} /> Simulation Mode
@@ -202,14 +223,79 @@ export default function HomeScreen({ onJoin, error, setError }) {
           )}
 
           {mode === 'join' && (
-            <input
-              className="input uppercase tracking-widest text-center text-xl font-bold"
-              placeholder="MÃ PHÒNG"
-              value={code}
-              onChange={e => { setCode(e.target.value.toUpperCase()); setError(''); }}
-              maxLength={4}
-              autoFocus
-            />
+            <>
+              <input
+                className="input uppercase tracking-widest text-center text-xl font-bold"
+                placeholder="MÃ PHÒNG"
+                value={code}
+                onChange={e => { setCode(e.target.value.toUpperCase()); setError(''); }}
+                maxLength={4}
+                autoFocus
+              />
+
+              {/* Public rooms list */}
+              <div className="-mt-1">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-white/40 text-xs">
+                    {publicRooms.length === 0
+                      ? 'Chưa có phòng nào đang mở'
+                      : `${publicRooms.length} phòng đang mở`}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => socket.emit('subscribe_rooms')}
+                    className="text-moon-400/60 text-xs hover:text-moon-300 flex items-center gap-1"
+                    title="Làm mới"
+                  >
+                    <Icon name="refresh" size={11} /> Làm mới
+                  </button>
+                </div>
+
+                {publicRooms.length > 0 && (
+                  <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1" style={{ overscrollBehavior: 'contain' }}>
+                    {publicRooms.map(r => {
+                      const isFull = r.playerCount >= 10;
+                      return (
+                        <button
+                          key={r.code}
+                          type="button"
+                          disabled={isFull}
+                          onClick={() => { setCode(r.code); setError(''); }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all ${
+                            code === r.code
+                              ? 'bg-moon-400/15 border-moon-400/50'
+                              : isFull
+                                ? 'bg-white/[0.02] border-white/5 opacity-50 cursor-not-allowed'
+                                : 'bg-white/5 border-white/10 hover:bg-white/10 active:scale-[0.98]'
+                          }`}
+                        >
+                          <div className="flex flex-col items-start min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-moon-300 tracking-wider">{r.code}</span>
+                              {r.isSimulation && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">SIM</span>
+                              )}
+                            </div>
+                            <span className="text-white/40 text-[11px] truncate max-w-[180px]">
+                              Host: {r.hostName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Icon name="users" size={12} className="text-white/40" />
+                            <span className={`text-xs font-semibold ${isFull ? 'text-wolf-400' : 'text-white/60'}`}>
+                              {r.playerCount}/10
+                            </span>
+                            {r.botCount > 0 && (
+                              <span className="text-[10px] text-white/30 ml-1">({r.botCount} bot)</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {mode === 'simulation' && (
