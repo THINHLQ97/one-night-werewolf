@@ -566,6 +566,7 @@ function computeResults(room) {
 
   room.results = {
     tally,
+    votes: { ...(room.dayPhase?.votes || {}) },
     eliminated,
     initialEliminated,
     princesSpared,

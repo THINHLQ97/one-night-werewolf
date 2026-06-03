@@ -74,7 +74,17 @@ const END_SCENE_IMAGES = {
   vote_drunk: '/images/endscene/vote-drunk.webp',
   vote_insomniac: '/images/endscene/vote-insomniac.webp',
   vote_mason: '/images/endscene/vote-mason.webp',
-  // Fallback for sentinel, apprentice seer, P.I., witch, village idiot, revealer, bodyguard
+  // Daybreak roles
+  vote_sentinel: '/images/endscene/vote-sentinel.webp',
+  vote_villageidiot: '/images/endscene/vote-villager-idiot.webp',
+  vote_witch: '/images/endscene/vote-witch.webp',
+  vote_apprenticeseer: '/images/endscene/vote-app-seer.webp',
+  vote_auraseer: '/images/endscene/vote-aura-seer.webp',
+  vote_revealer: '/images/endscene/vote-revealer.webp',
+  // Cursed: 2 variants based on conversion
+  vote_cursed_wolf: '/images/endscene/vote-cursed-wolf.webp',          // wolf voted → converted/hero
+  vote_cursed_villager: '/images/endscene/vote-cursed-villager.webp',  // no wolf vote → just villager
+  // Fallback for P.I., bodyguard, prince (vote-immune so this image rarely needed)
   vote_unknown_villager: '/images/endscene/vote-an-unknown-villager.webp',
 
   // Hunter voted → cascade kill (image keyed by victim role)
@@ -92,7 +102,16 @@ const END_SCENE_IMAGES = {
   hunter_kill_drunk: '/images/endscene/vote-hunter-kill-drunk.webp',
   hunter_kill_insomniac: '/images/endscene/vote-hunter-kill-insomniac.webp',
   hunter_kill_mason: '/images/endscene/vote-hunter-kill-mason.webp',
-  // Doppelganger — image reserved for future, not yet wired into game logic
+  // Daybreak roles
+  hunter_kill_sentinel: '/images/endscene/vote-hunter-kill-sentinel.webp',
+  hunter_kill_villageidiot: '/images/endscene/vote-hunter-kill-villager-idiot.webp',
+  hunter_kill_witch: '/images/endscene/vote-hunter-kill-witch.webp',
+  hunter_kill_apprenticeseer: '/images/endscene/vote-hunter-kill-app-seer.webp',
+  hunter_kill_auraseer: '/images/endscene/vote-hunter-kill-aura-seer.webp',
+  hunter_kill_revealer: '/images/endscene/vote-hunter-kill-revealer.webp',
+  hunter_kill_cursed: '/images/endscene/vote-hunter-kill-cursed.webp',
+  hunter_kill_prince: '/images/endscene/vote-hunter-kill-prince.webp',
+  // Doppelganger
   hunter_kill_doppelganger_villager: '/images/endscene/vote-hunter-kill-doppelganger-villager.webp',
   hunter_kill_doppelganger_wolf: '/images/endscene/vote-hunter-kill-doppelganger-wolf.webp',
 
@@ -142,6 +161,26 @@ const END_SCENE_NARRATIONS = {
   hunter_kill_doppelganger_villager: 'Phát súng cuối cùng của Thợ Săn tìm đến kẻ mang gương mặt dân làng. Một bản sao ngã xuống, để lại câu hỏi chẳng ai kịp trả lời.',
   hunter_kill_doppelganger_wolf: 'Thợ Săn không nhìn nhầm con mồi cuối cùng. Dưới lớp biến hình của Doppelganger, bản năng sói đã bị viên đạn gọi tên.',
 
+  // Daybreak — vote
+  vote_sentinel: 'Lính Canh đã chìa khiên ra bảo vệ kẻ khác, nhưng không có ai chìa khiên cho ông. Tấm khiên đồng lăn trên đá lạnh, chủ nhân của nó cũng thế.',
+  vote_villageidiot: 'Gã Ngốc Làng cười khúc khích cho đến phút cuối, không hiểu vì sao mình bị treo. Có lẽ với hắn, đó cũng là một trò đùa nữa.',
+  vote_witch: 'Phù Thủy đã đổi bài bằng phép thuật, nhưng không thể đổi số phận của chính mình. Lọ thuốc rơi xuống, vỡ thành ngàn mảnh.',
+  vote_apprenticeseer: 'Tiên Tri Học Việc chưa kịp trở thành Tiên Tri thực thụ. Phép thuật non yếu của cô không cứu được mình khỏi bản án oan nghiệt.',
+  vote_auraseer: 'Tiên Tri Hào Quang đã thấy hào quang của mọi người, nhưng không kịp nhìn thấy bản án dành cho mình. Ánh sáng cuối cùng tắt trong mắt cô.',
+  vote_revealer: 'Người Tiết Lộ đã lật bài quá nhiều người, có lẽ đã để lộ chính mình. Ngọn đèn dầu của ông tắt giữa quảng trường lạnh giá.',
+  vote_cursed_wolf: 'Lời nguyền sống dậy đúng vào khoảnh khắc cuối. Sói đã chỉ vào Người Bị Nguyền, và khi máu chảy, máu đó là máu Sói. Dân làng đã thắng nhờ trap hoàn hảo.',
+  vote_cursed_villager: 'Người Bị Nguyền chết oan như một Dân Làng bình thường. Lời nguyền không kịp trỗi dậy — Sói khôn ngoan đã tránh vote, và bóng tối vẫn còn ngoài kia.',
+
+  // Daybreak — hunter kill
+  hunter_kill_sentinel: 'Lính Canh ngã xuống trước phát súng oan nghiệt. Tấm khiên ông từng cầm để bảo vệ người khác giờ không cứu được chính mình.',
+  hunter_kill_villageidiot: 'Gã Ngốc Làng vẫn cười khi viên đạn đến. Phát súng cuối cùng có lẽ là điều hợp lý nhất với hắn trong cả đêm điên rồ này.',
+  hunter_kill_witch: 'Phù Thủy đưa tay lên, định niệm chú phòng thủ — nhưng viên đạn đã nhanh hơn phép thuật. Phép màu cuối cùng của bà là chết oanh liệt.',
+  hunter_kill_apprenticeseer: 'Tiên Tri Học Việc chưa kịp trưởng thành. Đôi mắt non nớt khép lại dưới ánh chớp của nòng súng cuối cùng.',
+  hunter_kill_auraseer: 'Tiên Tri Hào Quang thấy hào quang của Thợ Săn rực sáng — nhưng đó là hào quang của cái chết. Ánh sáng tắt nhanh hơn lời cảnh báo.',
+  hunter_kill_revealer: 'Người Tiết Lộ tay vẫn nắm chiếc đèn dầu. Phát súng cuối khiến ngọn lửa rơi xuống, thiêu rụi mọi bí mật chưa kịp lật.',
+  hunter_kill_cursed: 'Người Bị Nguyền chết dưới nòng súng của Thợ Săn. Không có Sói nào vote, lời nguyền câm lặng — máu họ chỉ là máu của một dân làng oan.',
+  hunter_kill_prince: 'Hoàng Tử cười khinh bỉ trước lời buộc tội của dân làng — họ không thể chạm vào ngài. Nhưng mũi tên của Thợ Săn không tuân theo luật vương triều, và máu xanh chảy như máu thường.',
+
   multi_tanner: 'Giữa những kẻ bị kết án, có một người chờ cái chết như chờ vương miện. Chán Đời đã ẩn trong đám đông để thắng bằng chính bản án ấy.',
   multi_wolf: 'Trong nhóm người bị dẫn ra phán xét, một con sói thật đã lộ móng vuốt. Dân làng đã chọn đúng, và bình minh có quyền trở lại.',
   multi_no_wolf: 'Nhiều người bị trùm mặt trước đám đông, nhưng không có con sói nào trong số họ. Khi bản án rơi xuống, bầy sói ngoài cổng bắt đầu mỉm cười.',
@@ -157,6 +196,16 @@ const VILLAGE_ROLE_KEYS = {
   drunk: 'vote_drunk',
   insomniac: 'vote_insomniac',
   mason: 'vote_mason',
+  // Daybreak roles
+  sentinel: 'vote_sentinel',
+  villageidiot: 'vote_villageidiot',
+  witch: 'vote_witch',
+  apprenticeseer: 'vote_apprenticeseer',
+  auraseer: 'vote_auraseer',
+  revealer: 'vote_revealer',
+  prince: 'vote_unknown_villager', // Prince is vote-immune, this is fallback only
+  // Note: 'cursed' handled separately in getEndSceneKey for wolf/villager variants
+  // P.I., bodyguard → unknown villager fallback
 };
 
 const HUNTER_VICTIM_KEYS = {
@@ -173,6 +222,16 @@ const HUNTER_VICTIM_KEYS = {
   drunk: 'hunter_kill_drunk',
   insomniac: 'hunter_kill_insomniac',
   mason: 'hunter_kill_mason',
+  // Daybreak roles
+  sentinel: 'hunter_kill_sentinel',
+  villageidiot: 'hunter_kill_villageidiot',
+  witch: 'hunter_kill_witch',
+  apprenticeseer: 'hunter_kill_apprenticeseer',
+  auraseer: 'hunter_kill_auraseer',
+  revealer: 'hunter_kill_revealer',
+  cursed: 'hunter_kill_cursed',
+  prince: 'hunter_kill_prince',
+  // P.I., bodyguard → unknown villager fallback
 };
 
 function getWinningTeam(results, players) {
@@ -235,6 +294,18 @@ function getEndSceneKey(results, players) {
   if (primaryRole === 'tanner') return 'vote_tanner';
   if (primaryRole === 'minion') {
     return wolvesInGame ? 'vote_minion_have_wolves' : 'vote_minion_no_wolf';
+  }
+  // Cursed: pick wolf or villager variant based on whether any wolf voted them
+  if (primaryRole === 'cursed') {
+    const votes = results.tally || {};
+    const allVotes = results.votes || {};
+    // Check if any wolf voted for the cursed (would have converted them)
+    const wolfVoted = Object.entries(allVotes).some(([voterId, targetId]) => {
+      if (targetId !== primary) return false;
+      const voterRole = finalCards[voterId];
+      return ['werewolf','alphawolf','mysticwolf','dreamwolf','minion'].includes(voterRole);
+    });
+    return wolfVoted ? 'vote_cursed_wolf' : 'vote_cursed_villager';
   }
   return VILLAGE_ROLE_KEYS[primaryRole] || 'vote_unknown_villager';
 }
