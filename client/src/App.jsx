@@ -42,6 +42,8 @@ export default function App() {
     myCurrentRole: null,
     shieldedPlayer: null,
     doppelgangerCopiedRole: null,
+    auraTouched: [],
+    auraSeen: false,
   });
 
   const [connectionLost, setConnectionLost] = useState(false);
@@ -154,7 +156,7 @@ export default function App() {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, auraTouched: [], auraSeen: false });
     });
 
     socket.on('role_assigned', ({ roleId, role }) => {
@@ -201,6 +203,13 @@ export default function App() {
         setNightKnowledge(prev => ({
           ...prev,
           knownMasons: actionData.masons.map(m => m.id),
+        }));
+      }
+      if (reqEffective === 'auraseer' && Array.isArray(actionData.touched)) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          auraTouched: actionData.touched,
+          auraSeen: true,
         }));
       }
       // Capture sentinel shield from actionData (sent to roles after sentinel)
@@ -371,7 +380,7 @@ export default function App() {
       setMyRole(null);
       setResults(null);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, auraTouched: [], auraSeen: false });
       setChatMessages([]);
       setScreen('lobby');
       stopBGM();

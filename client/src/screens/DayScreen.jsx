@@ -284,14 +284,22 @@ function HunterPhaseOverlay({ hunterPhase, myId, players, onShoot }) {
 }
 
 function KnowledgeSummary({ knowledge, players }) {
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = knowledge;
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, auraTouched = [], doppelgangerCopiedRole } = knowledge;
   const nameMap = {};
   players.forEach(p => { nameMap[p.id] = p.name; });
 
   const items = [];
 
+  if (doppelgangerCopiedRole) items.push(`🎭 Hóa Thân → ${ROLE_SHORT[doppelgangerCopiedRole] || doppelgangerCopiedRole}`);
   if (knownWerewolves.length > 0) items.push(`Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.auraSeen) {
+    if (auraTouched.length > 0) {
+      items.push(`✨ Hào quang: ${auraTouched.map(t => t.name || nameMap[t.id] || '?').join(', ')}`);
+    } else {
+      items.push(`✨ Hào quang: Không có ai`);
+    }
+  }
   Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id]}: ${ROLE_SHORT[role] || role}`));
   Object.entries(revealedCenter).forEach(([slot, role]) => items.push(`${centerName(slot)}: ${ROLE_SHORT[role] || role}`));
   swappedPairs.forEach(([a, b]) => {

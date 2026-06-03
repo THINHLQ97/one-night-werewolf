@@ -719,6 +719,14 @@ function KnowledgeSummary({ knowledge, players }) {
   if (knowledge.doppelgangerCopiedRole) items.push(`🎭 Hóa Thân → ${ROLE_SHORT[knowledge.doppelgangerCopiedRole] || knowledge.doppelgangerCopiedRole}`);
   if (knownWerewolves.length > 0) items.push(`Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.auraSeen) {
+    const aura = knowledge.auraTouched || [];
+    if (aura.length > 0) {
+      items.push(`✨ Hào quang: ${aura.map(t => t.name || nameMap[t.id] || '?').join(', ')}`);
+    } else {
+      items.push(`✨ Hào quang: Không có ai`);
+    }
+  }
   Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id] || id}: ${ROLE_SHORT[role] || role}`));
   Object.entries(revealedCenter).forEach(([slot, role]) => items.push(`${cName(slot)}: ${ROLE_SHORT[role] || role}`));
   swappedPairs.forEach(([a, b]) => {
