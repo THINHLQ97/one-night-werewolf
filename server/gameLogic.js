@@ -460,13 +460,16 @@ function getEliminatedHunters(room) {
 function determineWinners(room, eliminated) {
   const { players, currentCards } = room;
 
-  // ── Cursed conversion ──
-  // If a Cursed player was voted out AND at least one Werewolf voted for them,
-  // the Cursed counts as a Werewolf eliminated (village wins like killing a wolf).
+  // ── Cursed conversion (for elimination check only) ──
+  // If a Cursed player was ELIMINATED AND at least one Werewolf voted for them,
+  // the Cursed counts as "wolf eliminated" so village wins (like killing a wolf).
+  // NOTE: Cursed remains on Village team for their OWN win condition —
+  // they win when village wins, even though they died.
   const votes = room.dayPhase?.votes || {};
-  const cursedConverted = new Set(); // player IDs treated as wolves
+  const cursedConverted = new Set(); // player IDs treated as wolves for elimination only
   players.forEach(p => {
     if (currentCards[p.id] !== 'cursed') return;
+    if (!eliminated.includes(p.id)) return; // Only converts if actually eliminated
     // Check if any Wolf-team player voted for this Cursed
     const wolfVotedCursed = Object.entries(votes).some(([voterId, targetId]) => {
       if (targetId !== p.id) return false;
@@ -476,10 +479,13 @@ function determineWinners(room, eliminated) {
     if (wolfVotedCursed) cursedConverted.add(p.id);
   });
 
-  const isEffectivelyWolf = (pid) => isWolfRole(currentCards[pid]) || cursedConverted.has(pid);
+  // For "is this a wolf-team elimination?" — Cursed counts when triggered
+  const isEliminatedAsWolf = (pid) => isWolfRole(currentCards[pid]) || cursedConverted.has(pid);
+  // For "are there wolves in game?" — only actual wolves count
+  const isActualWolf = (pid) => isWolfRole(currentCards[pid]);
 
-  const werewolvesInGame = players.some(p => isEffectivelyWolf(p.id));
-  const eliminatedWerewolf = eliminated.some(id => isEffectivelyWolf(id));
+  const werewolvesInGame = players.some(p => isActualWolf(p.id)) || cursedConverted.size > 0;
+  const eliminatedWerewolf = eliminated.some(id => isEliminatedAsWolf(id));
   const eliminatedTanner = eliminated.some(id => currentCards[id] === 'tanner');
 
   const winners = [];
@@ -498,11 +504,12 @@ function determineWinners(room, eliminated) {
 
   function getEffectiveTeam(pid) {
     if (room.piTransformed?.[pid]) return room.piTransformed[pid];
-    if (cursedConverted.has(pid)) return 'werewolf';
+    // Cursed is ALWAYS on Village team for own win condition
+    // (the "conversion" only counts them as wolf for elimination tally, not for their own team)
     const role = currentCards[pid];
     if (isWolfRole(role) || role === 'minion') return 'werewolf';
     if (role === 'tanner') return 'tanner';
-    return 'village';
+    return 'village'; // includes cursed
   }
 
   if (werewolvesInGame) {
