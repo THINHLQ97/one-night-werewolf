@@ -16,8 +16,8 @@ const NEW_ROLES = [
   {
     id: 'cursed', name: 'Cursed', nameVi: 'Bị Nguyền', emoji: '🩸',
     team: 'village', teamColor: 'village',
-    short: 'Trap cho Sói',
-    desc: 'Nếu Sói vote bạn và bạn bị loại → Dân thắng (tính như Sói bị loại). Khiêu khích Sói target mình để "kích nổ" lời nguyền.',
+    short: 'Đổi phe nếu Sói vote',
+    desc: 'Nếu có ≥1 Sói vote bạn → bạn CHUYỂN HẲN sang phe Sói. Hãy né vote Sói bằng mọi giá để giữ phe Dân.',
   },
   {
     id: 'auraseer', name: 'Aura Seer', nameVi: 'Tiên Tri Hào Quang', emoji: '✨',
