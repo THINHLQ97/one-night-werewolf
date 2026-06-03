@@ -3,7 +3,7 @@ import RoleIcon from './RoleIcon';
 import Icon from './Icon';
 
 // Version key — bump this when adding a new update popup
-const UPDATE_VERSION = 'v1_prince_cursed_auraseer';
+const UPDATE_VERSION = 'v2_prince_cursed_auraseer';
 const STORAGE_KEY = `onw_seen_update_${UPDATE_VERSION}`;
 
 const NEW_ROLES = [
@@ -16,8 +16,8 @@ const NEW_ROLES = [
   {
     id: 'cursed', name: 'Cursed', nameVi: 'Bị Nguyền', emoji: '🩸',
     team: 'village', teamColor: 'village',
-    short: 'Đổi phe nếu Sói vote',
-    desc: 'Nếu có ≥1 Sói vote bạn → bạn CHUYỂN HẲN sang phe Sói. Hãy né vote Sói bằng mọi giá để giữ phe Dân.',
+    short: 'Anh hùng hoặc Sói',
+    desc: 'Sói vote + bạn bị loại → Anh hùng, thắng cùng Dân. Sói vote + bạn sống → biến thành Sói. Khiêu khích để chết oanh liệt!',
   },
   {
     id: 'auraseer', name: 'Aura Seer', nameVi: 'Tiên Tri Hào Quang', emoji: '✨',

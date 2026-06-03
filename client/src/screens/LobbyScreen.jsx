@@ -157,9 +157,9 @@ const ROLE_DETAILS = {
     tips: 'Tự nhận là Hoàng Tử để Sói biết không có lợi khi vote bạn. Nhưng cẩn thận với Robber/Witch!',
   },
   cursed: {
-    nightAction: 'Không thức dậy ban đêm. Bạn KHỞI ĐẦU phe Dân.',
-    winCondition: '⚠️ Nếu có ≥1 Sói vote bạn → CHUYỂN PHE thành Sói! Thắng/thua theo phe mới.',
-    tips: 'Tránh bị Sói vote bằng mọi giá! Nếu Sói vote → bạn thành Sói và rất khả năng thua.',
+    nightAction: 'Không thức dậy ban đêm.',
+    winCondition: 'Sói vote + bị loại → ANH HÙNG (thắng cùng Dân). Sói vote + KHÔNG bị loại → THÀNH SÓI.',
+    tips: 'Khiêu khích Sói vote bạn và đảm bảo Dân theo vote — bạn chết như anh hùng và thắng!',
   },
   auraseer: {
     nightAction: 'Thức dậy sau Kẻ Quậy. Thấy ai ĐÃ xem hoặc đổi bài đêm nay.',

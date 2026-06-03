@@ -460,15 +460,15 @@ function getEliminatedHunters(room) {
 function determineWinners(room, eliminated) {
   const { players, currentCards } = room;
 
-  // ── Cursed conversion (ONUW Daybreak rule) ──
-  // If at least one Werewolf voted for a Cursed player → Cursed CONVERTS to Wolf team.
-  // This conversion is permanent for win condition:
-  // - Cursed is now Wolf team
-  // - If Cursed is eliminated → village wins (killed a wolf) → Cursed (wolf) LOSES
-  // - If Cursed is not eliminated → Cursed wins/loses with the wolf team
-  // The Cursed essentially "becomes a wolf" the moment a wolf casts a vote on them.
+  // ── Cursed split logic (hybrid A+B) ──
+  // For each Cursed player with ≥1 Wolf vote:
+  //   • If they WERE eliminated → "Hero": counts as wolf killed (village wins),
+  //     BUT Cursed stays Village team for own win condition → wins with village
+  //   • If they were NOT eliminated → "Converted": becomes Wolf team for own win
+  // If no Wolf voted them → stays village always
   const votes = room.dayPhase?.votes || {};
-  const cursedConverted = new Set(); // player IDs that fully converted to wolf team
+  const cursedTriggered = new Set(); // eliminated Cursed with wolf vote → village hero
+  const cursedConverted = new Set(); // surviving Cursed with wolf vote → becomes wolf team
   players.forEach(p => {
     if (currentCards[p.id] !== 'cursed') return;
     const wolfVotedCursed = Object.entries(votes).some(([voterId, targetId]) => {
@@ -476,14 +476,21 @@ function determineWinners(room, eliminated) {
       const voterRole = currentCards[voterId];
       return isWolfRole(voterRole) || voterRole === 'minion';
     });
-    if (wolfVotedCursed) cursedConverted.add(p.id);
+    if (!wolfVotedCursed) return;
+    if (eliminated.includes(p.id)) {
+      cursedTriggered.add(p.id); // hero
+    } else {
+      cursedConverted.add(p.id); // converted to wolf
+    }
   });
 
-  // Converted Cursed are now Wolf team for ALL purposes
-  const isEffectivelyWolf = (pid) => isWolfRole(currentCards[pid]) || cursedConverted.has(pid);
+  // For elimination tally: cursedTriggered counts as "wolf eliminated"
+  const isEliminatedAsWolf = (pid) => isWolfRole(currentCards[pid]) || cursedTriggered.has(pid);
+  // For "are wolves still alive?": cursedConverted (alive wolves) + actual wolves
+  const isAliveAsWolf = (pid) => isWolfRole(currentCards[pid]) || cursedConverted.has(pid);
 
-  const werewolvesInGame = players.some(p => isEffectivelyWolf(p.id));
-  const eliminatedWerewolf = eliminated.some(id => isEffectivelyWolf(id));
+  const werewolvesInGame = players.some(p => isAliveAsWolf(p.id)) || cursedTriggered.size > 0;
+  const eliminatedWerewolf = eliminated.some(id => isEliminatedAsWolf(id));
   const eliminatedTanner = eliminated.some(id => currentCards[id] === 'tanner');
 
   const winners = [];
@@ -502,8 +509,9 @@ function determineWinners(room, eliminated) {
 
   function getEffectiveTeam(pid) {
     if (room.piTransformed?.[pid]) return room.piTransformed[pid];
-    // Cursed converts to Wolf team if any Wolf voted for them
+    // Cursed that survived wolf vote → becomes wolf team
     if (cursedConverted.has(pid)) return 'werewolf';
+    // Cursed that died with wolf vote → stays village (hero)
     const role = currentCards[pid];
     if (isWolfRole(role) || role === 'minion') return 'werewolf';
     if (role === 'tanner') return 'tanner';
