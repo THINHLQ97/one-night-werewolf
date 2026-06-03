@@ -706,7 +706,12 @@ function describeCopiedAction(copiedRole, action, result, playerMap, targetName,
 }
 
 function NightLogEntry({ entry, playerMap }) {
-  const { role, playerName, action, result, targetName, target1Name, target2Name } = entry;
+  const { role, playerName, action, result, targetName, target1Name, target2Name, autoExecuted } = entry;
+  const autoBadge = autoExecuted ? (
+    <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-semibold whitespace-nowrap">
+      AFK • tự động
+    </span>
+  ) : null;
 
   // ── Doppelganger: merge step 1 (copy) + step 2 (action) into one readable entry ──
   if (role === 'doppelganger') {
@@ -718,11 +723,12 @@ function NightLogEntry({ entry, playerMap }) {
       const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
       const fromName = targetName || playerMap[action.targetPlayer] || playerMap[result.copiedFromId] || '?';
       return (
-        <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-purple-500/[0.06] border border-purple-500/10">
+        <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg border ${autoExecuted ? 'bg-yellow-500/[0.06] border-yellow-500/20' : 'bg-purple-500/[0.06] border-purple-500/10'}`}>
           <RoleIcon roleId="doppelganger" size={22} circular className="flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
             <span className="text-white/70 text-xs font-medium">{playerName}</span>
             <span className="text-purple-400/60 text-xs"> (Doppelgänger)</span>
+            {autoBadge}
             <p className="text-purple-300/70 text-[11px] leading-tight">🎭 hóa thân thành <strong className="text-purple-300">{copiedName}</strong> (copy {fromName})</p>
           </div>
         </div>
@@ -735,11 +741,12 @@ function NightLogEntry({ entry, playerMap }) {
       const desc = describeCopiedAction(copiedRole, action, result, playerMap, targetName, target1Name, target2Name);
       if (desc) {
         return (
-          <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-purple-500/[0.04]">
+          <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg ${autoExecuted ? 'bg-yellow-500/[0.05] border border-yellow-500/15' : 'bg-purple-500/[0.04]'}`}>
             <RoleIcon roleId={copiedRole} size={22} circular isDoppel className="flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
               <span className="text-white/70 text-xs font-medium">{playerName}</span>
               <span className="text-purple-400/50 text-xs"> (🎭→{copiedName})</span>
+              {autoBadge}
               <p className="text-white/50 text-[11px] leading-tight">{desc}</p>
             </div>
           </div>
@@ -830,11 +837,12 @@ function NightLogEntry({ entry, playerMap }) {
   }
 
   return (
-    <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03]">
+    <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg ${autoExecuted ? 'bg-yellow-500/[0.06] border border-yellow-500/20' : 'bg-white/[0.03]'}`}>
       <RoleIcon roleId={role} size={22} circular className="flex-shrink-0 mt-0.5" />
       <div className="min-w-0">
         <span className="text-white/70 text-xs font-medium">{playerName}</span>
         <span className="text-white/30 text-xs"> ({roleName})</span>
+        {autoBadge}
         <p className="text-white/50 text-[11px] leading-tight">{describeAction()}</p>
       </div>
     </div>

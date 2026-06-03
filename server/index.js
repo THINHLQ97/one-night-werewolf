@@ -211,6 +211,92 @@ const DOPPEL_IMMEDIATE_ROLES = [
   'alphawolf', 'mysticwolf',
 ];
 
+// Roles that MUST perform an action per ONUW rules (auto-executed if player AFK)
+const MANDATORY_NIGHT_ROLES = ['drunk', 'doppelganger'];
+
+// Auto-execute a mandatory action for an AFK player.
+// Uses bot AI to choose a random valid action, processes it, logs, and notifies player.
+// Returns true if auto-executed.
+function autoExecuteMandatory(room, playerId, role) {
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) return false;
+
+  if (!room.nightLog) room.nightLog = [];
+
+  // ── Doppelganger: handle step 1 + immediate step 2 like a bot ──
+  if (role === 'doppelganger') {
+    const action = decideBotNightAction(room, playerId, 'doppelganger');
+    const result = processNightAction(room, playerId, 'doppelganger', action);
+    room.nightLog.push({
+      role: 'doppelganger',
+      playerId, playerName: player.name,
+      action: { ...action },
+      result: { ...result },
+      autoExecuted: true,
+    });
+    if (io.sockets.sockets.has(playerId)) {
+      io.to(playerId).emit('night_action_result', {
+        role: 'doppelganger',
+        result: { ...result, autoExecuted: true },
+      });
+    }
+
+    if (result.copiedRole && DOPPEL_IMMEDIATE_ROLES.includes(result.copiedRole)) {
+      const dCopied = result.copiedRole;
+      const action2 = decideBotDoppelgangerStep2(room, playerId, dCopied);
+      const result2 = processNightAction(room, playerId, dCopied, action2);
+      room.nightLog.push({
+        role: 'doppelganger',
+        playerId, playerName: player.name,
+        action: { ...action2 },
+        result: { ...result2, copiedRole: dCopied },
+        autoExecuted: true,
+      });
+      // PI / Witch multi-step continuation
+      if (dCopied === 'paranormalinvestigator' && result2.canContinue) {
+        const action3 = decideBotNightActionStep2(room, playerId, dCopied, result2);
+        const result3 = processNightAction(room, playerId, dCopied, action3);
+        room.nightLog.push({
+          role: 'doppelganger', playerId, playerName: player.name,
+          action: { ...action3 }, result: { ...result3, copiedRole: dCopied },
+          autoExecuted: true,
+        });
+      }
+      if (dCopied === 'witch' && result2.step === 1 && result2.canSwap) {
+        const action3 = decideBotNightActionStep2(room, playerId, dCopied, result2);
+        const result3 = processNightAction(room, playerId, dCopied, action3);
+        room.nightLog.push({
+          role: 'doppelganger', playerId, playerName: player.name,
+          action: { ...action3 }, result: { ...result3, copiedRole: dCopied },
+          autoExecuted: true,
+        });
+      }
+      if (dCopied === 'revealer' && result2.revealed && result2.targetPlayer) {
+        io.to(room.code).emit('night_public_reveal', { playerId: result2.targetPlayer, role: result2.role });
+      }
+    }
+    return true;
+  }
+
+  // ── Generic mandatory roles (Drunk, etc.) ──
+  const action = decideBotNightAction(room, playerId, role);
+  const result = processNightAction(room, playerId, role, action);
+  room.nightLog.push({
+    role,
+    playerId, playerName: player.name,
+    action: { ...action },
+    result: { ...result },
+    autoExecuted: true,
+  });
+  if (io.sockets.sockets.has(playerId)) {
+    io.to(playerId).emit('night_action_result', {
+      role,
+      result: { ...result, autoExecuted: true },
+    });
+  }
+  return true;
+}
+
 async function runNightPhase(room) {
   const { nightPhase, players } = room;
   room.state = 'night';
@@ -275,6 +361,19 @@ async function runNightPhase(room) {
         nightPhase.pendingActions = [];
         nightPhase.resolver = resolve;
         nightPhase.timer = setTimeout(() => {
+          // Auto-execute mandatory roles for AFK humans before clearing
+          if (MANDATORY_NIGHT_ROLES.includes(role)) {
+            const stillPending = [...nightPhase.pendingPlayerIds];
+            for (const pid of stillPending) {
+              const p = players.find(pp => pp.id === pid);
+              if (!p || p.isBot) continue; // bots already handled separately
+              try {
+                autoExecuteMandatory(room, pid, role);
+              } catch (err) {
+                console.error('[autoExecute error]', role, pid, err);
+              }
+            }
+          }
           nightPhase.pendingPlayerIds = [];
           nightPhase.resolver = null;
           resolve();
