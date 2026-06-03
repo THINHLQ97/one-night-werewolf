@@ -168,7 +168,7 @@ const ROLE_DETAILS = {
   },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, isSimulation, preferredHostRole, onPreferredRoleChange, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
@@ -429,6 +429,58 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           })}
         </div>
       </div>
+
+      {/* ── Simulation: Host can pre-select their role ── */}
+      {isSimulation && isHost && selected.length > 0 && (
+        <div className="card mb-4 border border-purple-500/30" style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(255,255,255,0.02))' }}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-purple-300 font-semibold flex items-center gap-1.5 text-sm">
+              <Icon name="robot" size={14} /> 🧪 Chọn vai cho bạn (Test)
+            </h3>
+            {preferredHostRole && (
+              <button
+                onClick={() => onPreferredRoleChange?.(null)}
+                className="text-white/40 text-xs hover:text-white/70"
+              >
+                ✕ Bỏ chọn
+              </button>
+            )}
+          </div>
+          <p className="text-white/40 text-[11px] mb-2.5">
+            Chọn vai bạn muốn để test. Bot sẽ nhận các vai còn lại ngẫu nhiên.
+          </p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[...new Set(selected)].map(roleId => {
+              const role = ALL_ROLES.find(r => r.id === roleId);
+              if (!role) return null;
+              const isPicked = preferredHostRole === roleId;
+              return (
+                <button
+                  key={roleId}
+                  onClick={() => onPreferredRoleChange?.(isPicked ? null : roleId)}
+                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl border transition-all ${
+                    isPicked
+                      ? 'border-purple-400 bg-purple-500/20 scale-105 shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10 active:scale-95'
+                  }`}
+                >
+                  <RoleIcon roleId={roleId} size={28} circular />
+                  <span className={`text-[9px] leading-tight text-center ${
+                    isPicked ? 'text-purple-200 font-bold' : 'text-white/60'
+                  }`}>
+                    {role.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {preferredHostRole && (
+            <p className="text-purple-300/80 text-xs mt-2 text-center">
+              ✓ Sẽ nhận: <strong>{ALL_ROLES.find(r => r.id === preferredHostRole)?.name}</strong>
+            </p>
+          )}
+        </div>
+      )}
 
       {error && <p className="text-wolf-400 text-sm text-center mb-3">{error}</p>}
 

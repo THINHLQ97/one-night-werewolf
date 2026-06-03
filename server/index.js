@@ -726,6 +726,7 @@ io.on('connection', socket => {
       players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
+      isSimulation: true,
     });
     broadcastPlayerList(room);
     broadcastRoomList();
@@ -754,6 +755,28 @@ io.on('connection', socket => {
 
     room.players = room.players.filter(p => p.id !== lastBot.id);
     broadcastPlayerList(room);
+    cb?.({ ok: true });
+  });
+
+  // ── Set preferred host role (simulation only) ──
+  socket.on('set_preferred_role', ({ roleId }, cb) => {
+    const room = getRoom(socket.roomCode);
+    if (!room || room.hostId !== socket.id) return cb?.({ error: 'Không có quyền' });
+    if (!room.isSimulation) return cb?.({ error: 'Chỉ Simulation mode mới chọn được vai' });
+    if (room.state !== 'waiting') return cb?.({ error: 'Game đã bắt đầu' });
+
+    if (roleId === null || roleId === undefined || roleId === '') {
+      // Clear preferred role → random
+      delete room.preferredHostRole;
+    } else {
+      // Must be in selected role pool
+      if (!room.settings.selectedRoles.includes(roleId)) {
+        return cb?.({ error: 'Vai không có trong pool' });
+      }
+      room.preferredHostRole = roleId;
+    }
+    // Broadcast to room so the lobby UI can show it
+    io.to(room.code).emit('preferred_role_updated', { roleId: room.preferredHostRole || null });
     cb?.({ ok: true });
   });
 
@@ -857,6 +880,8 @@ io.on('connection', socket => {
       players: room.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, isBot: p.isBot || false })),
       settings: room.settings,
       hostId: room.hostId,
+      isSimulation: !!room.isSimulation,
+      preferredHostRole: room.preferredHostRole || null,
       roleId,
       role: roleId ? ROLES[roleId] : null,
       currentRoleId,

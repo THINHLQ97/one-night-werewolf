@@ -30,6 +30,8 @@ export default function App() {
   const [tokenClaims, setTokenClaims] = useState(null);
   const [rankUpData, setRankUpData] = useState(null);
   const [demotedData, setDemotedData] = useState(null);
+  const [isSimulation, setIsSimulation] = useState(false);
+  const [preferredHostRole, setPreferredHostRole] = useState(null);
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -106,6 +108,8 @@ export default function App() {
               setPlayers(res.players);
               setHostId(res.hostId);
               setSettings(res.settings);
+              setIsSimulation(!!res.isSimulation);
+              setPreferredHostRole(res.preferredHostRole || null);
               setHasAlphaWolf(res.hasAlphaWolf || false);
               if (res.roleId) {
                 setMyRole({ roleId: res.roleId, ...res.role });
@@ -140,6 +144,10 @@ export default function App() {
 
     socket.on('settings_updated', ({ settings }) => {
       setSettings(settings);
+    });
+
+    socket.on('preferred_role_updated', ({ roleId }) => {
+      setPreferredHostRole(roleId);
     });
 
     socket.on('game_started', (data) => {
@@ -379,6 +387,8 @@ export default function App() {
     setSettings(cfg);
     setHostId(host);
     setError('');
+    setIsSimulation(!!extraData?.isSimulation);
+    setPreferredHostRole(extraData?.preferredHostRole || null);
     const me = ps.find(p => p.id === socket.id);
     if (me) localStorage.setItem('onw_name', me.name);
     localStorage.setItem('onw_room', code);
@@ -472,6 +482,9 @@ export default function App() {
         hostId={hostId}
         isHost={isHost}
         settings={settings}
+        isSimulation={isSimulation}
+        preferredHostRole={preferredHostRole}
+        onPreferredRoleChange={roleId => socket.emit('set_preferred_role', { roleId })}
         onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
         onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
@@ -483,6 +496,8 @@ export default function App() {
             setPlayers([]);
             setHostId('');
             setSettings({ selectedRoles: [] });
+            setIsSimulation(false);
+            setPreferredHostRole(null);
             localStorage.removeItem('onw_room');
           });
         }}

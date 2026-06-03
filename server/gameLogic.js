@@ -33,6 +33,20 @@ function startGame(room) {
 
   shuffle(roles);
 
+  // Simulation mode: host can pre-select their role from the pool
+  if (room.isSimulation && room.preferredHostRole) {
+    const preferred = room.preferredHostRole;
+    const idx = roles.indexOf(preferred);
+    if (idx !== -1) {
+      // Find host's position in players
+      const hostPos = players.findIndex(p => p.id === room.hostId);
+      if (hostPos !== -1 && hostPos < players.length) {
+        // Swap host's slot with preferred role's position
+        [roles[hostPos], roles[idx]] = [roles[idx], roles[hostPos]];
+      }
+    }
+  }
+
   const cards = {};
   players.forEach((p, i) => { cards[p.id] = roles[i]; });
   cards['center0'] = roles[players.length];
