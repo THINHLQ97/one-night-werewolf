@@ -51,6 +51,7 @@ function startGame(room) {
   room.revealedToAll = {};
   room.piTransformed = {};
   room.doppelgangerData = {}; // { playerId: { copiedRole, copiedFromId } }
+  room.auraTouched = new Set(); // player IDs who viewed/moved a card (for Aura Seer)
   room.nightPhase = {
     roleOrder: getNightOrder(settings.selectedRoles),
     currentRoleIndex: -1,
@@ -144,6 +145,14 @@ function getNightActionData(room, role) {
       return { shieldedPlayer: room.shieldedPlayer };
     case 'bodyguard':
       return { shieldedPlayer: room.shieldedPlayer };
+    case 'auraseer': {
+      // Build list of player IDs touched by this point in the night
+      const players2 = room.players;
+      const nameMap = {};
+      players2.forEach(p => { nameMap[p.id] = p.name; });
+      const touched = [...(room.auraTouched || [])].filter(id => id !== playerId).map(id => ({ id, name: nameMap[id] || '?' }));
+      return { touched, shieldedPlayer: room.shieldedPlayer };
+    }
     default:
       return {};
   }
@@ -161,6 +170,7 @@ function processNightAction(room, playerId, role, action) {
       room.doppelgangerData[playerId] = { copiedRole, copiedFromId: action.targetPlayer };
       // Doppelganger's card becomes the copied role (affects swaps & end-game)
       currentCards[playerId] = copiedRole;
+      if (room.auraTouched) room.auraTouched.add(playerId); // viewed a card
       return { copiedRole, copiedFromId: action.targetPlayer };
     }
 
@@ -174,6 +184,7 @@ function processNightAction(room, playerId, role, action) {
     case 'werewolf': {
       if (action.peekCenter !== undefined) {
         if (!getValidCenterSlots(room).includes(action.peekCenter)) return {};
+        if (room.auraTouched) room.auraTouched.add(playerId);
         return { peeked: { slot: action.peekCenter, role: currentCards[action.peekCenter] } };
       }
       return {};
@@ -186,6 +197,7 @@ function processNightAction(room, playerId, role, action) {
       const oldCard = currentCards[action.targetPlayer];
       currentCards[action.targetPlayer] = currentCards['centerWolf'];
       currentCards['centerWolf'] = oldCard;
+      if (room.auraTouched) room.auraTouched.add(playerId);
       return {};
     }
 
@@ -193,6 +205,7 @@ function processNightAction(room, playerId, role, action) {
       if (!action.targetPlayer || !isValidPlayerId(room, action.targetPlayer)) return {};
       if (action.targetPlayer === playerId) return {};
       if (isShielded(room, action.targetPlayer)) return { blocked: true };
+      if (room.auraTouched) room.auraTouched.add(playerId);
       return { seen: { type: 'player', id: action.targetPlayer, role: currentCards[action.targetPlayer] } };
     }
 
@@ -202,6 +215,7 @@ function processNightAction(room, playerId, role, action) {
 
     case 'apprenticeseer': {
       if (!action.centerSlot || !getValidCenterSlots(room).includes(action.centerSlot)) return {};
+      if (room.auraTouched) room.auraTouched.add(playerId);
       return { seen: { type: 'center', slots: [{ slot: action.centerSlot, role: currentCards[action.centerSlot] }] } };
     }
 
@@ -209,10 +223,12 @@ function processNightAction(room, playerId, role, action) {
       if (action.targetPlayer) {
         if (!isValidPlayerId(room, action.targetPlayer) || action.targetPlayer === playerId) return {};
         if (isShielded(room, action.targetPlayer)) return { blocked: true };
+        if (room.auraTouched) room.auraTouched.add(playerId);
         return { seen: { type: 'player', id: action.targetPlayer, role: currentCards[action.targetPlayer] } };
       }
       if (action.centerSlots && Array.isArray(action.centerSlots) && action.centerSlots.length === 2) {
         if (!action.centerSlots.every(s => getValidCenterSlots(room).includes(s))) return {};
+        if (room.auraTouched) room.auraTouched.add(playerId);
         return {
           seen: { type: 'center', slots: action.centerSlots.map(s => ({ slot: s, role: currentCards[s] })) },
         };
@@ -239,6 +255,7 @@ function processNightAction(room, playerId, role, action) {
       if (!ms[playerId]) ms[playerId] = {};
       ms[playerId].piStep = step;
       ms[playerId].piDone = transformed || step >= 2;
+      if (room.auraTouched) room.auraTouched.add(playerId);
 
       return {
         seen: { type: 'player', id: action.targetPlayer, role: seenRole },
@@ -258,6 +275,7 @@ function processNightAction(room, playerId, role, action) {
         if (!action.centerSlot || !getValidCenterSlots(room).includes(action.centerSlot)) return {};
         ms[playerId].witchSlot = action.centerSlot;
         ms[playerId].witchStep = 1;
+        if (room.auraTouched) room.auraTouched.add(playerId);
         return {
           seen: { type: 'center', slot: action.centerSlot, role: currentCards[action.centerSlot] },
           step: 1,
@@ -291,6 +309,7 @@ function processNightAction(room, playerId, role, action) {
       const theirRole = currentCards[action.targetPlayer];
       currentCards[playerId] = theirRole;
       currentCards[action.targetPlayer] = myOldRole;
+      if (room.auraTouched) room.auraTouched.add(playerId);
       return { newRole: theirRole };
     }
 
@@ -304,7 +323,18 @@ function processNightAction(room, playerId, role, action) {
       const r2 = currentCards[action.target2];
       currentCards[action.target1] = r2;
       currentCards[action.target2] = r1;
+      if (room.auraTouched) room.auraTouched.add(playerId);
       return {};
+    }
+
+    case 'auraseer': {
+      const players2 = room.players;
+      const nameMap = {};
+      players2.forEach(p => { nameMap[p.id] = p.name; });
+      const touched = [...(room.auraTouched || [])]
+        .filter(id => id !== playerId)
+        .map(id => ({ id, name: nameMap[id] || '?' }));
+      return { touched };
     }
 
     case 'villageidiot': {
@@ -356,7 +386,7 @@ function processNightAction(room, playerId, role, action) {
 // ─── Vote & results ───────────────────────────────────────────────────────────
 
 function tallyVotes(room) {
-  const { players, dayPhase } = room;
+  const { players, dayPhase, currentCards } = room;
   const votes = dayPhase.votes;
 
   const tally = {};
@@ -365,12 +395,23 @@ function tallyVotes(room) {
     if (tally[targetId] !== undefined) tally[targetId]++;
   });
 
-  const maxVotes = Math.max(0, ...Object.values(tally));
+  // Prince immunity: skip Prince(s) from tally consideration
+  const isPrince = (pid) => currentCards[pid] === 'prince';
+
+  // Compute eliminated, but exclude Princes (they're immune even if max votes)
+  const nonPrinceTally = {};
+  players.forEach(p => {
+    if (!isPrince(p.id)) nonPrinceTally[p.id] = tally[p.id];
+  });
+  const maxVotes = Math.max(0, ...Object.values(nonPrinceTally));
   const eliminated = maxVotes >= 2
-    ? players.filter(p => tally[p.id] === maxVotes).map(p => p.id)
+    ? players.filter(p => !isPrince(p.id) && tally[p.id] === maxVotes).map(p => p.id)
     : [];
 
-  return { tally, eliminated };
+  // Track if any Prince was voted but spared (for UI / narration)
+  const princesSpared = players.filter(p => isPrince(p.id) && tally[p.id] >= 2).map(p => p.id);
+
+  return { tally, eliminated, princesSpared };
 }
 
 function applyBodyguard(room, eliminated) {
@@ -405,8 +446,26 @@ function getEliminatedHunters(room) {
 function determineWinners(room, eliminated) {
   const { players, currentCards } = room;
 
-  const werewolvesInGame = players.some(p => isWolfRole(currentCards[p.id]));
-  const eliminatedWerewolf = eliminated.some(id => isWolfRole(currentCards[id]));
+  // ── Cursed conversion ──
+  // If a Cursed player was voted out AND at least one Werewolf voted for them,
+  // the Cursed counts as a Werewolf eliminated (village wins like killing a wolf).
+  const votes = room.dayPhase?.votes || {};
+  const cursedConverted = new Set(); // player IDs treated as wolves
+  players.forEach(p => {
+    if (currentCards[p.id] !== 'cursed') return;
+    // Check if any Wolf-team player voted for this Cursed
+    const wolfVotedCursed = Object.entries(votes).some(([voterId, targetId]) => {
+      if (targetId !== p.id) return false;
+      const voterRole = currentCards[voterId];
+      return isWolfRole(voterRole) || voterRole === 'minion';
+    });
+    if (wolfVotedCursed) cursedConverted.add(p.id);
+  });
+
+  const isEffectivelyWolf = (pid) => isWolfRole(currentCards[pid]) || cursedConverted.has(pid);
+
+  const werewolvesInGame = players.some(p => isEffectivelyWolf(p.id));
+  const eliminatedWerewolf = eliminated.some(id => isEffectivelyWolf(id));
   const eliminatedTanner = eliminated.some(id => currentCards[id] === 'tanner');
 
   const winners = [];
@@ -425,6 +484,7 @@ function determineWinners(room, eliminated) {
 
   function getEffectiveTeam(pid) {
     if (room.piTransformed?.[pid]) return room.piTransformed[pid];
+    if (cursedConverted.has(pid)) return 'werewolf';
     const role = currentCards[pid];
     if (isWolfRole(role) || role === 'minion') return 'werewolf';
     if (role === 'tanner') return 'tanner';
@@ -471,7 +531,7 @@ function determineWinners(room, eliminated) {
 }
 
 function computeResults(room) {
-  const { tally, eliminated: initialEliminated } = tallyVotes(room);
+  const { tally, eliminated: initialEliminated, princesSpared = [] } = tallyVotes(room);
   const afterBodyguard = applyBodyguard(room, initialEliminated);
   const eliminated = applyHunterEffect(room, afterBodyguard);
   const { winners } = determineWinners(room, eliminated);
@@ -480,6 +540,7 @@ function computeResults(room) {
     tally,
     eliminated,
     initialEliminated,
+    princesSpared,
     bodyguardSaved: room.dayPhase?.bodyguardProtect?.targetId && initialEliminated.includes(room.dayPhase.bodyguardProtect.targetId) ? room.dayPhase.bodyguardProtect.targetId : null,
     winners,
     finalCards: { ...room.currentCards },

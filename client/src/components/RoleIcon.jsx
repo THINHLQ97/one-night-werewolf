@@ -22,6 +22,9 @@ const CARD_IMAGES = {
   revealer: '/images/character card/Revealer.webp',
   bodyguard: '/images/character card/Bodyguard.webp',
   doppelganger: '/images/character card/Doppelganger.webp',
+  prince: '/images/character card/Prince.webp',
+  cursed: '/images/character card/Cursed.webp',
+  auraseer: '/images/character card/Aura_seer.webp',
 };
 
 export const CARD_BACK = '/images/Card-Back.webp';

@@ -17,6 +17,7 @@ const ROLE_NAMES = {
   dreamwolf: 'Dream Wolf', apprenticeseer: 'Apprentice Seer',
   paranormalinvestigator: 'P.I.', witch: 'Witch', villageidiot: 'Village Idiot',
   revealer: 'Revealer', bodyguard: 'Bodyguard',
+  prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
 };
 
 export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages }) {
@@ -105,6 +106,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'mason':
       case 'minion':
       case 'insomniac':
+      case 'auraseer':
         setActionStep('done');
         break;
       default:
@@ -393,6 +395,23 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               </div>
             )}
 
+            {effectiveRole === 'auraseer' && (
+              <div className="text-center">
+                <p className="text-purple-400 text-sm font-semibold mb-1">✨ Tiên Tri Hào Quang</p>
+                {actionData?.touched?.length > 0 ? (
+                  <div className="mb-2">
+                    <p className="text-white/60 text-sm mb-1">Những người có hào quang (đã xem/đổi bài):</p>
+                    <p className="text-purple-300 text-sm font-semibold">
+                      {actionData.touched.map(t => t.name).join(', ')}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-sm mb-2">Không ai có hào quang — chưa ai xem/đổi bài.</p>
+                )}
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
+              </div>
+            )}
+
             {effectiveRole === 'mason' && (
               <div className="text-center">
                 <div className="mb-3">
@@ -577,11 +596,23 @@ function ActionResultInline({ role, result, step }) {
     sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
     apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
     villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
+    prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
   function cLabel(slot) {
     if (slot === 'centerWolf') return 'Alpha';
     return CENTER[parseInt(slot.replace('center', ''))] || slot;
+  }
+
+  if (displayRole === 'auraseer' && result.touched) {
+    if (result.touched.length === 0) {
+      return <p className="text-white/50 text-sm mt-1 italic">Không ai có hào quang</p>;
+    }
+    return (
+      <p className="text-purple-300 text-sm mt-1">
+        Có hào quang: <strong>{result.touched.map(t => t.name).join(', ')}</strong>
+      </p>
+    );
   }
 
   // Doppelganger step 1 result: show which role was copied
@@ -674,6 +705,7 @@ function KnowledgeSummary({ knowledge, players }) {
     sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
     apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
     villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
+    prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
   function cName(slot) {

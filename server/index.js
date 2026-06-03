@@ -333,6 +333,24 @@ async function runNightPhase(room) {
       }
     }
 
+    // Doppel-Aura Seer: auto-send result (passive view)
+    if (role === 'auraseer' && room.doppelgangerData) {
+      const doppelAuraSeers = players.filter(p =>
+        room.originalCards[p.id] === 'doppelganger' &&
+        room.doppelgangerData[p.id]?.copiedRole === 'auraseer'
+      );
+      for (const dp of doppelAuraSeers) {
+        const result = processNightAction(room, dp.id, 'auraseer', {});
+        room.nightLog.push({ role: 'doppelganger', playerId: dp.id, playerName: dp.name, action: {}, result: { ...result, copiedRole: 'auraseer' } });
+        if (!dp.isBot) {
+          io.to(dp.id).emit('night_action_result', {
+            role: 'doppelganger',
+            result: { ...result, copiedRole: 'auraseer' },
+          });
+        }
+      }
+    }
+
     // Doppel-Revealer: needs a mini-phase for user input
     if (role === 'revealer' && room.doppelgangerData) {
       const doppelRevealers = players.filter(p =>

@@ -157,6 +157,25 @@ const ROLES = {
     description: 'Cận Vệ! Khi vote, bạn chỉ vào người muốn BẢO VỆ thay vì người muốn loại.',
     nightInstruction: null, nightClose: null,
   },
+  prince: {
+    id: 'prince', name: 'Prince', nameVi: 'Hoàng Tử', team: 'village',
+    nightOrder: 99, hasNightAction: false, maxCount: 1, emoji: '👑', expansion: 'daybreak',
+    description: 'Hoàng Tử! Bạn miễn dịch với vote. Nếu bạn bị vote nhiều nhất, người có phiếu cao thứ 2 sẽ bị loại thay.',
+    nightInstruction: null, nightClose: null,
+  },
+  cursed: {
+    id: 'cursed', name: 'Cursed', nameVi: 'Bị Nguyền', team: 'village',
+    nightOrder: 99, hasNightAction: false, maxCount: 1, emoji: '🩸', expansion: 'daybreak',
+    description: 'Bị Nguyền! Bạn thuộc phe Dân. NHƯNG nếu có Sói vote bạn → bạn biến thành Sói (phe Dân thắng nếu bạn bị loại).',
+    nightInstruction: null, nightClose: null,
+  },
+  auraseer: {
+    id: 'auraseer', name: 'Aura Seer', nameVi: 'Tiên Tri Hào Quang', team: 'village',
+    nightOrder: 7.4, hasNightAction: true, maxCount: 1, emoji: '✨', expansion: 'daybreak',
+    description: 'Tiên Tri Hào Quang! Thức dậy sau Kẻ Quậy. Thấy ai ĐÃ xem hoặc đổi bài ai đó từ đầu đêm tới giờ.',
+    nightInstruction: 'Tiên Tri Hào Quang, hãy mở mắt. Bạn thấy hào quang của những người đã xem hoặc đổi bài đêm nay.',
+    nightClose: 'Tiên Tri Hào Quang, hãy nhắm mắt lại.',
+  },
 };
 
 const WOLF_TEAM_ROLES = ['werewolf', 'alphawolf', 'mysticwolf', 'dreamwolf', 'minion'];
@@ -172,6 +191,7 @@ const ACTIVE_NIGHT_ROLES = [
   'minion', 'mason',
   'apprenticeseer', 'seer', 'paranormalinvestigator',
   'robber', 'witch', 'troublemaker',
+  'auraseer',
   'villageidiot', 'drunk',
   'insomniac', 'revealer',
 ];

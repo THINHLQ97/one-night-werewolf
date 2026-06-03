@@ -31,6 +31,9 @@ const ALL_ROLES = [
   { id: 'villageidiot', name: 'Village Idiot', emoji: '🤪', team: 'village', max: 1, expansion: 'daybreak' },
   { id: 'revealer',  name: 'Revealer',  emoji: '🔦', team: 'village',  max: 1, expansion: 'daybreak' },
   { id: 'bodyguard', name: 'Bodyguard', emoji: '💪', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'prince',    name: 'Prince',    emoji: '👑', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'cursed',    name: 'Cursed',    emoji: '🩸', team: 'village',  max: 1, expansion: 'daybreak' },
+  { id: 'auraseer',  name: 'Aura Seer', emoji: '✨', team: 'village',  max: 1, expansion: 'daybreak' },
 ];
 
 const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400' };
@@ -147,6 +150,21 @@ const ROLE_DETAILS = {
     nightAction: 'Không thức dậy ban đêm. Khi vote: chỉ vào người BẢO VỆ thay vì loại.',
     winCondition: 'Thắng nếu phe Dân loại được Sói.',
     tips: 'Đừng tiết lộ mình là Cận Vệ. Bảo vệ người bạn tin là Dân!',
+  },
+  prince: {
+    nightAction: 'Không thức dậy ban đêm.',
+    winCondition: 'Thắng cùng phe Dân. Bạn MIỄN DỊCH với vote — không thể bị loại.',
+    tips: 'Tự nhận là Hoàng Tử để Sói biết không có lợi khi vote bạn. Nhưng cẩn thận với Robber/Witch!',
+  },
+  cursed: {
+    nightAction: 'Không thức dậy ban đêm. Bạn là Dân — TRỪ KHI có Sói vote bạn.',
+    winCondition: 'Thắng cùng phe Dân. Nếu Sói vote bạn và bạn bị loại → Dân thắng (như loại 1 Sói).',
+    tips: 'Hấp dẫn vote nhưng đừng quá lộ. Sói thường tránh vote bạn nếu biết.',
+  },
+  auraseer: {
+    nightAction: 'Thức dậy sau Kẻ Quậy. Thấy ai ĐÃ xem hoặc đổi bài đêm nay.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Biết ai active đêm nay → loại trừ Villager/Hunter/Tanner/Bodyguard. Cẩn thận: Sói cũng có thể "có hào quang".',
   },
 };
 

@@ -14,6 +14,7 @@ const ROLE_NAMES = {
   dreamwolf: 'Dream Wolf', apprenticeseer: 'Apprentice Seer',
   paranormalinvestigator: 'P.I.', witch: 'Witch', villageidiot: 'Village Idiot',
   revealer: 'Revealer', bodyguard: 'Bodyguard',
+  prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
 };
 
 const TEAM_OF = {
@@ -23,6 +24,7 @@ const TEAM_OF = {
   drunk: 'village', insomniac: 'village', villager: 'village', hunter: 'village', mason: 'village',
   sentinel: 'village', apprenticeseer: 'village', paranormalinvestigator: 'village',
   witch: 'village', villageidiot: 'village', revealer: 'village', bodyguard: 'village',
+  prince: 'village', cursed: 'village', auraseer: 'village',
   tanner: 'tanner',
 };
 
@@ -747,6 +749,11 @@ function NightLogEntry({ entry, playerMap }) {
         return result.rotated ? `xoay bài sang ${result.rotated === 'left' ? 'trái' : 'phải'}` : 'xoay bài';
       case 'bodyguard': return 'thức dậy';
       case 'dreamwolf': return 'ngủ say';
+      case 'auraseer':
+        if (result.touched?.length > 0) return `thấy hào quang của: ${result.touched.map(t => t.name).join(', ')}`;
+        return 'không thấy hào quang nào';
+      case 'prince': return 'thức dậy (miễn vote)';
+      case 'cursed': return 'thức dậy';
       default: return 'thức dậy';
     }
   }

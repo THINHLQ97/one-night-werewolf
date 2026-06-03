@@ -105,6 +105,9 @@ function decideBotNightAction(room, botId, role) {
     case 'revealer':
       return { targetPlayer: pickRandom(others) };
 
+    case 'auraseer':
+      return {};
+
     default:
       return {};
   }

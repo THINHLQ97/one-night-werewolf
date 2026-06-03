@@ -9,6 +9,7 @@ const ROLE_NAME = {
   sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf',
   dreamwolf: 'Dream Wolf', apprenticeseer: 'Apprentice', paranormalinvestigator: 'P.I.',
   witch: 'Witch', villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
+  prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
 };
 
 const ROLE_ABBR = {
@@ -19,6 +20,7 @@ const ROLE_ABBR = {
   sentinel: 'Sent', alphawolf: 'AWlf', mysticwolf: 'MWlf',
   dreamwolf: 'DWlf', apprenticeseer: 'Appr', paranormalinvestigator: 'PI',
   witch: 'Wtch', villageidiot: 'Idiot', revealer: 'Rev', bodyguard: 'BG',
+  prince: 'Prnc', cursed: 'Curs', auraseer: 'Aura',
 };
 
 export default function TokenClaimBoard({

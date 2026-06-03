@@ -32,6 +32,7 @@ const ROLE_SHORT = {
   sentinel: 'Sentinel', alphawolf: 'Alpha Wolf', mysticwolf: 'Mystic Wolf', dreamwolf: 'Dream Wolf',
   apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
   villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
+  prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 function centerName(slot) {
