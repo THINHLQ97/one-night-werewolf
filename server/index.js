@@ -13,7 +13,7 @@ const { startAlienGame, generateNightInstructions, generateAlienInstructionPostO
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
-const { calculateGamePoints, clampPoints, checkRankUp, getRank } = require('./ranking');
+const { calculateGamePoints, calculateAlienGamePoints, clampPoints, checkRankUp, getRank } = require('./ranking');
 
 const app = express();
 app.use(cors());
@@ -1110,7 +1110,16 @@ async function finishGame(room) {
   if (!room.isSimulation) {
     const humanPlayers = room.players.filter(p => !p.isBot);
     const totalPlayerCount = humanPlayers.length;
-    const pointsMap = calculateGamePoints(humanPlayers, results.winners, totalPlayerCount);
+    // Use alien-specific ranking (with role bonuses) for alien mode
+    const isAlienMode = room.settings.gameMode === 'alien';
+    const pointsMap = isAlienMode
+      ? calculateAlienGamePoints(humanPlayers, results.winners, totalPlayerCount, {
+          originalCards: room.originalCards,
+          finalCards: results.finalCards,
+          alienAppState: room.alienAppState || {},
+          eliminated: results.eliminated || [],
+        })
+      : calculateGamePoints(humanPlayers, results.winners, totalPlayerCount);
 
     for (const p of humanPlayers) {
       if (!p.userId) continue;

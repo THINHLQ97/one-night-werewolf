@@ -31,6 +31,80 @@ function calculateGamePoints(players, winners, totalPlayerCount) {
   return results;
 }
 
+// ─── Alien Mode Ranking ──────────────────────────────────────────────────────
+// Same base pool as werewolf, plus a role-specific BONUS on top for harder wins.
+// Loss penalty unchanged (-5).
+
+const ALIEN_BONUS = {
+  MYTHIC: 20,  // Synthetic killed (own win), Oracle survives Hunt Mode alone
+  HARD:   10,  // Groob/Zerb rivalry win
+  MEDIUM:  5,  // Mortician, Blob, Leader (under G+Z rivalry)
+  SLIGHT:  3,  // Hunt Mode resolution — everyone else wins by killing Oracle
+  NORMAL:  0,  // Standard team wins
+};
+
+function getAlienBonus(playerId, originalCards, finalCards, alienAppState, eliminated) {
+  const orig = originalCards[playerId];
+  const curr = finalCards[playerId];
+
+  // 🥇 MYTHIC: Synthetic Alien killed and wins solo (everyone else lost)
+  if (curr === 'syntheticalien' && eliminated.includes(playerId)) {
+    return ALIEN_BONUS.MYTHIC;
+  }
+
+  // Hunt Mode logic
+  if (alienAppState?.oracleHuntMode) {
+    const isOracle = orig === 'oracle';
+    const oracleDied = eliminated.some(id => originalCards[id] === 'oracle');
+
+    // 🥇 MYTHIC: Oracle survives Hunt Mode alone
+    if (isOracle && !eliminated.includes(playerId)) {
+      return ALIEN_BONUS.MYTHIC;
+    }
+    // 🎯 SLIGHT: Everyone else wins by killing Oracle in Hunt Mode
+    if (!isOracle && oracleDied) {
+      return ALIEN_BONUS.SLIGHT;
+    }
+    return ALIEN_BONUS.NORMAL;
+  }
+
+  // Check Groob+Zerb rivalry
+  const bothGroobZerb = Object.values(finalCards).includes('groob')
+    && Object.values(finalCards).includes('zerb');
+
+  // 🥈 HARD: Groob/Zerb wins rivalry
+  if (bothGroobZerb && (curr === 'groob' || curr === 'zerb')) {
+    return ALIEN_BONUS.HARD;
+  }
+
+  // 🥉 MEDIUM: Mortician, Blob, Leader (under G+Z rivalry)
+  if (curr === 'mortician') return ALIEN_BONUS.MEDIUM;
+  if (curr === 'blob') return ALIEN_BONUS.MEDIUM;
+  if (curr === 'leader' && bothGroobZerb) return ALIEN_BONUS.MEDIUM;
+
+  // 🎖️ NORMAL: standard team wins (Alien team, Village team, Oracle-as-Minion)
+  return ALIEN_BONUS.NORMAL;
+}
+
+// Calculate alien-mode points: base pool + role bonus for winners
+function calculateAlienGamePoints(players, winners, totalPlayerCount, gameContext) {
+  const { originalCards = {}, finalCards = {}, alienAppState = {}, eliminated = [] } = gameContext || {};
+  const loserCount = totalPlayerCount - winners.length;
+  const totalPool = loserCount * LOSS_PER_PLAYER * 2;
+  const baseShare = winners.length > 0 ? Math.round(totalPool / winners.length) : 0;
+
+  const results = {};
+  players.forEach(p => {
+    if (!winners.includes(p.id)) {
+      results[p.id] = -LOSS_PER_PLAYER;
+      return;
+    }
+    const bonus = getAlienBonus(p.id, originalCards, finalCards, alienAppState, eliminated);
+    results[p.id] = baseShare + bonus;
+  });
+  return results;
+}
+
 function getRank(points) {
   let rank = RANKS[0];
   for (const r of RANKS) {
@@ -61,4 +135,4 @@ function checkRankUp(oldPoints, newPoints) {
   return { ranked: false };
 }
 
-module.exports = { RANKS, MAX_POINTS, LOSS_PER_PLAYER, getRank, getNextRank, calculateGamePoints, clampPoints, checkRankUp };
+module.exports = { RANKS, MAX_POINTS, LOSS_PER_PLAYER, ALIEN_BONUS, getRank, getNextRank, calculateGamePoints, calculateAlienGamePoints, clampPoints, checkRankUp };
