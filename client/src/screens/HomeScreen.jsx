@@ -7,6 +7,7 @@ import ProfileBar, { GoogleLoginButton } from '../components/ProfileBar';
 import Leaderboard from '../components/Leaderboard';
 import RoleLibrary from '../components/RoleLibrary';
 import UpdatePopup from '../components/UpdatePopup';
+import TabWarpTransition from '../components/TabWarpTransition';
 
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
@@ -138,39 +139,48 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
 
       {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} />}
 
+      {/* Warp transition overlay (cosmic effect when switching tabs) */}
+      <TabWarpTransition gameMode={gameMode} />
+
       {/* Game mode tabs */}
       <div className="flex items-center justify-center gap-3 mb-4 relative z-10">
         <button
-          onClick={() => onGameModeChange?.('werewolf')}
-          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border ${
+          onClick={() => gameMode !== 'werewolf' && onGameModeChange?.('werewolf')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
             gameMode !== 'alien'
               ? 'bg-moon-400/20 border-moon-400/50 text-moon-300 shadow-[0_0_12px_rgba(196,168,107,0.2)]'
-              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:scale-105'
           }`}
         >
           Werewolf
         </button>
         <button
-          onClick={() => onGameModeChange?.('alien')}
-          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border ${
+          onClick={() => gameMode !== 'alien' && onGameModeChange?.('alien')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
             gameMode === 'alien'
               ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
-              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:scale-105'
           }`}
         >
           Alien
         </button>
       </div>
 
-      <div className="text-center mb-6 sm:mb-8 relative z-10">
+      {/* Mode-keyed wrapper triggers fresh fade-in when gameMode changes */}
+      <div
+        key={gameMode}
+        className="text-center mb-6 sm:mb-8 relative z-10"
+        style={{ animation: 'modeContentFadeIn 0.9s ease-out' }}
+      >
         <img
           src={gameMode === 'alien' ? '/images/logo-game-alien.png' : '/images/logo-game.png'}
           alt={gameMode === 'alien' ? 'One Night Ultimate Alien' : 'One Night Ultimate Werewolf'}
           className={`w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-3 ${
             gameMode === 'alien'
-              ? 'drop-shadow-[0_0_24px_rgba(52,211,153,0.3)]'
+              ? 'drop-shadow-[0_0_24px_rgba(52,211,153,0.4)]'
               : 'drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]'
           }`}
+          style={{ animation: 'modeLogoFloat 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
           draggable={false}
         />
         <div className="max-w-xs mx-auto">
