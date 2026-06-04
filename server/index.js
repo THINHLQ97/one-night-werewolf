@@ -6,8 +6,10 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
+const { ALIEN_ROLES, isAlienAffiliation } = require('./alienRoles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
+const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults } = require('./alienGameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
@@ -571,6 +573,344 @@ async function runNightPhase(room) {
   startDayPhase(room);
 }
 
+// ─── Alien Night Phase ─────────────────────────────────────────────────────
+
+async function runAlienNightPhase(room) {
+  const { nightPhase, players } = room;
+  room.state = 'night';
+  room.nightLog = [];
+
+  // Pre-generate all app instructions for this night
+  generateNightInstructions(room);
+
+  io.to(room.code).emit('night_start');
+
+  const PHASE_LABELS = {
+    oracle: { name: 'Oracle', nameVi: 'Nhà Tiên Tri' },
+    aliens: { name: 'Aliens', nameVi: 'Alien' },
+    groob_zerb: { name: 'Groob & Zerb', nameVi: 'Groob & Zerb' },
+    leader: { name: 'Leader', nameVi: 'Thủ Lĩnh' },
+    cow: { name: 'Cow', nameVi: 'Bò' },
+    rascal: { name: 'Rascal', nameVi: 'Quỷ Nhỏ' },
+    exposer: { name: 'Exposer', nameVi: 'Kẻ Phơi Bày' },
+    psychic: { name: 'Psychic', nameVi: 'Ngoại Cảm' },
+    mortician: { name: 'Mortician', nameVi: 'Nhà Quàn' },
+    blob: { name: 'Blob', nameVi: 'Blob' },
+  };
+
+  for (let i = 0; i < nightPhase.roleOrder.length; i++) {
+    if (room.state !== 'night') break;
+
+    const phase = nightPhase.roleOrder[i];
+    nightPhase.currentRoleIndex = i;
+
+    const label = PHASE_LABELS[phase] || { name: phase, nameVi: phase };
+
+    // After oracle phase, generate alien instruction (may depend on oracle decision)
+    if (phase === 'aliens') {
+      generateAlienInstructionPostOracle(room);
+    }
+
+    // Determine which players act in this phase
+    let actingPlayers = [];
+    switch (phase) {
+      case 'oracle':
+        actingPlayers = players.filter(p => room.originalCards[p.id] === 'oracle');
+        break;
+      case 'aliens':
+        actingPlayers = players.filter(p => isAlienAffiliation(room.originalCards[p.id]));
+        // Oracle (if joined alien) does NOT wake with aliens — she's like Minion (one-way knowledge)
+        break;
+      case 'groob_zerb':
+        actingPlayers = players.filter(p => room.originalCards[p.id] === 'groob' || room.originalCards[p.id] === 'zerb');
+        break;
+      case 'leader':
+        actingPlayers = players.filter(p => room.originalCards[p.id] === 'leader');
+        break;
+      case 'cow':
+        actingPlayers = players.filter(p => room.originalCards[p.id] === 'cow');
+        break;
+      default:
+        actingPlayers = players.filter(p => room.originalCards[p.id] === phase);
+        break;
+    }
+
+    // Build public announcement from app instruction
+    let publicAnnounce = null;
+    const appInst = room.alienAppState;
+    if (phase === 'oracle' && appInst.oracleQuestion) {
+      publicAnnounce = `🤖 → Oracle: ${appInst.oracleQuestion.question}`;
+    } else if (phase === 'aliens' && appInst.alienInstruction) {
+      publicAnnounce = appInst.alienInstruction.publicAnnounce;
+    } else if (phase === 'rascal' && appInst.rascalInstruction) {
+      publicAnnounce = appInst.rascalInstruction.publicAnnounce;
+    } else if (phase === 'exposer' && appInst.exposerInstruction) {
+      publicAnnounce = appInst.exposerInstruction.publicAnnounce;
+    } else if (phase === 'psychic') {
+      const pInsts = appInst.psychicInstructions || {};
+      const firstInst = Object.values(pInsts)[0];
+      if (firstInst) publicAnnounce = firstInst.publicAnnounce;
+    } else if (phase === 'mortician' && appInst.morticianInstruction) {
+      publicAnnounce = appInst.morticianInstruction.publicAnnounce;
+    } else if (phase === 'blob' && appInst.blobInstruction) {
+      publicAnnounce = appInst.blobInstruction.publicAnnounce;
+    }
+
+    // Emit night_role_called with public app announcement
+    const roleData = ALIEN_ROLES[phase] || ALIEN_ROLES[phase.replace('_', '')] || {};
+    io.to(room.code).emit('night_role_called', {
+      role: phase,
+      roleName: label.nameVi,
+      instruction: roleData.nightInstruction || `${label.nameVi}, hãy mở mắt.`,
+      closeInstruction: roleData.nightClose || `${label.nameVi}, hãy nhắm mắt lại.`,
+      appAnnounce: publicAnnounce,
+    });
+
+    if (actingPlayers.length > 0) {
+      const realPlayers = actingPlayers.filter(p => !p.isBot);
+      const botPlayers = actingPlayers.filter(p => p.isBot);
+
+      // Broadcast special event start to ALL when Oracle gets number_guess
+      if (phase === 'oracle' && room.alienAppState?.oracleQuestion?.id === 'number_guess') {
+        const oraclePlayer = players.find(p => room.originalCards[p.id] === 'oracle');
+        io.to(room.code).emit('oracle_special_event', {
+          stage: 'start',
+          oracleId: oraclePlayer?.id || null,
+          oracleName: oraclePlayer?.name || null,
+        });
+      }
+
+      realPlayers.forEach(p => {
+        const actionData = getAlienNightActionData(room, phase, p.id);
+        io.to(p.id).emit('night_action_request', { role: phase, ...actionData });
+      });
+
+      await new Promise(resolve => {
+        nightPhase.pendingPlayerIds = actingPlayers.map(p => p.id);
+        nightPhase.pendingActions = [];
+        nightPhase.resolver = resolve;
+        nightPhase.timer = setTimeout(() => {
+          nightPhase.pendingPlayerIds = [];
+          nightPhase.resolver = null;
+          resolve();
+        }, 30000);
+
+        if (botPlayers.length > 0) {
+          setTimeout(() => {
+            botPlayers.forEach(bot => {
+              if (!nightPhase.pendingPlayerIds.includes(bot.id)) return;
+
+              if (!room.nightLog) room.nightLog = [];
+
+              const action = decideAlienBotAction(room, bot.id, phase);
+              const result = processAlienNightAction(room, bot.id, phase, action);
+              room.nightLog.push({ role: phase, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
+
+              // Broadcast Oracle special event result to ALL
+              if (phase === 'oracle' && result.oracleChallenge) {
+                io.to(room.code).emit('oracle_special_event', {
+                  stage: 'result',
+                  correct: result.oracleChallenge === 'correct',
+                  secretNumber: result.secretNumber,
+                  answer: result.answer,
+                });
+              }
+
+              // Broadcast publicAnnounce and appReply (if different) — both go to all players
+              if (result.publicAnnounce) {
+                io.to(room.code).emit('alien_app_announce', { message: result.publicAnnounce });
+              }
+              if (result.appReply && result.appReply !== result.publicAnnounce) {
+                io.to(room.code).emit('alien_app_announce', { message: result.appReply });
+              }
+
+              const idx2 = nightPhase.pendingPlayerIds.indexOf(bot.id);
+              if (idx2 !== -1) nightPhase.pendingPlayerIds.splice(idx2, 1);
+              nightPhase.pendingActions.push({ playerId: bot.id, role: phase, action: {} });
+            });
+
+            if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+              clearTimeout(nightPhase.timer);
+              const r = nightPhase.resolver;
+              nightPhase.resolver = null;
+              r();
+            }
+          }, 1500);
+        }
+      });
+    } else {
+      await new Promise(r => setTimeout(r, 3000));
+    }
+
+    // Broadcast result announcements from oracle
+    if (phase === 'oracle' && room.nightLog?.length > 0) {
+      const oracleLog = room.nightLog.find(l => l.role === 'oracle');
+      if (oracleLog?.result?.publicAnnounce) {
+        io.to(room.code).emit('alien_app_announce', { message: oracleLog.result.publicAnnounce });
+      }
+    }
+
+    io.to(room.code).emit('night_role_done', { role: phase });
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  // ── Oracle Vision: if Oracle guessed correctly, show all cards + night log ──
+  if (room.alienAppState?.oracleStaysAwake) {
+    const oraclePlayer = players.find(p => room.originalCards[p.id] === 'oracle');
+
+    // Oracle stays awake all night → everyone knows who Oracle is (official rules)
+    if (oraclePlayer) {
+      const oracleSeat = players.findIndex(pp => pp.id === oraclePlayer.id) + 1;
+      room.alienAppState.oracleRevealed = {
+        id: oraclePlayer.id,
+        name: oraclePlayer.name,
+        seat: oracleSeat,
+      };
+      io.to(room.code).emit('oracle_identity_revealed', {
+        oracleId: oraclePlayer.id,
+        oracleName: oraclePlayer.name,
+        oracleSeat: oracleSeat,
+      });
+    }
+
+    if (oraclePlayer && !oraclePlayer.isBot) {
+      // Build full vision data
+      const allCards = {};
+      players.forEach(p => {
+        allCards[p.id] = {
+          name: p.name,
+          seat: players.findIndex(pp => pp.id === p.id) + 1,
+          originalRole: room.originalCards[p.id],
+          currentRole: room.currentCards[p.id],
+        };
+      });
+      const centerCards = {
+        center0: room.currentCards.center0,
+        center1: room.currentCards.center1,
+        center2: room.currentCards.center2,
+      };
+      // Sanitize night log: resolve player IDs to names
+      const nameMap = {};
+      players.forEach(p => { nameMap[p.id] = p.name; });
+      const visionLog = (room.nightLog || []).map(entry => ({
+        ...entry,
+        targetName: entry.action?.targetPlayer ? nameMap[entry.action.targetPlayer] : null,
+        target1Name: entry.action?.target1 ? nameMap[entry.action.target1] : null,
+        target2Name: entry.action?.target2 ? nameMap[entry.action.target2] : null,
+      }));
+
+      io.to(oraclePlayer.id).emit('oracle_vision', {
+        allCards,
+        centerCards,
+        nightLog: visionLog,
+      });
+
+      // Brief pause for Oracle to read overlay (5s) before day phase
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+
+  startDayPhase(room);
+}
+
+function decideAlienBotAction(room, botId, phase) {
+  const others = room.players.filter(p => p.id !== botId);
+  const randomPlayer = () => others[Math.floor(Math.random() * others.length)];
+  const randomCenter = () => ['center0', 'center1', 'center2'][Math.floor(Math.random() * 3)];
+
+  switch (phase) {
+    case 'oracle': {
+      const q = room.alienAppState.oracleQuestion;
+      if (!q) return { answer: 'Không' };
+      if (q.type === 'choice') {
+        // Bots: prefer NOT to switch teams (20% yes for switch questions)
+        if (q.id === 'change_team') return { answer: Math.random() < 0.20 ? q.options[0] : q.options[1] };
+        return { answer: q.options[Math.floor(Math.random() * q.options.length)] };
+      }
+      if (q.type === 'pick_number') return { answer: String(Math.floor(Math.random() * (q.max - q.min + 1)) + q.min) };
+      return { answer: 'Không' };
+    }
+    case 'aliens': {
+      const inst = room.alienAppState.alienInstruction;
+      if (inst.type === 'individual_view' || inst.type === 'group_view') {
+        // For 'center' target, pick a center slot. For other targets, pick a random other player.
+        if (inst.target === 'center') return { targetId: randomCenter() };
+        return { targetId: randomPlayer().id };
+      }
+      // stare / rotate_left / rotate_right / show / swap_cards / nothing — no input needed
+      return {};
+    }
+    case 'groob_zerb':
+    case 'leader':
+    case 'cow':
+      return {};
+    case 'rascal': {
+      const inst = room.alienAppState.rascalInstruction;
+      if (!inst.mandatory && Math.random() < 0.3) return { skip: true };
+      switch (inst.type) {
+        case 'troublemaker': {
+          const t1 = randomPlayer();
+          const pool = others.filter(p => p.id !== t1.id);
+          const t2 = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+          return t2 ? { target1: t1.id, target2: t2.id } : { skip: true };
+        }
+        case 'robber': return { targetPlayer: randomPlayer().id };
+        case 'drunk': return { centerSlot: randomCenter() };
+        case 'village_idiot': return { direction: Math.random() < 0.5 ? 'left' : 'right' };
+        default: return {};
+      }
+    }
+    case 'exposer': {
+      const inst = room.alienAppState.exposerInstruction;
+      if (Math.random() < 0.2) return { skip: true };
+      const slots = ['center0', 'center1', 'center2'];
+      const shuffled = slots.sort(() => Math.random() - 0.5);
+      return { centerSlots: shuffled.slice(0, inst.count) };
+    }
+    case 'psychic': {
+      const inst = room.alienAppState.psychicInstructions?.[botId];
+      if (!inst) return {};
+      // For 'specific' or 'neighbors' 2-card: auto-resolve, no need to pick
+      if (inst.viewType === 'specific' || (inst.viewType === 'neighbors' && inst.count === 2)) {
+        return {};
+      }
+      // For 'odd' / 'even' / 'neighbors' single: pick from pool
+      const targets = (function() {
+        const idx = room.players.findIndex(p => p.id === botId);
+        const len = room.players.length;
+        const mySeat = idx + 1;
+        if (inst.viewType === 'neighbors') {
+          const left = room.players[(idx - 1 + len) % len];
+          const right = room.players[(idx + 1) % len];
+          return [left.id, right.id];
+        }
+        if (inst.viewType === 'odd') {
+          return room.players.map((p, i) => ({ id: p.id, seat: i + 1 })).filter(p => p.seat % 2 === 1 && p.seat !== mySeat).map(p => p.id);
+        }
+        if (inst.viewType === 'even') {
+          return room.players.map((p, i) => ({ id: p.id, seat: i + 1 })).filter(p => p.seat % 2 === 0 && p.seat !== mySeat).map(p => p.id);
+        }
+        return [];
+      })();
+      const shuffled = targets.sort(() => Math.random() - 0.5);
+      const picked = shuffled.slice(0, inst.count || 1);
+      return picked.length === 1 ? { targetId: picked[0] } : { targetIds: picked };
+    }
+    case 'mortician': {
+      const inst = room.alienAppState.morticianInstruction;
+      if (inst.side === 'choice') {
+        const { left, right } = require('./alienGameLogic').getNeighborIds(room, botId);
+        return { targetId: Math.random() < 0.5 ? left : right };
+      }
+      return {};
+    }
+    case 'blob':
+      return {};
+    default:
+      return {};
+  }
+}
+
 function startDayPhase(room) {
   room.state = 'day';
 
@@ -595,6 +935,7 @@ function startDayPhase(room) {
     tokenPool: pool,
     shieldedPlayer: room.shieldedPlayer || null,
     votingPhase: false,
+    exposedCenter: room.exposedCenter || {},  // Public: center cards flipped face-up by Exposer
   });
 
   // After discussion ends → start 1-minute voting phase
@@ -680,6 +1021,12 @@ function checkAllVoted(room) {
 function endGame(room) {
   if (room.dayPhase?.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
 
+  // Alien mode: no hunter phase, go straight to results
+  if (room.settings.gameMode === 'alien') {
+    finishGame(room);
+    return;
+  }
+
   const { hunters } = getEliminatedHunters(room);
 
   if (hunters.length > 0 && !room.dayPhase.hunterTarget) {
@@ -731,7 +1078,9 @@ function endGame(room) {
 
 async function finishGame(room) {
   if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
-  const results = computeResults(room);
+  const results = room.settings.gameMode === 'alien'
+    ? computeAlienResults(room)
+    : computeResults(room);
 
   // Sanitize nightLog: resolve player IDs to names in actions
   const nameMap = {};
@@ -795,10 +1144,14 @@ io.on('connection', socket => {
   });
 
   // ── Create room ──
-  socket.on('create_room', async ({ name, token, authToken }, cb) => {
+  socket.on('create_room', async ({ name, token, authToken, gameMode }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
     const authUser = authToken ? await authenticateToken(authToken) : null;
     const room = createRoom(socket.id, name.trim(), token, authUser?.id || null);
+    if (gameMode === 'alien') {
+      room.settings.gameMode = 'alien';
+      room.settings.selectedRoles = ['alien', 'alien', 'cow', 'oracle', 'rascal', 'exposer', 'psychic'];
+    }
     socket.join(room.code);
     socket.roomCode = room.code;
     if (authUser) socket.userId = authUser.id;
@@ -825,8 +1178,14 @@ io.on('connection', socket => {
 
     addBotPlayers(room, count, generateBotId, generateBotName);
 
+    if (gameMode === 'alien') {
+      room.settings.gameMode = 'alien';
+      if (!selectedRoles) {
+        room.settings.selectedRoles = ['alien', 'alien', 'cow', 'oracle', 'rascal', 'exposer', 'psychic'];
+      }
+    }
     if (selectedRoles) room.settings.selectedRoles = selectedRoles;
-    if (gameMode) room.settings.gameMode = gameMode;
+    if (gameMode && gameMode !== 'alien') room.settings.gameMode = gameMode;
 
     cb({
       code: room.code,
@@ -990,7 +1349,7 @@ io.on('connection', socket => {
       isSimulation: !!room.isSimulation,
       preferredHostRole: room.preferredHostRole || null,
       roleId,
-      role: roleId ? ROLES[roleId] : null,
+      role: roleId ? (room.settings.gameMode === 'alien' ? ALIEN_ROLES[roleId] : ROLES[roleId]) : null,
       currentRoleId,
       votes: room.dayPhase?.votes || {},
       timerEnd: room.dayPhase?.timerEnd || null,
@@ -1032,34 +1391,44 @@ io.on('connection', socket => {
     if (!room || room.hostId !== socket.id) return cb?.({ error: 'Không có quyền' });
     if (room.players.length < 3) return cb?.({ error: 'Cần ít nhất 3 người chơi' });
 
+    const isAlien = room.settings.gameMode === 'alien';
+    const ROLE_DEFS = isAlien ? ALIEN_ROLES : ROLES;
+
     try {
-      startGame(room);
+      if (isAlien) {
+        startAlienGame(room);
+      } else {
+        startGame(room);
+      }
     } catch (e) {
       return cb?.({ error: e.message });
     }
 
-    // Send each real player their private role (skip bots)
     room.players.filter(p => !p.isBot).forEach(p => {
       io.to(p.id).emit('role_assigned', {
         roleId: room.originalCards[p.id],
-        role: ROLES[room.originalCards[p.id]],
+        role: ROLE_DEFS[room.originalCards[p.id]],
       });
     });
 
-    broadcastRoomList(); // Remove from public list since game started
+    broadcastRoomList();
 
     io.to(room.code).emit('game_started', {
       state: 'role_reveal',
       playerCount: room.players.length,
       hasAlphaWolf: room.hasAlphaWolf || false,
+      gameMode: isAlien ? 'alien' : 'werewolf',
     });
 
     cb?.({ ok: true });
 
-    // After 15s role reveal, start night
     setTimeout(() => {
       if (room.state === 'role_reveal') {
-        runNightPhase(room);
+        if (isAlien) {
+          runAlienNightPhase(room);
+        } else {
+          runNightPhase(room);
+        }
       }
     }, 15000);
   });
@@ -1075,6 +1444,47 @@ io.on('connection', socket => {
 
     const playerName = room.players.find(p => p.id === socket.id)?.name || '?';
     if (!room.nightLog) room.nightLog = [];
+
+    // ── Alien mode: use alien game logic (role = phase name) ──
+    if (room.settings.gameMode === 'alien') {
+      const phase = role;
+      const result = processAlienNightAction(room, socket.id, phase, action);
+
+      room.nightLog.push({ role: phase, playerId: socket.id, playerName, action: { ...action }, result: { ...result } });
+
+      if (Object.keys(result).length > 0) {
+        socket.emit('night_action_result', { role: phase, result });
+      }
+
+      // Broadcast Oracle special event result to ALL (when human Oracle answers)
+      if (phase === 'oracle' && result.oracleChallenge) {
+        io.to(room.code).emit('oracle_special_event', {
+          stage: 'result',
+          correct: result.oracleChallenge === 'correct',
+          secretNumber: result.secretNumber,
+          answer: result.answer,
+        });
+      }
+
+      // Broadcast publicAnnounce and appReply (both go to all players) — avoid duplicate if identical
+      if (result.publicAnnounce) {
+        io.to(room.code).emit('alien_app_announce', { message: result.publicAnnounce });
+      }
+      if (result.appReply && result.appReply !== result.publicAnnounce) {
+        io.to(room.code).emit('alien_app_announce', { message: result.appReply });
+      }
+
+      nightPhase.pendingPlayerIds.splice(idx, 1);
+      nightPhase.pendingActions.push({ playerId: socket.id, role: phase, action });
+
+      if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+        clearTimeout(nightPhase.timer);
+        const resolve = nightPhase.resolver;
+        nightPhase.resolver = null;
+        resolve();
+      }
+      return;
+    }
 
     // ── Doppelganger multi-step handling ──
     if (role === 'doppelganger') {

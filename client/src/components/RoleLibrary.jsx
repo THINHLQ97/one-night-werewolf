@@ -255,33 +255,170 @@ const ROLES = [
     nightScript: 'Cận Vệ không thức dậy ban đêm.',
     howToPlay: 'Ban đêm: Không có hành động.\nBan ngày: Khi bỏ phiếu, thay vì chọn người để LOẠI, bạn chọn người để BẢO VỆ.\n💪 Người được bạn chỉ vào sẽ KHÔNG THỂ bị treo cổ!\n⚠️ Nếu người được bảo vệ bị vote nhiều nhất, người có phiếu cao thứ 2 (≥2 phiếu) sẽ bị loại thay.\nMục tiêu: Bảo vệ đúng người phe Dân. Đừng tiết lộ mình là Cận Vệ — Sói sẽ tránh vote người được bảo vệ.',
   },
+
+  // ─── ONE NIGHT ULTIMATE ALIEN ────────────────────────────────────────────────
+  {
+    id: 'oracle', name: 'Oracle', nameVi: 'Nhà Tiên Tri', emoji: '🔮',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: -9, expansion: 'alien',
+    lore: 'Nhà Tiên Tri là người đầu tiên thức dậy mỗi đêm — trước cả Alien. Cô nhận được một câu hỏi bí ẩn từ vũ trụ, và câu trả lời của cô sẽ ảnh hưởng đến toàn bộ diễn biến đêm hôm đó. Đôi khi cô quyết định số phận của Alien, đôi khi cô đổi chính bài mình, và đôi khi cô phải đánh cược bằng cả vị trí ngồi. Không ai biết cô đã trả lời gì — nhưng Tiếng vọng từ không gian sẽ công bố kết quả cho tất cả nghe.',
+    nightAction: 'Tiếng vọng hỏi 1 câu hỏi ngẫu nhiên. Bạn trả lời — câu trả lời ảnh hưởng cả đêm nay.',
+    winCondition: 'Thắng cùng phe Dân (trừ khi bị biến đổi bởi câu trả lời sai).',
+    tips: 'Cân nhắc kỹ trước khi trả lời. Mọi người đều nghe câu hỏi từ Tiếng vọng nhưng không biết bạn là ai.',
+    nightScript: 'Tiếng vọng phát: "Nhà Tiên Tri, hãy mở mắt và trả lời câu hỏi." Tiếng vọng hỏi câu hỏi ngẫu nhiên. Nhà Tiên Tri trả lời.',
+    howToPlay: 'Ban đêm: Thức dậy ĐẦU TIÊN (trước tất cả). Tiếng vọng hỏi 1 câu hỏi ngẫu nhiên:\n\n📋 CÁC CÂU HỎI CÓ THỂ:\n• "Đổi phe sang Alien?" → Có: bạn thành Tay Sai cho Alien (giống Minion). Không: trung thành phe Dân\n• "Xem 3 bài giữa?" → Có: Tiếng vọng cho xem 1-3 bài (thường ít hơn 3)\n• "Đổi bài với bài giữa?" → Drunk action. Tiếng vọng có thể từ chối\n• "Số ghế chẵn/lẻ?" → Tiếng vọng công bố lựa chọn của bạn (có thể nói dối)\n• "Xem bài người chơi số mấy?" → Tiếng vọng có thể cho bạn xem bài người khác (trêu chọc)\n• "Đoán số 1-10" → 10% đúng = thấu thị suốt đêm. 90% sai = Chế độ Săn Oracle!\n\n⚠️ Nếu bạn không trả lời (AFK), Tiếng vọng tự chọn ngẫu nhiên!\nMọi người đều nghe câu hỏi qua Tiếng vọng từ không gian.',
+  },
+  {
+    id: 'alien', name: 'Alien', nameVi: 'Người Ngoài Hành Tinh', emoji: '👽',
+    team: 'alien', teamLabel: 'Phe Alien', nightOrder: 1, expansion: 'alien',
+    lore: 'Từ những vì sao xa xôi, chúng đến trong im lặng. Alien xâm nhập ngôi làng dưới hình dạng con người, nhưng mỗi đêm chúng cùng thức dậy, nhìn nhau bằng đôi mắt lạ lẫm, và nhận chỉ thị từ con tàu mẹ (App). Nhiệm vụ của chúng thay đổi mỗi đêm — đôi khi do thám, đôi khi phá hoại — nhưng mục tiêu luôn là: tồn tại đến bình minh.',
+    nightAction: 'Mở mắt nhìn đồng bọn Alien. Tiếng vọng chỉ thị hành động (xem bài, swap, hoặc không làm gì).',
+    winCondition: 'Thắng nếu không có Alien nào bị loại.',
+    tips: 'Chú ý chỉ thị Tiếng vọng — nó thay đổi mỗi game. Phối hợp với đồng bọn qua ánh mắt.',
+    nightScript: 'Tiếng vọng: "Alien, mở mắt và nhìn nhau." Sau đó Tiếng vọng chỉ thị hành động cụ thể. "Alien, nhắm mắt lại."',
+    howToPlay: 'Ban đêm: Mở mắt cùng tất cả Alien (gồm Synthetic, Groob, Zerb).\n\n📋 APP CHỈ THỊ NGẪU NHIÊN:\n• Mỗi Alien xem 1 bài (hàng xóm/trái/phải/giữa)\n• Tất cả Alien cùng xem 1 bài\n• Hoán đổi bài với nhau (nếu Oracle kích hoạt)\n• Không làm gì — chỉ nhìn nhau\n\n🐄 NẾU CÓ BÒ: Nếu bạn ngồi cạnh Bò, bạn PHẢI tap nắm đấm của Bò.\n\nBan ngày: Phủ nhận mình là Alien. Đổ tội cho người khác.\nMục tiêu: Sống sót — không để ai bị vote loại.',
+  },
+  {
+    id: 'syntheticalien', name: 'Synthetic Alien', nameVi: 'Alien Nhân Tạo', emoji: '🤖',
+    team: 'synthetic', teamLabel: 'Phe Riêng', nightOrder: 1, expansion: 'alien',
+    lore: 'Alien Nhân Tạo không phải sinh vật tự nhiên — hắn là sản phẩm của công nghệ ngoài hành tinh, được tạo ra để thử nghiệm. Hắn mở mắt cùng Alien, nhìn thấy tất cả, nhưng mục tiêu hoàn toàn ngược lại: hắn muốn BỊ PHÁ HỦY. Chỉ khi bị loại, sứ mệnh mới hoàn thành. Nếu Synthetic bị giết, cả Alien lẫn Dân đều thua — chỉ Synthetic thắng.',
+    nightAction: 'Mở mắt cùng Alien. Nhìn thấy tất cả đồng bọn.',
+    winCondition: 'Thắng NẾU BỊ GIẾT. Nếu Synthetic chết → cả Alien lẫn Dân đều thua.',
+    tips: 'Hành xử đáng ngờ vừa đủ để bị vote, nhưng đừng lộ liễu. Giống Tanner nhưng nguy hiểm hơn.',
+    nightScript: 'Synthetic mở mắt cùng Alien. Không có hành động riêng.',
+    howToPlay: 'Ban đêm: Mở mắt cùng tất cả Alien — bạn biết ai là Alien.\n\n⚠️ ĐIỀU KIỆN THẮNG ĐẶC BIỆT:\n• Bạn thắng NẾU bạn BỊ GIẾT\n• Nếu bạn bị giết → Alien team THUA, Village team THUA, chỉ bạn THẮNG\n\nBan ngày: Cố gắng bị vote loại! Nhưng đừng quá lộ liễu.\nMục tiêu: Bị loại = bạn thắng. Sống sót = bạn thua.',
+  },
+  {
+    id: 'groob', name: 'Groob', nameVi: 'Groob', emoji: '👾',
+    team: 'alien', teamLabel: 'Phe Alien', nightOrder: 1, expansion: 'alien',
+    lore: 'Groob là một chiến binh ngoài hành tinh nóng nảy. Hắn thuộc phe Alien, nhưng khi đối thủ truyền kiếp Zerb cũng có mặt, mọi thứ thay đổi. Hai kẻ này ghét nhau tận xương — mỗi người chỉ thắng khi đối phương bị tiêu diệt.',
+    nightAction: 'Mở mắt cùng Alien (phase 1A), rồi mở mắt riêng với Zerb (phase 1D).',
+    winCondition: 'Nếu chỉ có Groob → Alien thường. Nếu cả Groob & Zerb → Groob thắng khi Zerb chết & mình sống.',
+    tips: 'Khi cả 2 có mặt: chiến thuật giống Tanner — cố gắng đẩy Zerb ra.',
+    nightScript: 'Phase 1A: Groob mở mắt cùng Alien. Phase 1D: Groob & Zerb mở mắt nhìn nhau.',
+    howToPlay: 'Ban đêm:\n• Phase 1: Mở mắt cùng TẤT CẢ Alien — biết đồng bọn\n• Phase 2: Mở mắt RIÊNG với Zerb — biết đối thủ\n\n📋 ĐIỀU KIỆN THẮNG:\n• Nếu chỉ có Groob (Zerb ở giữa): Bạn là Alien thường → thắng nếu không Alien nào bị loại\n• Nếu cả Groob & Zerb: BẠN THẮNG KHI ZERB CHẾT & BẠN SỐNG\n\nBan ngày: Đẩy Zerb ra ngoài!\nMục tiêu: Tùy thuộc vào Zerb có trong game không.',
+  },
+  {
+    id: 'zerb', name: 'Zerb', nameVi: 'Zerb', emoji: '👾',
+    team: 'alien', teamLabel: 'Phe Alien', nightOrder: 1, expansion: 'alien',
+    lore: 'Zerb là kẻ ranh mãnh trong số các Alien. Hắn biết cách thao túng, biết cách đổ lỗi, và biết cách khiến Groob — kẻ thù truyền kiếp — phải trả giá. Khi cả hai có mặt, cuộc chơi trở thành đấu trí tay đôi.',
+    nightAction: 'Mở mắt cùng Alien (phase 1A), rồi mở mắt riêng với Groob (phase 1D).',
+    winCondition: 'Nếu chỉ có Zerb → Alien thường. Nếu cả Groob & Zerb → Zerb thắng khi Groob chết & mình sống.',
+    tips: 'Ngược lại với Groob: cố gắng đẩy Groob ra.',
+    nightScript: 'Phase 1A: Zerb mở mắt cùng Alien. Phase 1D: Groob & Zerb mở mắt nhìn nhau.',
+    howToPlay: 'Ban đêm:\n• Phase 1: Mở mắt cùng TẤT CẢ Alien — biết đồng bọn\n• Phase 2: Mở mắt RIÊNG với Groob — biết đối thủ\n\n📋 ĐIỀU KIỆN THẮNG:\n• Nếu chỉ có Zerb (Groob ở giữa): Bạn là Alien thường\n• Nếu cả Groob & Zerb: BẠN THẮNG KHI GROOB CHẾT & BẠN SỐNG\n\nBan ngày: Đẩy Groob ra ngoài!\nMục tiêu: Tùy thuộc vào Groob có trong game không.',
+  },
+  {
+    id: 'leader', name: 'Leader', nameVi: 'Thủ Lĩnh', emoji: '👑',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 3, expansion: 'alien',
+    lore: 'Thủ Lĩnh là người duy nhất trong làng biết chính xác Alien đang ẩn ở đâu. Trong đêm, tất cả Alien nhắm mắt và giơ ngón cái — Thủ Lĩnh nhìn thấy tất cả. Đây là sức mạnh cực lớn, nhưng cũng là gánh nặng: nếu tất cả Alien chỉ vào Thủ Lĩnh, Alien thắng ngay lập tức.',
+    nightAction: 'Mở mắt. Alien giơ ngón cái — bạn thấy vị trí tất cả Alien.',
+    winCondition: 'Nếu không có cả Groob & Zerb → thắng cùng Dân. Nếu có cả 2 → thắng chỉ khi cả 2 đều sống. Nếu TẤT CẢ Alien chỉ vào bạn → Alien thắng.',
+    tips: 'Bạn biết ai là Alien — dùng thông tin khéo léo. Nhưng đừng để Alien biết bạn là Leader.',
+    nightScript: '"Thủ Lĩnh, hãy mở mắt. Alien, hãy giơ ngón cái lên." Thủ Lĩnh quan sát. "Thủ Lĩnh, nhắm mắt. Alien, hạ tay."',
+    howToPlay: 'Ban đêm: Mở mắt. Tất cả Alien (bao gồm Groob, Zerb, Synthetic) nhắm mắt và giơ ngón cái.\n\n📋 BẠN THẤY: Vị trí chính xác của tất cả Alien!\n\n📋 ĐIỀU KIỆN THẮNG PHỨC TẠP:\n• Không có cả Groob & Zerb → thắng cùng phe Dân\n• Có cả Groob & Zerb → thắng CHỈ KHI cả 2 đều SỐNG\n• Nếu TẤT CẢ Alien chỉ vào bạn → Alien thắng (bất kể có Alien bị giết)\n\nBan ngày: Chia sẻ thông tin khéo léo mà không để Alien biết bạn là Leader.',
+  },
+  {
+    id: 'cow', name: 'Cow', nameVi: 'Bò', emoji: '🐄',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 5, expansion: 'alien',
+    lore: 'Bò là nhân vật đặc biệt — trong lượt Alien, tất cả mọi người giơ nắm đấm, và Alien ngồi cạnh Bò phải tap nắm đấm để "tip" Bò. Bò sẽ biết mình có bị tap hay không — từ đó suy luận có Alien ngồi bên cạnh không.',
+    nightAction: 'Giơ nắm đấm trong lượt Alien. Alien cạnh bạn phải tap. Bạn biết có bị tap không.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Nếu bị tap → 1 trong 2 hàng xóm là Alien. Nếu không bị tap → cả 2 hàng xóm an toàn.',
+    nightScript: '"Mọi người giơ nắm đấm. Alien cạnh Bò, hãy tap nắm đấm." Bò cảm nhận. "Hạ tay."',
+    howToPlay: 'Ban đêm: Trong lượt Alien, TẤT CẢ mọi người giơ nắm đấm (để không lộ ai là Bò).\n\n🐄 NẾU BỊ TAP: Có ÍT NHẤT 1 Alien ngồi cạnh bạn (trái hoặc phải)\n🐄 NẾU KHÔNG BỊ TAP: Cả 2 người cạnh bạn đều KHÔNG phải Alien\n\nBan ngày: Chia sẻ thông tin tình trạng tap để thu hẹp nghi phạm.\n⚠️ Alien biết Cow ở đâu (nếu đã tap) — cẩn thận khi khai báo.',
+  },
+  {
+    id: 'rascal', name: 'Rascal', nameVi: 'Quỷ Nhỏ', emoji: '😈',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 7, expansion: 'alien',
+    lore: 'Quỷ Nhỏ là kẻ phá rối đa tài — mỗi đêm Tiếng vọng giao cho hắn một nhiệm vụ khác nhau. Có đêm hắn hoán đổi bài 2 người, có đêm hắn ăn trộm bài, có đêm hắn xoay bài cả bàn. Không ai — kể cả Quỷ Nhỏ — biết trước đêm nay sẽ phải làm gì cho đến khi Tiếng vọng ra lệnh.',
+    nightAction: 'Tiếng vọng chỉ thị 1 hành động ngẫu nhiên: Troublemaker, Robber, Drunk, hoặc Village Idiot.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Ghi nhớ Tiếng vọng yêu cầu gì. Mọi người đều nghe chỉ thị — khai báo trung thực giúp Dân rất nhiều.',
+    nightScript: 'Tiếng vọng: "Quỷ Nhỏ, mở mắt. Bạn [PHẢI/CÓ THỂ] [hành động]." Quỷ Nhỏ thực hiện. "Nhắm mắt."',
+    howToPlay: 'Ban đêm: Tiếng vọng chỉ thị NGẪU NHIÊN 1 trong các action:\n\n📋 CÁC ACTION CÓ THỂ:\n• 🔄 Troublemaker: Hoán đổi bài 2 người khác\n• 🦝 Robber: Đổi bài bạn với 1 người (xem bài mới)\n• 🍺 Drunk: Đổi bài bạn với 1 bài giữa (không xem)\n• 🤪 Village Idiot: Xoay bài tất cả sang trái/phải\n\n⚠️ Tiếng vọng dùng "PHẢI" (bắt buộc) hoặc "CÓ THỂ" (tùy chọn)\n\nBan ngày: Khai báo Tiếng vọng đã yêu cầu gì — rất quan trọng cho suy luận.',
+  },
+  {
+    id: 'exposer', name: 'Exposer', nameVi: 'Kẻ Phơi Bày', emoji: '🔦',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 10, expansion: 'alien',
+    lore: 'Kẻ Phơi Bày có khả năng vén màn bí mật ở trung tâm bàn chơi. Tiếng vọng chỉ thị cô lật 1, 2, hoặc 3 bài giữa — những bài này sẽ úp lên cho tất cả cùng thấy vào ban ngày. Thông tin từ bài lật giúp cả làng thu hẹp khả năng.',
+    nightAction: 'Tiếng vọng chỉ thị lật 1, 2, hoặc 3 bài giữa. Lật đúng số đó hoặc không lật gì.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Bài lật giúp mọi người loại trừ vai. Nhưng Alien cũng thấy — cân nhắc kỹ.',
+    nightScript: 'Tiếng vọng: "Kẻ Phơi Bày, mở mắt. Bạn CÓ THỂ lật [N] bài giữa." Phơi Bày lật hoặc bỏ qua. "Nhắm mắt."',
+    howToPlay: 'Ban đêm: Tiếng vọng chỉ thị số bài giữa bạn CÓ THỂ lật:\n\n📋 QUY TẮC:\n• Tiếng vọng nói lật 1 → lật đúng 1 hoặc 0\n• Tiếng vọng nói lật 2 → lật đúng 2 hoặc 0 (KHÔNG được lật 1)\n• Tiếng vọng nói lật 3 → lật đúng 3 hoặc 0\n\nBài lật sẽ HIỂN THỊ cho TẤT CẢ vào ban ngày.\n\nBan ngày: Thông tin bài lật giúp thu hẹp các vai còn lại.',
+  },
+  {
+    id: 'psychic', name: 'Psychic', nameVi: 'Ngoại Cảm', emoji: '🧠',
+    team: 'village', teamLabel: 'Phe Dân', nightOrder: 11, expansion: 'alien',
+    lore: 'Ngoại Cảm có đôi mắt thấu thị — nhưng không phải lúc nào cũng kiểm soát được. Tiếng vọng quyết định cô sẽ xem ai: hàng xóm, người bên trái, người số chẵn, hay bài giữa. Mỗi đêm là một trải nghiệm khác biệt.',
+    nightAction: 'Tiếng vọng chỉ thị xem 1-2 bài. Target thay đổi mỗi game (hàng xóm, trái/phải, giữa, v.v.).',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Mọi người đều nghe Tiếng vọng chỉ thị cho bạn xem bài gì — dùng thông tin đó khi khai báo.',
+    nightScript: 'Tiếng vọng: "Ngoại Cảm, mở mắt. Hãy xem bài [target]." Ngoại Cảm xem. "Nhắm mắt."',
+    howToPlay: 'Ban đêm: Tiếng vọng chỉ thị NGẪU NHIÊN target:\n\n📋 CÁC TARGET CÓ THỂ:\n• Bài 1 người hàng xóm\n• Bài người bên trái/phải\n• 1 bài ở giữa\n\nSố bài xem: 1 hoặc 2 (Tiếng vọng quyết định)\n\n⚠️ Mọi người đều nghe Tiếng vọng nói bạn xem loại bài gì!\n\nBan ngày: Khai báo thông tin bạn đã thấy.',
+  },
+  {
+    id: 'mortician', name: 'Mortician', nameVi: 'Nhà Quàn', emoji: '⚰️',
+    team: 'mortician', teamLabel: 'Phe Riêng', nightOrder: 12, expansion: 'alien',
+    lore: 'Nhà Quàn sống bên lề xã hội — không thuộc Dân, không thuộc Alien. Cô chỉ quan tâm một điều: có ai ngã xuống bên cạnh cô không. Mỗi đêm, Tiếng vọng cho cô xem 0, 1, hoặc 2 bài hàng xóm — thông tin để cô tính toán nước đi ban ngày.',
+    nightAction: 'Tiếng vọng chỉ thị xem 0, 1, hoặc 2 bài hàng xóm.',
+    winCondition: 'Thắng nếu ÍT NHẤT 1 hàng xóm bị giết & mình sống sót.',
+    tips: 'Đẩy hàng xóm ra — nhưng đừng để bị loại theo. Biết bài hàng xóm giúp bạn lập kế hoạch.',
+    nightScript: 'Tiếng vọng: "Nhà Quàn, mở mắt. [Xem bài hàng xóm / Không xem gì]." Nhà Quàn thực hiện. "Nhắm mắt."',
+    howToPlay: 'Ban đêm: Tiếng vọng chỉ thị ngẫu nhiên:\n• 0 bài: Không xem gì\n• 1 bài: Xem bài 1 hàng xóm (Tiếng vọng chọn hoặc bạn chọn)\n• 2 bài: Xem bài CẢ 2 hàng xóm\n\n📋 ĐIỀU KIỆN THẮNG:\n• Bạn thắng nếu ÍT NHẤT 1 trong 2 hàng xóm BỊ GIẾT\n• VÀ bạn phải SỐNG SÓT\n• Thắng ĐỘC LẬP với các phe khác\n\nBan ngày: Đẩy hàng xóm ra khỏi cuộc chơi mà không lộ mình là Nhà Quàn.',
+  },
+  {
+    id: 'blob', name: 'Blob', nameVi: 'Blob', emoji: '🟢',
+    team: 'blob', teamLabel: 'Phe Blob', nightOrder: 13, expansion: 'alien',
+    lore: 'Blob là sinh vật kỳ lạ — nó mở rộng cơ thể, hấp thụ những người ngồi xung quanh vào khối sống nhầy nhụa. Tiếng vọng thông báo ai đã bị hấp thụ. Nếu bất kỳ thành viên nào của Blob bị giết, Blob thua.',
+    nightAction: 'Tiếng vọng thông báo ai thuộc Blob (dựa vào vị trí ngồi). Bạn ghi nhớ danh sách.',
+    winCondition: 'Thắng nếu TẤT CẢ thành viên Blob (bao gồm bạn) đều KHÔNG bị giết.',
+    tips: 'Bảo vệ thành viên Blob. Đẩy nghi ngờ về những người ở xa bạn.',
+    nightScript: 'Tiếng vọng: "Blob, mở mắt. Những người sau thuộc Blob: [danh sách]." Blob ghi nhớ. "Nhắm mắt."',
+    howToPlay: 'Ban đêm: Tiếng vọng thông báo ai thuộc Blob (bạn + 1-2 người ngồi cạnh, ngẫu nhiên).\n\n📋 ĐIỀU KIỆN THẮNG:\n• TẤT CẢ thành viên Blob (bao gồm bạn) phải SỐNG SÓT\n• Thắng ĐỘC LẬP với các phe khác\n• Nếu bất kỳ ai trong Blob bị giết → bạn thua\n\nBan ngày: Bảo vệ thành viên Blob.\n💡 Mọi người biết Tiếng vọng nói "Blob, xem ai thuộc Blob" → họ biết Blob tồn tại nhưng không biết ai.',
+  },
 ];
 
 const TEAM_COLOR = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', badge: 'bg-wolf-500/30 text-wolf-300' },
   village: { bg: 'bg-village-400/20 border-village-400/40', text: 'text-village-400', badge: 'bg-village-400/30 text-village-300' },
   tanner: { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', badge: 'bg-purple-500/30 text-purple-300' },
+  alien: { bg: 'bg-emerald-500/20 border-emerald-500/40', text: 'text-emerald-400', badge: 'bg-emerald-500/30 text-emerald-300' },
+  synthetic: { bg: 'bg-cyan-500/20 border-cyan-500/40', text: 'text-cyan-400', badge: 'bg-cyan-500/30 text-cyan-300' },
+  mortician: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-400', badge: 'bg-amber-500/30 text-amber-300' },
+  blob: { bg: 'bg-lime-500/20 border-lime-500/40', text: 'text-lime-400', badge: 'bg-lime-500/30 text-lime-300' },
 };
 
-export default function RoleLibrary({ isOpen, onClose, highlightRole = null }) {
+export default function RoleLibrary({ isOpen, onClose, highlightRole = null, gameMode = null }) {
   const [selectedRole, setSelectedRole] = useState(highlightRole);
 
   if (!isOpen) return null;
 
-  const role = ROLES.find(r => r.id === selectedRole);
+  // Filter roles by game mode
+  const filteredRoles = gameMode === 'alien'
+    ? ROLES.filter(r => r.expansion === 'alien')
+    : gameMode === 'werewolf' || gameMode === 'base' || gameMode === 'daybreak' || gameMode === 'combined'
+      ? ROLES.filter(r => r.expansion === 'base' || r.expansion === 'daybreak')
+      : ROLES; // no filter — show all
+
+  const role = filteredRoles.find(r => r.id === selectedRole) || ROLES.find(r => r.id === selectedRole);
+
+  const isAlien = gameMode === 'alien';
 
   return (
     <div className="fixed inset-0 bg-black/90 z-40 flex flex-col fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-moon-300 font-bold text-lg flex items-center gap-2"><Icon name="book" size={20} /> Thư viện nhân vật</h2>
+        <h2 className={`${isAlien ? 'text-emerald-300' : 'text-moon-300'} font-bold text-lg flex items-center gap-2`}>
+          <Icon name="book" size={20} /> {isAlien ? 'Thư viện nhân vật Alien' : 'Thư viện nhân vật'}
+        </h2>
         <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20">
           ✕
         </button>
       </div>
 
       {!role ? (
-        <RoleList roles={ROLES} onSelect={setSelectedRole} />
+        <RoleList roles={filteredRoles} onSelect={setSelectedRole} isAlienMode={isAlien} />
       ) : (
         <RoleDetail role={role} onBack={() => setSelectedRole(null)} />
       )}
@@ -289,18 +426,24 @@ export default function RoleLibrary({ isOpen, onClose, highlightRole = null }) {
   );
 }
 
-function RoleList({ roles, onSelect }) {
-  const teams = [
+function RoleList({ roles, onSelect, isAlienMode = false }) {
+  const allTeams = [
     { key: 'village', label: '🏘️ Phe Dân' },
     { key: 'werewolf', label: '🐺 Phe Sói' },
     { key: 'tanner', label: '💀 Phe Riêng' },
+    { key: 'alien', label: '👽 Phe Alien' },
+    { key: 'synthetic', label: '🤖 Phe Riêng (Synthetic)' },
+    { key: 'mortician', label: '⚰️ Phe Riêng (Nhà Quàn)' },
+    { key: 'blob', label: '🟢 Phe Blob' },
   ];
+  // Only show teams that have roles in the list
+  const teams = allTeams.filter(t => roles.some(r => r.team === t.key));
 
   return (
     <div className="flex-1 overflow-y-auto px-4 pb-4">
       {teams.map(team => {
         const teamRoles = roles.filter(r => r.team === team.key);
-        const tc = TEAM_COLOR[team.key];
+        const tc = TEAM_COLOR[team.key] || { bg: 'bg-white/10 border-white/20', text: 'text-white/60', badge: 'bg-white/20 text-white/60' };
         return (
           <div key={team.key} className="mb-4">
             <p className={`text-sm font-semibold mb-2 ${tc.text}`}>{team.label}</p>
@@ -348,28 +491,37 @@ function RoleList({ roles, onSelect }) {
       </div>
 
       {/* Game flow guide */}
-      <div className="mt-3 p-3 bg-moon-400/5 border border-moon-400/10 rounded-xl">
-        <p className="text-moon-400 text-xs font-semibold mb-2">📖 Luồng chơi</p>
+      <div className={`mt-3 p-3 rounded-xl ${isAlienMode ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-moon-400/5 border border-moon-400/10'}`}>
+        <p className={`text-xs font-semibold mb-2 ${isAlienMode ? 'text-emerald-400' : 'text-moon-400'}`}>📖 Luồng chơi</p>
         <div className="space-y-2 text-[11px] leading-relaxed">
           <div>
             <p className="text-village-400 font-semibold">1. Nhận bài (15 giây)</p>
             <p className="text-white/40">Mỗi người nhận 1 bài ngẫu nhiên. 3 bài dư nằm ở giữa bàn. Lật bài để xem vai của bạn.</p>
           </div>
           <div>
-            <p className="text-moon-400 font-semibold">2. Ban đêm</p>
-            <p className="text-white/40">Các vai thức dậy theo thứ tự và thực hiện hành động. Kết thúc đêm, bài có thể đã bị hoán đổi — vai hiện tại có thể KHÁC vai ban đầu!</p>
+            <p className={`font-semibold ${isAlienMode ? 'text-emerald-400' : 'text-moon-400'}`}>2. Ban đêm {isAlienMode ? '(Tiếng vọng điều khiển)' : ''}</p>
+            <p className="text-white/40">{isAlienMode
+              ? 'Tiếng vọng đưa ra chỉ thị ngẫu nhiên cho từng vai — mọi người đều nghe. Các vai thức dậy theo thứ tự và làm theo App.'
+              : 'Các vai thức dậy theo thứ tự và thực hiện hành động. Kết thúc đêm, bài có thể đã bị hoán đổi — vai hiện tại có thể KHÁC vai ban đầu!'
+            }</p>
           </div>
           <div>
             <p className="text-yellow-400 font-semibold">3. Thảo luận (5 phút)</p>
-            <p className="text-white/40">Tất cả mở mắt, bàn luận. Khai báo vai, đối chất, tìm mâu thuẫn. Chưa được vote trong giai đoạn này.</p>
+            <p className="text-white/40">{isAlienMode
+              ? 'Tất cả mở mắt, bàn luận. Nhớ lại chỉ thị Tiếng vọng đêm qua (hiển thị trên Terminal). Tìm Alien, bảo vệ Leader.'
+              : 'Tất cả mở mắt, bàn luận. Khai báo vai, đối chất, tìm mâu thuẫn. Chưa được vote trong giai đoạn này.'
+            }</p>
           </div>
           <div>
-            <p className="text-wolf-400 font-semibold">4. Bỏ phiếu (1 phút)</p>
-            <p className="text-white/40">Hết giờ thảo luận → chuyển sang vote. Chạm vào người bạn muốn loại. Ai bị vote nhiều nhất (≥2 phiếu) sẽ bị treo cổ.</p>
+            <p className={`font-semibold ${isAlienMode ? 'text-emerald-400' : 'text-wolf-400'}`}>4. Bỏ phiếu (1 phút)</p>
+            <p className="text-white/40">Hết giờ thảo luận → chuyển sang vote. Chạm vào người bạn muốn loại. Ai bị vote nhiều nhất (≥2 phiếu) sẽ bị loại.</p>
           </div>
           <div>
             <p className="text-purple-400 font-semibold">5. Kết quả</p>
-            <p className="text-white/40">Lật bài toàn bộ. Phe Dân thắng nếu loại được Sói. Phe Sói thắng nếu không ai bị loại hoặc chỉ Dân bị loại. Tanner thắng nếu bị loại.</p>
+            <p className="text-white/40">{isAlienMode
+              ? 'Lật bài toàn bộ. Phe Dân thắng nếu loại được Alien. Phe Alien thắng nếu không Alien nào bị loại. Synthetic thắng nếu bị giết. Blob thắng nếu tất cả thành viên sống. Nhà Quàn thắng nếu hàng xóm chết.'
+              : 'Lật bài toàn bộ. Phe Dân thắng nếu loại được Sói. Phe Sói thắng nếu không ai bị loại hoặc chỉ Dân bị loại. Tanner thắng nếu bị loại.'
+            }</p>
           </div>
         </div>
       </div>
@@ -378,7 +530,7 @@ function RoleList({ roles, onSelect }) {
 }
 
 function RoleDetail({ role, onBack }) {
-  const tc = TEAM_COLOR[role.team];
+  const tc = TEAM_COLOR[role.team] || { bg: 'bg-white/10 border-white/20', text: 'text-white/60', badge: 'bg-white/20 text-white/60' };
 
   return (
     <div className="flex-1 overflow-y-auto px-4 pb-6">

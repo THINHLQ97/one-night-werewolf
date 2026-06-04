@@ -3,6 +3,7 @@ import RoleIcon from '../components/RoleIcon';
 import Icon from '../components/Icon';
 import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import RankBadge, { PointsBadge } from '../components/RankBadge';
+import AlienTerminal from '../components/AlienTerminal';
 
 const ROLE_NAMES = {
   doppelganger: 'Doppelgänger',
@@ -15,10 +16,17 @@ const ROLE_NAMES = {
   paranormalinvestigator: 'P.I.', witch: 'Witch', villageidiot: 'Village Idiot',
   revealer: 'Revealer', bodyguard: 'Bodyguard',
   prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
+  // Alien
+  alien: 'Alien', syntheticalien: 'Synthetic Alien',
+  cow: 'Cow', groob: 'Groob', zerb: 'Zerb',
+  oracle: 'Oracle', rascal: 'Rascal', exposer: 'Exposer',
+  psychic: 'Psychic', mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
+  // Alien phase names (used in night log)
+  aliens: 'Alien', groob_zerb: 'Groob & Zerb',
 };
 
 const TEAM_OF = {
-  doppelganger: 'village', // If card swapped back to doppelganger, it's village
+  doppelganger: 'village',
   werewolf: 'werewolf', minion: 'werewolf', alphawolf: 'werewolf', mysticwolf: 'werewolf', dreamwolf: 'werewolf',
   seer: 'village', robber: 'village', troublemaker: 'village',
   drunk: 'village', insomniac: 'village', villager: 'village', hunter: 'village', mason: 'village',
@@ -26,6 +34,12 @@ const TEAM_OF = {
   witch: 'village', villageidiot: 'village', revealer: 'village', bodyguard: 'village',
   prince: 'village', cursed: 'village', auraseer: 'village',
   tanner: 'tanner',
+  // Alien
+  alien: 'alien', syntheticalien: 'synthetic',
+  groob: 'alien', zerb: 'alien',
+  cow: 'village', oracle: 'village', rascal: 'village', exposer: 'village',
+  psychic: 'village', leader: 'village',
+  mortician: 'mortician', blob: 'blob',
 };
 
 const RESULT_SIGNS = {
@@ -45,6 +59,225 @@ const WIN_SCENES = {
   werewolf: '/images/werewolves-win-scene.png',
   tanner: '/images/tanner-win-scene.png',
 };
+
+// ─── Alien-specific assets ──────────────────────────────────────────────────
+
+const ALIEN_RESULT_SIGNS = {
+  alien_win: '/images/result sign-alien/alien-win.webp',
+  alien_lose: '/images/result sign-alien/alien-lose.webp',
+  villager_win: '/images/result sign-alien/villager-win.webp',
+  villager_lose: '/images/result sign-alien/villager-lose.webp',
+  synthetic_win: '/images/result sign-alien/synthetic-win.webp',
+  synthetic_lose: '/images/result sign-alien/synthetic-lose.webp',
+  blob_win: '/images/result sign-alien/blob-win.webp',
+  blob_lose: '/images/result sign-alien/blob-lose.webp',
+  mortician_win: '/images/result sign-alien/mortician-win.webp',
+  mortician_lose: '/images/result sign-alien/mortician-lose.webp',
+  groob_win: '/images/result sign-alien/groob-win.webp',
+  groob_lose: '/images/result sign-alien/groob-lose.webp',
+  zerb_win: '/images/result sign-alien/zerb-win.webp',
+  zerb_lose: '/images/result sign-alien/zerb-lose.webp',
+  oracle_win: '/images/result sign-alien/oracle-win.webp', // ONLY for Oracle Hunt mode
+  oracle_lose: '/images/result sign-alien/oracle-lose.webp',
+};
+
+const ALIEN_WIN_SCENES = {
+  alien: '/images/scene-alien/Alien-Alien-Win.png',
+  villager: '/images/scene-alien/Alien-Villager-Win.png',
+  synthetic: '/images/scene-alien/Alien-Synthetic-Win.png',
+  blob_alien: '/images/scene-alien/Alien-Blob-Alien-Win.png',
+  blob_villager: '/images/scene-alien/Alien-Blob-Villager-Win.png',
+  // Oracle Hunt mode specials
+  oracle_hunt_survives: '/images/scene-alien/Oracle-Special-Event-Win.png',  // Oracle survived the hunt
+  oracle_hunt_dies: '/images/scene-alien/Oracle-Special-Event-Lose.png',     // Oracle got caught
+};
+
+const ALIEN_END_SCENE_IMAGES = {
+  // Vote-by-role (single elimination)
+  vote_alien: '/images/endscene-alien/vote-alien.webp',
+  vote_synthetic_alien: '/images/endscene-alien/vote-synthetic-alien.webp',
+  vote_cow: '/images/endscene-alien/vote-cow.webp',
+  vote_groob: '/images/endscene-alien/vote-groob.webp',
+  vote_zerb: '/images/endscene-alien/vote-zerb.webp',
+  vote_leader: '/images/endscene-alien/vote-leader.webp',
+  vote_mortician: '/images/endscene-alien/vote-mortician.webp',
+  vote_oracle: '/images/endscene-alien/vote-oracle.webp',
+  vote_psychic: '/images/endscene-alien/vote-psychic.webp',
+  vote_rascal: '/images/endscene-alien/vote-rascal.webp',
+  vote_exposer: '/images/endscene-alien/vote-exposer.webp',
+  vote_blob: '/images/endscene-alien/vote-bloob.webp',
+  // Multi-die
+  multi_aliens_present: '/images/endscene-alien/more-than-2-die-but-there-aliens.webp',
+  multi_no_aliens: '/images/endscene-alien/more-than-2-die-but-there-no-aliens.webp',
+  // No one dies
+  no_one_die_aliens: '/images/endscene-alien/no-one-die-but-there-aliens.webp',
+  no_one_die_no_aliens: '/images/endscene-alien/no-one-die-but-there-no-aliens.webp',
+  // Mortician specials (REVERSED per user)
+  mortician_win_with_alien: '/images/endscene-alien/mortician-win-with-alien.webp',     // Mortician + Village win
+  mortician_win_with_villager: '/images/endscene-alien/mortician-win-with-villager.webp', // Mortician + Alien win
+  // Oracle Hunt mode specials
+  oracle_hunt_survives: '/images/endscene-alien/oracle-win-special-event.webp',  // Oracle NOT voted → survives → wins alone
+  oracle_hunt_dies: '/images/endscene-alien/vote-oracle-special-event.webp',     // Oracle voted out → others win
+};
+
+const ALIEN_END_SCENE_NARRATIONS = {
+  vote_alien: 'Một sinh vật ngoài hành tinh đã bị lột mặt nạ. Dân làng thở phào — bóng tối từ vũ trụ đã bị đẩy lùi.',
+  vote_synthetic_alien: 'Alien Nhân Tạo đã hoàn thành sứ mệnh kỳ lạ — bị tiêu diệt chính là chiến thắng của hắn.',
+  vote_cow: 'Bò bị treo cổ trong nhầm lẫn. Tiếng rống bi ai vọng khắp ngôi làng nhỏ.',
+  vote_groob: 'Groob ngã xuống. Trong vũ trụ rộng lớn, một kẻ thù cũ vừa ăn mừng chiến thắng.',
+  vote_zerb: 'Zerb đã ra đi. Đối thủ truyền kiếp giờ đây mỉm cười dưới ánh trăng lạnh.',
+  vote_leader: 'Thủ Lĩnh bị hạ — cây cột chống đỡ ngôi làng vừa đổ sụp. Bóng tối ngoài hành tinh giờ đây không gì cản nổi.',
+  vote_mortician: 'Nhà Quàn bị treo cổ — kẻ độc cô đã nhập cuộc cuối cùng vào hàng ngũ những người chết.',
+  vote_oracle: 'Nhà Tiên Tri đã không nhìn thấy chính cái chết của mình. Lời nguyền vũ trụ vẫn tiếp tục.',
+  vote_psychic: 'Ngoại Cảm đã không đoán được số phận của chính mình. Tiếng vọng vũ trụ giờ đây không còn ai nghe được.',
+  vote_rascal: 'Quỷ Nhỏ bị bắt — kẻ phá rối cuối cùng cũng phải trả giá cho những trò đùa của mình.',
+  vote_exposer: 'Kẻ Phơi Bày bị tiêu diệt — ánh sáng sự thật đã tắt, bóng tối lại bao trùm.',
+  vote_blob: 'Khối Blob nhầy nhụa bị tiêu diệt. Cả khối sống cùng tan biến trong giây phút.',
+  multi_aliens_present: 'Cuộc thảm sát đêm nay không tha cho ai. Trong số những kẻ ngã xuống, có cả những sinh vật ngoài hành tinh.',
+  multi_no_aliens: 'Nhiều người chết vô ích đêm nay — không có Alien nào bị tiêu diệt. Vũ trụ vẫn lạnh lùng quan sát.',
+  no_one_die_aliens: 'Không ai ngã xuống — nhưng Alien vẫn ẩn nấp đâu đó giữa các bạn. Cuộc xâm lăng vẫn tiếp diễn.',
+  no_one_die_no_aliens: 'Không có Alien, không có cái chết — một đêm yên bình hiếm hoi giữa vũ trụ hỗn loạn.',
+  mortician_win_with_alien: 'Nhà Quàn mỉm cười khi hàng xóm Alien ngã xuống. Vũ trụ trả công cho kẻ chờ đợi cái chết.',
+  mortician_win_with_villager: 'Nhà Quàn mỉm cười khi hàng xóm Dân ngã xuống. Một cái chết không trả thù được — nhưng Nhà Quàn đã thắng.',
+  oracle_hunt_survives: 'Oracle sống sót qua cuộc săn đuổi điên cuồng — không ai vote cô. Một mình cô ta chiến thắng — bí mật của vũ trụ vẫn thuộc về cô.',
+  oracle_hunt_dies: 'Cả làng đã hợp sức bỏ phiếu tiêu diệt Oracle — kẻ đoán sai số bí mật của vũ trụ. Tiếng vọng từ không gian cuối cùng cũng im lặng.',
+};
+
+const ALIEN_VOTE_KEYS = {
+  alien: 'vote_alien',
+  syntheticalien: 'vote_synthetic_alien',
+  cow: 'vote_cow',
+  groob: 'vote_groob',
+  zerb: 'vote_zerb',
+  leader: 'vote_leader',
+  mortician: 'vote_mortician',
+  oracle: 'vote_oracle',
+  psychic: 'vote_psychic',
+  rascal: 'vote_rascal',
+  exposer: 'vote_exposer',
+  blob: 'vote_blob',
+};
+
+// Determine the player's effective team in alien mode
+function getAlienTeamOf(playerId, results) {
+  const { finalCards = {}, originalCards = {}, alienAppState = {} } = results;
+  const orig = originalCards[playerId];
+  const curr = finalCards[playerId];
+
+  // Hunt mode → Oracle (original) gets her own team
+  if (alienAppState.oracleHuntMode && orig === 'oracle') return 'oracle';
+
+  // Synthetic — independent
+  if (curr === 'syntheticalien') return 'synthetic';
+  // Blob — independent
+  if (curr === 'blob') return 'blob';
+  // Mortician — independent
+  if (curr === 'mortician') return 'mortician';
+
+  // Groob/Zerb rivalry (both in play → each on own team)
+  const bothGZ = Object.values(finalCards).includes('groob') && Object.values(finalCards).includes('zerb');
+  if (bothGZ) {
+    if (curr === 'groob') return 'groob';
+    if (curr === 'zerb') return 'zerb';
+  }
+
+  // Oracle who joined alien team via change_team (acts like Minion)
+  if (alienAppState.oracleJoinedAlien && orig === 'oracle') return 'alien';
+
+  // Real aliens
+  if (curr === 'alien' || curr === 'groob' || curr === 'zerb') return 'alien';
+
+  // Default: villager
+  return 'villager';
+}
+
+function getAlienWinningTeam(results, players) {
+  const { winners = [], eliminated = [], finalCards = {}, originalCards = {}, alienAppState = {} } = results;
+  if (winners.length === 0) return null;
+
+  // Hunt mode: use Oracle-Special-Event scenes based on Oracle's fate
+  if (alienAppState.oracleHuntMode) {
+    const oraclePlayer = players.find(p => originalCards[p.id] === 'oracle');
+    if (oraclePlayer) {
+      return eliminated.includes(oraclePlayer.id) ? 'oracle_hunt_dies' : 'oracle_hunt_survives';
+    }
+    // Oracle in center → fallback villager scene
+    return 'villager';
+  }
+
+  // Determine team that won
+  // Check if Blob is in winners
+  const blobWinner = players.find(p => finalCards[p.id] === 'blob' && winners.includes(p.id));
+  // Check if any alien (or oracle-joined-alien) is winner
+  const alienWinner = winners.some(id => {
+    const team = getAlienTeamOf(id, results);
+    return team === 'alien';
+  });
+  const villagerWinner = winners.some(id => {
+    const team = getAlienTeamOf(id, results);
+    return team === 'villager';
+  });
+  const syntheticWinner = winners.some(id => getAlienTeamOf(id, results) === 'synthetic');
+
+  // Blob + Alien
+  if (blobWinner && alienWinner) return 'blob_alien';
+  // Blob + Village
+  if (blobWinner && villagerWinner) return 'blob_villager';
+  // Synthetic
+  if (syntheticWinner) return 'synthetic';
+  // Alien
+  if (alienWinner) return 'alien';
+  // Village (also covers Mortician-only or Blob-only — fall back to villager)
+  return 'villager';
+}
+
+function getAlienEndSceneKey(results, players) {
+  const { eliminated = [], initialEliminated = [], finalCards = {}, originalCards = {}, alienAppState = {} } = results;
+
+  const aliensInGame = players.some(p => {
+    const r = finalCards[p.id];
+    return r === 'alien' || r === 'groob' || r === 'zerb' || r === 'syntheticalien';
+  });
+
+  // ── Hunt Mode special ──
+  if (alienAppState.oracleHuntMode) {
+    const oraclePlayer = players.find(p => originalCards[p.id] === 'oracle');
+    if (oraclePlayer) {
+      return eliminated.includes(oraclePlayer.id) ? 'oracle_hunt_dies' : 'oracle_hunt_survives';
+    }
+  }
+
+  // ── Mortician special — Mortician won + which team also won ──
+  const morticianPlayer = players.find(p => finalCards[p.id] === 'mortician');
+  if (morticianPlayer && results.winners?.includes(morticianPlayer.id)) {
+    // Determine if Village or Alien also won alongside Mortician
+    const alienAlsoWon = results.winners.some(id => getAlienTeamOf(id, results) === 'alien');
+    const villageAlsoWon = results.winners.some(id => getAlienTeamOf(id, results) === 'villager');
+    // Per user (reversed): with-alien = village won; with-villager = alien won
+    if (villageAlsoWon) return 'mortician_win_with_alien';
+    if (alienAlsoWon) return 'mortician_win_with_villager';
+  }
+
+  // ── No one dies ──
+  if (eliminated.length === 0) {
+    return aliensInGame ? 'no_one_die_aliens' : 'no_one_die_no_aliens';
+  }
+
+  // ── Multi (≥2 voted out) ──
+  if (initialEliminated.length >= 2) {
+    const aliensEliminated = eliminated.some(id => {
+      const r = finalCards[id];
+      return r === 'alien' || r === 'groob' || r === 'zerb' || r === 'syntheticalien';
+    });
+    // Per user: file naming follows "are aliens in game" check
+    return aliensEliminated ? 'multi_aliens_present' : 'multi_no_aliens';
+  }
+
+  // ── Single vote — vote-{role} priority ──
+  const primary = initialEliminated[0] ?? eliminated[0];
+  const primaryRole = finalCards[primary];
+  return ALIEN_VOTE_KEYS[primaryRole] || null;
+}
 
 // ─── End-scene banner images (2:1) ──────────────────────────────────────────
 // Each key maps to a specific vote outcome. Logic: getEndSceneKey().
@@ -323,35 +556,49 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
   if (!results) return null;
 
   const { eliminated, initialEliminated, winners, players, finalCards, originalCards, tally, nightLog = [], rankUpdates = {} } = results;
-  const hunterKills = eliminated.filter(id => !initialEliminated?.includes(id));
+  const hunterKills = initialEliminated ? eliminated.filter(id => !initialEliminated.includes(id)) : [];
 
   const isWinner = winners.includes(myId);
   const playerMap = {};
   players.forEach(p => { playerMap[p.id] = p.name; });
 
-  const sceneKey = getEndSceneKey(results, players);
-  const sceneSrc = sceneKey ? END_SCENE_IMAGES[sceneKey] : null;
-  const narration = END_SCENE_NARRATIONS[sceneKey] || null;
-  const winningTeam = getWinningTeam(results, players);
-  const sceneBg = winningTeam ? WIN_SCENES[winningTeam] : null;
+  // Detect alien mode via results.alienAppState
+  const isAlienMode = !!results.alienAppState;
 
-  // Determine result sign based on the player's OWN team
-  const myTeam = TEAM_OF[finalCards[myId]] || 'village';
+  let sceneKey, sceneSrc, narration, sceneBg, signSrc;
 
-  let signSrc;
-  if (winners.length === 0) {
-    // No one wins
-    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
-            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
-            : RESULT_SIGNS.village_lose;
-  } else if (isWinner) {
-    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_win
-            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_win
-            : RESULT_SIGNS.village_win;
+  if (isAlienMode) {
+    sceneKey = getAlienEndSceneKey(results, players);
+    sceneSrc = sceneKey ? ALIEN_END_SCENE_IMAGES[sceneKey] : null;
+    narration = ALIEN_END_SCENE_NARRATIONS[sceneKey] || null;
+    const winningTeam = getAlienWinningTeam(results, players);
+    sceneBg = winningTeam ? ALIEN_WIN_SCENES[winningTeam] : null;
+
+    // Determine result sign based on the player's effective alien team
+    const myTeam = getAlienTeamOf(myId, results);
+    const suffix = (winners.length > 0 && isWinner) ? 'win' : 'lose';
+    signSrc = ALIEN_RESULT_SIGNS[`${myTeam}_${suffix}`] || ALIEN_RESULT_SIGNS[`villager_${suffix}`];
   } else {
-    signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
-            : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
-            : RESULT_SIGNS.village_lose;
+    sceneKey = getEndSceneKey(results, players);
+    sceneSrc = sceneKey ? END_SCENE_IMAGES[sceneKey] : null;
+    narration = END_SCENE_NARRATIONS[sceneKey] || null;
+    const winningTeam = getWinningTeam(results, players);
+    sceneBg = winningTeam ? WIN_SCENES[winningTeam] : null;
+
+    const myTeam = TEAM_OF[finalCards[myId]] || 'village';
+    if (winners.length === 0) {
+      signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
+              : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
+              : RESULT_SIGNS.village_lose;
+    } else if (isWinner) {
+      signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_win
+              : myTeam === 'tanner' ? RESULT_SIGNS.tanner_win
+              : RESULT_SIGNS.village_win;
+    } else {
+      signSrc = myTeam === 'werewolf' ? RESULT_SIGNS.werewolf_lose
+              : myTeam === 'tanner' ? RESULT_SIGNS.tanner_lose
+              : RESULT_SIGNS.village_lose;
+    }
   }
 
   return (
@@ -520,6 +767,28 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           </div>
         </div>
 
+        {/* Blob members */}
+        {results.alienAppState?.blobInstruction?.memberNames?.length > 0 && (
+          <div className="card mb-4">
+            <h3 className="text-lime-400 font-semibold mb-2 flex items-center gap-1.5">
+              🟢 Thành viên Blob
+            </h3>
+            <p className="text-white/50 text-xs mb-2">{results.alienAppState.blobInstruction.publicAnnounce?.replace('🤖 → Blob: ', '')}</p>
+            <div className="flex gap-2 flex-wrap">
+              {results.alienAppState.blobInstruction.members.map((id, i) => {
+                const name = results.alienAppState.blobInstruction.memberNames[i];
+                const isBlobSelf = finalCards[id] === 'blob';
+                const survived = !eliminated.includes(id);
+                return (
+                  <span key={id} className={`text-xs px-2.5 py-1.5 rounded-lg border ${survived ? 'bg-lime-500/15 border-lime-500/30 text-lime-300' : 'bg-wolf-500/15 border-wolf-500/30 text-wolf-300 line-through'}`}>
+                    {isBlobSelf ? '👑 ' : ''}{name} {survived ? '✓' : '✗'}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Night History */}
         {nightLog.length > 0 && (
           <div className="card mb-4">
@@ -528,10 +797,27 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
             </h3>
             <div className="space-y-1.5">
               {nightLog.map((entry, i) => (
-                <NightLogEntry key={i} entry={entry} playerMap={playerMap} />
+                <NightLogEntry key={i} entry={entry} playerMap={playerMap} results={results} />
               ))}
             </div>
           </div>
+        )}
+
+        {/* Alien Terminal recap */}
+        {results.alienAppState && (
+          <AlienTerminal
+            messages={[
+              results.alienAppState.oracleQuestion && { text: `Oracle: "${results.alienAppState.oracleQuestion.question}"`, time: 0 },
+              results.alienAppState.alienInstruction && { text: results.alienAppState.alienInstruction.publicAnnounce, time: 1 },
+              results.alienAppState.rascalInstruction && { text: results.alienAppState.rascalInstruction.publicAnnounce, time: 2 },
+              results.alienAppState.exposerInstruction && { text: results.alienAppState.exposerInstruction.publicAnnounce, time: 3 },
+              ...(Object.values(results.alienAppState.psychicInstructions || {}).map((inst, i) => ({ text: inst.publicAnnounce, time: 4 + i }))),
+              results.alienAppState.morticianInstruction && { text: results.alienAppState.morticianInstruction.publicAnnounce, time: 6 },
+              results.alienAppState.blobInstruction && { text: results.alienAppState.blobInstruction.publicAnnounce, time: 7 },
+            ].filter(Boolean)}
+            maxLines={10}
+            collapsed={true}
+          />
         )}
 
         {/* Vote tally */}
@@ -565,7 +851,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           <p className="text-center text-white/40 text-sm py-4">Chờ host bắt đầu game mới...</p>
         )}
 
-        <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
+        <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} gameMode={results?.alienAppState ? 'alien' : null} />
       </div>
     </>
   );
@@ -705,8 +991,16 @@ function describeCopiedAction(copiedRole, action, result, playerMap, targetName,
   }
 }
 
-function NightLogEntry({ entry, playerMap }) {
+// Map alien phase names to display roleId for icons
+const PHASE_TO_ICON = {
+  aliens: 'alien', groob_zerb: 'groob', oracle: 'oracle', leader: 'leader',
+  cow: 'cow', rascal: 'rascal', exposer: 'exposer', psychic: 'psychic',
+  mortician: 'mortician', blob: 'blob',
+};
+
+function NightLogEntry({ entry, playerMap, results }) {
   const { role, playerName, action, result, targetName, target1Name, target2Name, autoExecuted } = entry;
+  const iconRoleId = PHASE_TO_ICON[role] || role;
   const autoBadge = autoExecuted ? (
     <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-semibold whitespace-nowrap">
       AFK • tự động
@@ -832,13 +1126,65 @@ function NightLogEntry({ entry, playerMap }) {
         return 'không thấy hào quang nào';
       case 'prince': return 'thức dậy (miễn vote)';
       case 'cursed': return 'thức dậy';
+      // ── Alien phases ──
+      case 'oracle':
+        if (result.seen) return `xem ${result.seen.length || 1} bài giữa`;
+        if (result.swapped) return 'đổi bài với bài giữa';
+        if (result.correct === false) return `trả lời SAI — mục tiêu đổi!`;
+        if (result.correct === true) return `trả lời ĐÚNG`;
+        if (result.answer) return `trả lời: "${result.answer}"`;
+        return 'trả lời câu hỏi App';
+      case 'aliens':
+        if (result.seen) return `xem bài → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        if (result.swapped) return 'hoán đổi bài với Alien khác';
+        return 'nhìn thấy đồng bọn Alien';
+      case 'groob_zerb': return 'nhìn thấy Groob & Zerb';
+      case 'leader': return 'thấy vị trí Alien (giơ ngón cái)';
+      case 'cow':
+        if (result.wasTapped) return 'bị tap — có Alien ngồi cạnh!';
+        return 'không bị tap';
+      case 'rascal':
+        if (result.skipped) return 'bỏ qua hành động';
+        if (result.action === 'robber') {
+          const tname = targetName || playerMap[action.targetPlayer] || '?';
+          return `cướp bài ${tname}${result.newRole ? ` → thành ${ROLE_NAMES[result.newRole] || '?'}` : ''}`;
+        }
+        if (result.action === 'troublemaker') {
+          const n1 = target1Name || playerMap[action.target1] || '?';
+          const n2 = target2Name || playerMap[action.target2] || '?';
+          return `hoán đổi bài ${n1} ↔ ${n2}`;
+        }
+        if (result.action === 'drunk') {
+          const slot = action.centerSlot;
+          const label = slot === 'center0' ? 'Giữa 1' : slot === 'center1' ? 'Giữa 2' : slot === 'center2' ? 'Giữa 3' : 'bài giữa';
+          return `đổi bài của mình với ${label}`;
+        }
+        if (result.action === 'village_idiot') return `xoay bài tất cả sang ${action.direction === 'left' ? 'TRÁI' : 'PHẢI'}`;
+        return 'không hành động';
+      case 'exposer':
+        if (result.skipped) return 'bỏ qua';
+        if (result.exposed?.length > 0) return `lật ${result.exposed.length} bài giữa`;
+        return 'lật bài giữa';
+      case 'psychic':
+        if (result.seen) return `xem bài → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        return 'xem bài theo chỉ thị App';
+      case 'mortician':
+        if (result.seen) return `xem bài hàng xóm → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        return 'quan sát hàng xóm';
+      case 'blob': {
+        const blobInst = results?.alienAppState?.blobInstruction;
+        if (blobInst?.memberNames?.length > 0) {
+          return `nhiễm Blob: ${blobInst.memberNames.join(', ')}`;
+        }
+        return 'xem thành viên Blob';
+      }
       default: return 'thức dậy';
     }
   }
 
   return (
     <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg ${autoExecuted ? 'bg-yellow-500/[0.06] border border-yellow-500/20' : 'bg-white/[0.03]'}`}>
-      <RoleIcon roleId={role} size={22} circular className="flex-shrink-0 mt-0.5" />
+      <RoleIcon roleId={iconRoleId} size={22} circular className="flex-shrink-0 mt-0.5" />
       <div className="min-w-0">
         <span className="text-white/70 text-xs font-medium">{playerName}</span>
         <span className="text-white/30 text-xs"> ({roleName})</span>

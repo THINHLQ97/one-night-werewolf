@@ -6,6 +6,7 @@ import RoleLibrary, { RoleLibraryButton } from '../components/RoleLibrary';
 import TokenClaimBoard from '../components/TokenClaimBoard';
 import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
+import AlienTerminal from '../components/AlienTerminal';
 
 function useCountdown(timerEnd, paused, pausedRemaining) {
   const [remaining, setRemaining] = useState(0);
@@ -41,7 +42,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
   const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd } = dayState;
   // Use voting timer when in voting phase, otherwise discussion timer
   const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
@@ -57,7 +58,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
 
   const votedCount = Object.keys(votes).length + (bodyguardProtect ? 1 : 0);
 
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, knownAliens = [], knownGroobZerb = [], knownCow = null } = nightKnowledge || {};
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
@@ -89,6 +90,16 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
             <Icon name={roleHidden ? 'eyeOff' : 'eye'} size={16} />
           </button>
           <RoleLibraryButton onClick={() => setLibraryOpen(true)} />
+          {hasOracleVision && (
+            <button
+              onClick={onReopenVision}
+              className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+              title="Xem lại thị kiến Oracle"
+              style={{ boxShadow: '0 0 10px rgba(74,222,128,0.3)' }}
+            >
+              👁️
+            </button>
+          )}
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
           <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} />
         </div>
@@ -113,6 +124,11 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         </div>
       )}
 
+      {/* Alien Terminal — recap of night app instructions */}
+      {gameMode === 'alien' && appAnnouncements.length > 0 && (
+        <AlienTerminal messages={appAnnouncements} maxLines={6} collapsed={true} />
+      )}
+
       {/* Game Table with voting */}
       <GameTable
         players={players}
@@ -121,6 +137,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         revealedCenter={roleHidden ? {} : revealedCenter}
         knownWerewolves={roleHidden ? [] : knownWerewolves}
         knownMasons={roleHidden ? [] : knownMasons}
+        knownAliens={roleHidden ? [] : knownAliens}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable={votingPhase ? 'player' : 'none'}
@@ -222,7 +239,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         />
       )}
 
-      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} gameMode={gameMode} />
     </div>
   );
 }
@@ -291,14 +308,23 @@ function KnowledgeSummary({ knowledge, players }) {
   const items = [];
 
   if (doppelgangerCopiedRole) items.push(`🎭 Hóa Thân → ${ROLE_SHORT[doppelgangerCopiedRole] || doppelgangerCopiedRole}`);
-  if (knownWerewolves.length > 0) items.push(`Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knownWerewolves.length > 0) items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.knownAliens?.length > 0) items.push(`👽 Alien: ${knowledge.knownAliens.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.knownGroobZerb?.length > 0) items.push(`👾 Groob & Zerb: ${knowledge.knownGroobZerb.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.knownCow) items.push(`🐄 Cow: ${nameMap[knowledge.knownCow] || '?'}`);
   if (knowledge.auraSeen) {
     if (auraTouched.length > 0) {
       items.push(`✨ Hào quang: ${auraTouched.map(t => t.name || nameMap[t.id] || '?').join(', ')}`);
     } else {
       items.push(`✨ Hào quang: Không có ai`);
     }
+  }
+  if (knowledge.oracleRevealed) {
+    items.push(`👁️ Oracle: ${knowledge.oracleRevealed.name} (ghế #${knowledge.oracleRevealed.seat}) — thấu thị`);
+  }
+  if (knowledge.blobMembers?.length > 0) {
+    items.push(`🟢 Blob: ${knowledge.blobMembers.map(m => m.name).join(', ')}`);
   }
   Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id]}: ${ROLE_SHORT[role] || role}`));
   Object.entries(revealedCenter).forEach(([slot, role]) => items.push(`${centerName(slot)}: ${ROLE_SHORT[role] || role}`));

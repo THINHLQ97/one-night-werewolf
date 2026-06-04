@@ -11,7 +11,7 @@ import UpdatePopup from '../components/UpdatePopup';
 const ADJECTIVES = ['Vui', 'Nhanh', 'Mạnh', 'Khéo', 'Lanh', 'Dũng', 'Tài', 'Giỏi', 'Hay', 'Cool', 'Pro', 'Ngầu', 'Bí Ẩn', 'Tinh', 'Lém'];
 const ANIMALS = ['Cáo', 'Gấu', 'Hổ', 'Rồng', 'Chim', 'Mèo', 'Thỏ', 'Voi', 'Sói', 'Cú', 'Ếch', 'Cá', 'Bò', 'Dê', 'Ngựa'];
 
-const FAMOUS_QUOTES = [
+const WEREWOLF_QUOTES = [
   { en: 'Man is a wolf to man.', author: 'Plautus', vi: 'Con người là sói đối với chính đồng loại mình.' },
   { en: 'The only thing we have to fear is fear itself.', author: 'Franklin D. Roosevelt', vi: 'Điều đáng sợ nhất không phải bóng tối, mà là nỗi sợ bên trong mỗi người.' },
   { en: "If you tell the truth, you don't have to remember anything.", author: 'Mark Twain', vi: 'Kẻ nói thật không cần nhớ mình đã bịa điều gì.' },
@@ -22,6 +22,14 @@ const FAMOUS_QUOTES = [
   { en: 'A liar is not believed when he tells the truth.', author: 'Tục ngữ', vi: 'Kẻ nói dối sẽ chẳng còn được tin, ngay cả khi hắn nói thật.' },
 ];
 
+const ALIEN_QUOTES = [
+  { en: 'We are not alone in the universe.', author: 'Carl Sagan', vi: 'Chúng ta không đơn độc trong vũ trụ này.' },
+  { en: 'The universe is a pretty big place. If it\'s just us, seems like an awful waste of space.', author: 'Carl Sagan', vi: 'Vũ trụ rộng lớn lắm. Nếu chỉ có mình ta, thì thật lãng phí không gian.' },
+  { en: 'Two possibilities exist: either we are alone in the universe or we are not. Both are equally terrifying.', author: 'Arthur C. Clarke', vi: 'Có hai khả năng: chúng ta cô đơn trong vũ trụ, hoặc không. Cả hai đều đáng sợ.' },
+  { en: 'Sometimes the most alien thing is yourself.', author: 'Tục ngữ', vi: 'Đôi khi thứ xa lạ nhất chính là bản thân mình.' },
+  { en: 'In space, no one can hear you scream.', author: 'Alien (1979)', vi: 'Ngoài không gian, không ai nghe thấy tiếng bạn la hét.' },
+];
+
 function generateName() {
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
@@ -29,7 +37,7 @@ function generateName() {
   return `${adj} ${animal} ${num}`;
 }
 
-export default function HomeScreen({ onJoin, error, setError }) {
+export default function HomeScreen({ onJoin, error, setError, gameMode, onGameModeChange }) {
   const { user, authToken, loginAsGuest, googleClientId, loginWithGoogle } = useAuth();
   const isLoggedIn = !!user;
   const [mode, setMode] = useState(null);
@@ -57,13 +65,14 @@ export default function HomeScreen({ onJoin, error, setError }) {
   }, [mode, isLoggedIn]);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
-  const quote = useMemo(() => FAMOUS_QUOTES[Math.floor(Math.random() * FAMOUS_QUOTES.length)], []);
+  const quotes = gameMode === 'alien' ? ALIEN_QUOTES : WEREWOLF_QUOTES;
+  const quote = useMemo(() => quotes[Math.floor(Math.random() * quotes.length)], [gameMode]);
 
   function handleCreate(e) {
     e.preventDefault();
     if (!displayName) return setError('Nhập tên của bạn');
     setLoading(true);
-    socket.emit('create_room', { name: displayName, token: playerToken, authToken }, (res) => {
+    socket.emit('create_room', { name: displayName, token: playerToken, authToken, gameMode }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
       onJoin(res.code, res.players, res.settings, res.hostId);
@@ -95,7 +104,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
     e.preventDefault();
     if (!displayName) return setError('Nhập tên của bạn');
     setLoading(true);
-    socket.emit('create_simulation', { name: displayName, token: playerToken, authToken, botCount }, (res) => {
+    socket.emit('create_simulation', { name: displayName, token: playerToken, authToken, botCount, gameMode }, (res) => {
       setLoading(false);
       if (res.error) return setError(res.error);
       onJoin(res.code, res.players, res.settings, res.hostId, undefined, res);
@@ -115,7 +124,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 py-6 fade-in relative">
-      <FallingCards count={14} />
+      <FallingCards count={14} gameMode={gameMode} />
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
         <button
           onClick={() => setShowLeaderboard(true)}
@@ -129,16 +138,44 @@ export default function HomeScreen({ onJoin, error, setError }) {
 
       {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} />}
 
+      {/* Game mode tabs */}
+      <div className="flex items-center justify-center gap-3 mb-4 relative z-10">
+        <button
+          onClick={() => onGameModeChange?.('werewolf')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border ${
+            gameMode !== 'alien'
+              ? 'bg-moon-400/20 border-moon-400/50 text-moon-300 shadow-[0_0_12px_rgba(196,168,107,0.2)]'
+              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+          }`}
+        >
+          Werewolf
+        </button>
+        <button
+          onClick={() => onGameModeChange?.('alien')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border ${
+            gameMode === 'alien'
+              ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
+              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+          }`}
+        >
+          Alien
+        </button>
+      </div>
+
       <div className="text-center mb-6 sm:mb-8 relative z-10">
         <img
-          src="/images/logo-game.png"
-          alt="One Night Ultimate Werewolf"
-          className="w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-3 drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]"
+          src={gameMode === 'alien' ? '/images/logo-game-alien.png' : '/images/logo-game.png'}
+          alt={gameMode === 'alien' ? 'One Night Ultimate Alien' : 'One Night Ultimate Werewolf'}
+          className={`w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-3 ${
+            gameMode === 'alien'
+              ? 'drop-shadow-[0_0_24px_rgba(52,211,153,0.3)]'
+              : 'drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]'
+          }`}
           draggable={false}
         />
         <div className="max-w-xs mx-auto">
           <p className="text-white/30 text-xs italic leading-relaxed">"{quote.en}"</p>
-          <p className="text-moon-400/50 text-[11px] italic mt-0.5">{quote.vi}</p>
+          <p className={`${gameMode === 'alien' ? 'text-emerald-400/50' : 'text-moon-400/50'} text-[11px] italic mt-0.5`}>{quote.vi}</p>
           <p className="text-white/20 text-[10px] mt-1">— {quote.author}</p>
         </div>
       </div>
@@ -332,7 +369,7 @@ export default function HomeScreen({ onJoin, error, setError }) {
         Dự án phi lợi nhuận · Mọi bản quyền hình ảnh thuộc về Bezier Games
       </p>
 
-      <RoleLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
+      <RoleLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} gameMode={gameMode} />
       <UpdatePopup />
     </div>
   );

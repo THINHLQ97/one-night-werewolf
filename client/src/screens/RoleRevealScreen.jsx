@@ -20,6 +20,10 @@ const TEAM_STYLE = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Phe Sói', glow: 'shadow-[0_0_30px_rgba(231,76,60,0.3)]' },
   village:  { bg: 'bg-village-500/20 border-village-500/40', text: 'text-village-400', label: 'Phe Dân', glow: 'shadow-[0_0_30px_rgba(39,174,96,0.3)]' },
   tanner:   { bg: 'bg-purple-500/20 border-purple-500/40', text: 'text-purple-400', label: 'Phe Riêng', glow: 'shadow-[0_0_30px_rgba(142,68,173,0.3)]' },
+  alien:     { bg: 'bg-emerald-500/20 border-emerald-500/40', text: 'text-emerald-400', label: 'Phe Alien', glow: 'shadow-[0_0_30px_rgba(74,222,128,0.3)]' },
+  synthetic: { bg: 'bg-cyan-500/20 border-cyan-500/40', text: 'text-cyan-400', label: 'Phe Alien Nhân Tạo', glow: 'shadow-[0_0_30px_rgba(34,211,238,0.3)]' },
+  blob:      { bg: 'bg-lime-500/20 border-lime-500/40', text: 'text-lime-400', label: 'Phe Blob', glow: 'shadow-[0_0_30px_rgba(163,230,53,0.3)]' },
+  mortician: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-400', label: 'Phe Nhà Quàn', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.3)]' },
 };
 
 export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking, chatMessages }) {
@@ -122,7 +126,7 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
         </div>
       </div>
 
-      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} />
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} gameMode={['alien','syntheticalien','groob','zerb','cow','oracle','rascal','exposer','psychic','mortician','leader','blob'].includes(myRole?.roleId) ? 'alien' : null} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // Map role IDs to local card images
 const CARD_IMAGES = {
+  // ─── Werewolf ────────────────────────────────────────────────────────────────
   werewolf: '/images/character card/Werewolf.webp',
   minion: '/images/character card/Minion.webp',
   seer: '/images/character card/Seer-0.webp',
@@ -25,6 +26,19 @@ const CARD_IMAGES = {
   prince: '/images/character card/Prince.webp',
   cursed: '/images/character card/Cursed.webp',
   auraseer: '/images/character card/Aura_seer.webp',
+  // ─── Alien ───────────────────────────────────────────────────────────────────
+  alien: '/images/character card/Alien.webp',
+  syntheticalien: '/images/character card/Synthetic_alien.webp',
+  cow: '/images/character card/Cow-0.webp',
+  groob: '/images/character card/Groob-0.webp',
+  zerb: '/images/character card/Zerb-0.webp',
+  leader: '/images/character card/Leader-0.webp',
+  oracle: '/images/character card/Oracle-0.webp',
+  psychic: '/images/character card/Psychic-0.webp',
+  rascal: '/images/character card/Rascal-0.webp',
+  exposer: '/images/character card/Exposer-0.webp',
+  mortician: '/images/character card/Mortician-0.webp',
+  blob: '/images/character card/Blob.webp',
 };
 
 export const CARD_BACK = '/images/Card-Back.webp';

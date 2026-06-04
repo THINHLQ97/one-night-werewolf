@@ -39,6 +39,7 @@ export default function GameTable({
   revealedCenter = {},
   knownWerewolves = [],
   knownMasons = [],
+  knownAliens = [],
   swappedPairs = [],
   myCurrentRole = null,
   selectable = null,
@@ -148,6 +149,7 @@ export default function GameTable({
         const isRevealed = revealedPlayers[p.id];
         const isWolf = knownWerewolves.includes(p.id);
         const isMason = knownMasons.includes(p.id);
+        const isAlien = knownAliens.includes(p.id);
         const isSelected = selected.includes(p.id);
         const isClickable = (selectable === 'player' || selectable === 'both') && p.id !== myId;
         const isEliminated = eliminated.includes(p.id);
@@ -168,6 +170,7 @@ export default function GameTable({
                 ${isMe ? 'player-me' : ''}
                 ${isWolf ? 'player-wolf' : ''}
                 ${isMason ? 'player-mason' : ''}
+                ${isAlien ? 'player-alien' : ''}
                 ${isSelected ? 'player-selected' : ''}
                 ${isClickable ? 'player-clickable' : ''}
                 ${isEliminated ? 'player-eliminated' : ''}
@@ -277,10 +280,11 @@ export default function GameTable({
                 )}
               </div>
 
-              {/* Name */}
+              {/* Name with seat number */}
               <span style={{ maxWidth: nodeWidth, fontSize: Math.max(9, 10 * scale) }} className={`mt-0.5 truncate block text-center leading-tight ${
                 isMe ? 'text-moon-300 font-bold' : 'text-white/70'
               }`}>
+                <span className="text-emerald-400/70 font-mono mr-0.5">#{i + 1}</span>
                 {isMe ? '(Bạn)' : p.name}
               </span>
 

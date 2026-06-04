@@ -6,7 +6,7 @@ import RankBadge from '../components/RankBadge';
 import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
 
-const ALL_ROLES = [
+const WEREWOLF_ROLES = [
   // Base
   { id: 'doppelganger', name: 'Doppelgänger', emoji: '🎭', team: 'village', max: 1, expansion: 'base' },
   { id: 'werewolf', name: 'Werewolf', emoji: '🐺', team: 'werewolf', max: 5, expansion: 'base' },
@@ -36,9 +36,26 @@ const ALL_ROLES = [
   { id: 'auraseer',  name: 'Aura Seer', emoji: '✨', team: 'village',  max: 1, expansion: 'daybreak' },
 ];
 
-const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400' };
-const TEAM_LABEL = { werewolf: 'Phe Sói', village: 'Phe Dân', tanner: 'Phe Riêng' };
-const TEAM_BG = { werewolf: 'bg-wolf-500/10 border-wolf-500/30', village: 'bg-village-400/10 border-village-400/30', tanner: 'bg-purple-500/10 border-purple-500/30' };
+const ALIEN_ROLES = [
+  { id: 'alien',    name: 'Alien',    emoji: '👽', team: 'alien',     max: 3, expansion: 'alien' },
+  { id: 'syntheticalien', name: 'Synthetic Alien', emoji: '🤖', team: 'synthetic', max: 1, expansion: 'alien' },
+  { id: 'groob',    name: 'Groob',    emoji: '👾', team: 'alien',     max: 1, expansion: 'alien' },
+  { id: 'zerb',     name: 'Zerb',     emoji: '👾', team: 'alien',     max: 1, expansion: 'alien' },
+  { id: 'leader',   name: 'Leader',   emoji: '👑', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'cow',      name: 'Cow',      emoji: '🐄', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'oracle',   name: 'Oracle',   emoji: '🔮', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'rascal',   name: 'Rascal',   emoji: '😈', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'exposer',  name: 'Exposer',  emoji: '🔦', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'psychic',  name: 'Psychic',  emoji: '🧠', team: 'village',   max: 1, expansion: 'alien' },
+  { id: 'mortician',name: 'Mortician', emoji: '⚰️', team: 'mortician', max: 1, expansion: 'alien' },
+  { id: 'blob',     name: 'Blob',     emoji: '🟢', team: 'blob',      max: 1, expansion: 'alien' },
+];
+
+const ALL_ROLES = [...WEREWOLF_ROLES, ...ALIEN_ROLES];
+
+const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400', alien: 'text-emerald-400', synthetic: 'text-cyan-400', mortician: 'text-amber-400', blob: 'text-lime-400' };
+const TEAM_LABEL = { werewolf: 'Phe Sói', village: 'Phe Dân', tanner: 'Phe Riêng', alien: 'Phe Alien', synthetic: 'Phe Riêng', mortician: 'Phe Riêng', blob: 'Phe Blob' };
+const TEAM_BG = { werewolf: 'bg-wolf-500/10 border-wolf-500/30', village: 'bg-village-400/10 border-village-400/30', tanner: 'bg-purple-500/10 border-purple-500/30', alien: 'bg-emerald-500/10 border-emerald-500/30', synthetic: 'bg-cyan-500/10 border-cyan-500/30', mortician: 'bg-amber-500/10 border-amber-500/30', blob: 'bg-lime-500/10 border-lime-500/30' };
 
 const ROLE_DETAILS = {
   doppelganger: {
@@ -166,19 +183,83 @@ const ROLE_DETAILS = {
     winCondition: 'Thắng cùng phe Dân.',
     tips: 'Biết ai active đêm nay → loại trừ Villager/Hunter/Tanner/Bodyguard. Cẩn thận: Sói cũng có thể "có hào quang".',
   },
+  // ─── Alien ───────────────────────────────────────────────────────────────────
+  alien: {
+    nightAction: 'Mở mắt, nhìn đồng bọn Alien. Có thể "tip" 1 người (đổi bài họ với bài giữa). Nếu Alien đơn, xem 1 bài giữa.',
+    winCondition: 'Thắng nếu không có Alien nào bị loại. Hoặc thắng nếu Leader bị loại.',
+    tips: 'Tip Cow hoặc người phe Dân mạnh để gây rối. Nếu đơn, thông tin bài giữa rất quý.',
+  },
+  syntheticalien: {
+    nightAction: 'Mở mắt cùng Alien. Nhìn thấy tất cả đồng bọn Alien.',
+    winCondition: 'Thắng NẾU BỊ GIẾT. Nếu bạn chết → Alien & Dân đều thua.',
+    tips: 'Giống Tanner nhưng nguy hiểm hơn. Hành xử đáng ngờ vừa đủ để bị vote.',
+  },
+  cow: {
+    nightAction: 'Thức dậy sau Alien. Biết mình có bị "tip" (đổi bài) hay không.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Nếu bị tip, bài bạn đã đổi — hãy khai báo để mọi người suy luận.',
+  },
+  groob: {
+    nightAction: 'Mở mắt cùng Zerb, nhìn nhau. Biết chắc ai cùng phe.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Phối hợp với Zerb để tìm Alien. Nếu chỉ có 1, bài còn lại ở giữa.',
+  },
+  zerb: {
+    nightAction: 'Mở mắt cùng Groob, nhìn nhau. Biết chắc ai cùng phe.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Phối hợp với Groob để tìm Alien. Nếu chỉ có 1, bài còn lại ở giữa.',
+  },
+  oracle: {
+    nightAction: 'Xem bài 1 người chơi khác, HOẶC 2 bài ở giữa.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Chia sẻ thông tin bạn biết nhưng cẩn thận — Alien có thể giả danh.',
+  },
+  rascal: {
+    nightAction: 'Hoán đổi bài 2 người khác (có thể bỏ qua).',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Khai báo bạn đã đổi ai — hoặc bluff rằng đã đổi để gây rối Alien.',
+  },
+  exposer: {
+    nightAction: 'Lật 1 bài ở giữa. Bài lật sẽ hiển thị cho mọi người.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Bài lật giúp Psychic và cả nhóm có thêm thông tin.',
+  },
+  psychic: {
+    nightAction: 'Xem tất cả bài đã lật ở giữa. Nếu không có bài lật, xem bài 1 người.',
+    winCondition: 'Thắng cùng phe Dân.',
+    tips: 'Phối hợp tốt với Exposer — họ lật bài, bạn đọc.',
+  },
+  mortician: {
+    nightAction: 'App chỉ thị xem 0, 1, hoặc 2 bài hàng xóm.',
+    winCondition: 'Phe riêng. Thắng nếu ÍT NHẤT 1 hàng xóm bị giết & mình sống.',
+    tips: 'Đẩy hàng xóm ra — nhưng đừng để bị loại theo. Biết bài hàng xóm giúp lập kế hoạch.',
+  },
+  leader: {
+    nightAction: 'Không có hành động ban đêm.',
+    winCondition: 'Thắng cùng phe Dân. NHƯNG nếu bạn bị loại, phe Alien thắng!',
+    tips: 'Che giấu danh tính — nếu bạn bị loại, Alien thắng ngay lập tức.',
+  },
+  blob: {
+    nightAction: 'Không có hành động ban đêm.',
+    winCondition: 'Thắng nếu bạn VÀ 2 người ngồi cạnh đều KHÔNG bị loại.',
+    tips: 'Bảo vệ hàng xóm của bạn. Đổ lỗi cho người ở xa bạn!',
+  },
 };
 
-export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, isSimulation, preferredHostRole, onPreferredRoleChange, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
+export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, isSimulation, preferredHostRole, gameMode: gameModeFromProps, onPreferredRoleChange, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedRole, setExpandedRole] = useState(null);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const gameMode = settings.gameMode || 'base';
+  const isAlienMode = gameModeFromProps === 'alien' || settings.gameMode === 'alien';
+  const gameMode = isAlienMode ? 'alien' : (settings.gameMode || 'base');
   const selected = settings.selectedRoles || [];
   const needed = players.length + 3;
-  const filteredRoles = ALL_ROLES.filter(r => gameMode === 'combined' || r.expansion === gameMode);
+  const filteredRoles = isAlienMode
+    ? ALIEN_ROLES
+    : WEREWOLF_ROLES.filter(r => gameMode === 'combined' || r.expansion === gameMode);
 
   function countRole(id) {
     return selected.filter(r => r === id).length;
@@ -333,27 +414,34 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           </span>
         </div>
 
-        {/* Mode selector */}
-        <div className="flex gap-2 mb-3">
-          {[
-            { mode: 'base', label: '🎯 Cơ bản' },
-            { mode: 'daybreak', label: '🌅 Daybreak' },
-            { mode: 'combined', label: '⚡ Kết hợp' },
-          ].map(m => (
-            <button
-              key={m.mode}
-              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
-                gameMode === m.mode
-                  ? 'bg-moon-400/20 text-moon-300 border border-moon-400/40'
-                  : 'bg-white/5 text-white/40 border border-transparent'
-              } ${isHost ? 'hover:bg-white/10' : 'opacity-60'}`}
-              onClick={() => isHost && onModeChange?.(m.mode)}
-              disabled={!isHost}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+        {/* Mode selector — hidden in alien mode (alien has no sub-modes) */}
+        {!isAlienMode && (
+          <div className="flex gap-2 mb-3">
+            {[
+              { mode: 'base', label: '🎯 Cơ bản' },
+              { mode: 'daybreak', label: '🌅 Daybreak' },
+              { mode: 'combined', label: '⚡ Kết hợp' },
+            ].map(m => (
+              <button
+                key={m.mode}
+                className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+                  gameMode === m.mode
+                    ? 'bg-moon-400/20 text-moon-300 border border-moon-400/40'
+                    : 'bg-white/5 text-white/40 border border-transparent'
+                } ${isHost ? 'hover:bg-white/10' : 'opacity-60'}`}
+                onClick={() => isHost && onModeChange?.(m.mode)}
+                disabled={!isHost}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {isAlienMode && (
+          <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <span className="text-emerald-400 text-xs font-medium">👽 One Night Ultimate Alien</span>
+          </div>
+        )}
 
         {!isHost && (
           <p className="text-white/40 text-sm mb-3">Chỉ host mới có thể chọn bài</p>
@@ -403,6 +491,10 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                         role.team === 'werewolf' ? 'bg-wolf-500/30 text-wolf-300' :
                         role.team === 'tanner' ? 'bg-purple-500/30 text-purple-300' :
+                        role.team === 'alien' ? 'bg-emerald-500/30 text-emerald-300' :
+                        role.team === 'synthetic' ? 'bg-cyan-500/30 text-cyan-300' :
+                        role.team === 'mortician' ? 'bg-amber-500/30 text-amber-300' :
+                        role.team === 'blob' ? 'bg-lime-500/30 text-lime-300' :
                         'bg-village-400/30 text-village-300'
                       }`}>{TEAM_LABEL[role.team]}</span>
                       {role.max > 1 && <span className="text-white/30">tối đa {role.max}</span>}

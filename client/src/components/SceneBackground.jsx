@@ -1,25 +1,39 @@
 import { useState, useEffect } from 'react';
 
+const SCENE_PATHS = {
+  werewolf: {
+    night: '/images/night-scene.png',
+    day: '/images/day-scene.png',
+  },
+  alien: {
+    night: '/images/scene-alien/Alien-Night-Scene.png',
+    day: '/images/scene-alien/Alien-Day-Scene.png',
+  },
+};
+
 /**
  * Day/night scene background with crossfade transition.
- * Both images are always mounted (for smooth transitions),
- * only opacity changes. A dark overlay ensures gameplay readability.
+ * Switches asset set based on gameMode.
  *
- * @param {'night'|'day'|null} scene - 'night' or 'day'. null = no scene bg.
+ * @param {'night'|'day'|null} scene
+ * @param {'werewolf'|'alien'} gameMode
  */
-export default function SceneBackground({ scene }) {
+export default function SceneBackground({ scene, gameMode = 'werewolf' }) {
+  const paths = SCENE_PATHS[gameMode] || SCENE_PATHS.werewolf;
   const [loaded, setLoaded] = useState({ day: false, night: false });
 
-  // Preload both images on mount
+  // Preload both images on mount + when gameMode changes
   useEffect(() => {
+    setLoaded({ day: false, night: false });
+
     const dayImg = new Image();
-    dayImg.src = '/images/day-scene.png';
+    dayImg.src = paths.day;
     dayImg.onload = () => setLoaded(s => ({ ...s, day: true }));
 
     const nightImg = new Image();
-    nightImg.src = '/images/night-scene.png';
+    nightImg.src = paths.night;
     nightImg.onload = () => setLoaded(s => ({ ...s, night: true }));
-  }, []);
+  }, [paths.day, paths.night]);
 
   if (!scene) return null;
 
@@ -31,7 +45,7 @@ export default function SceneBackground({ scene }) {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-[1500ms] ease-in-out"
         style={{
-          backgroundImage: loaded.night ? 'url(/images/night-scene.png)' : 'none',
+          backgroundImage: loaded.night ? `url('${paths.night}')` : 'none',
           opacity: isDay ? 0 : 1,
         }}
       />
@@ -40,7 +54,7 @@ export default function SceneBackground({ scene }) {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-[1500ms] ease-in-out"
         style={{
-          backgroundImage: loaded.day ? 'url(/images/day-scene.png)' : 'none',
+          backgroundImage: loaded.day ? `url('${paths.day}')` : 'none',
           opacity: isDay ? 1 : 0,
         }}
       />

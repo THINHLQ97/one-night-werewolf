@@ -111,6 +111,12 @@
   animation: masonPulse 2s ease-in-out infinite;
 }
 
+.player-alien > div:first-child {
+  border-color: rgba(74, 222, 128, 0.7) !important;
+  box-shadow: 0 0 14px rgba(74, 222, 128, 0.45);
+  animation: alienPulse 2s ease-in-out infinite;
+}
+
 .player-selected > div:first-child {
   border-color: rgba(196, 168, 107, 0.9) !important;
   box-shadow: 0 0 16px rgba(196, 168, 107, 0.5);
@@ -207,6 +213,11 @@
 @keyframes masonPulse {
   0%, 100% { box-shadow: 0 0 8px rgba(39, 174, 96, 0.3); }
   50%      { box-shadow: 0 0 20px rgba(39, 174, 96, 0.6); }
+}
+
+@keyframes alienPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+  50%      { box-shadow: 0 0 22px rgba(74, 222, 128, 0.65); }
 }
 
 @keyframes cardReveal {
@@ -402,4 +413,26 @@
 }
 .animate-narratFadeIn {
   animation: narratFadeIn 0.8s ease-out 0.8s both;
+}
+
+/* ── Alien Terminal ─────────────────────────────────────────────────────────── */
+.alien-cursor {
+  animation: alienBlink 0.6s step-end infinite;
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+}
+
+@keyframes alienBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.alien-terminal {
+  animation: terminalBoot 0.3s ease-out;
+}
+
+@keyframes terminalBoot {
+  0% { opacity: 0; transform: scaleY(0.1); }
+  50% { opacity: 1; transform: scaleY(1.02); }
+  100% { transform: scaleY(1); }
 }

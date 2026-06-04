@@ -1,11 +1,17 @@
 import { useMemo } from 'react';
 import { CARD_IMAGES, CARD_BACK } from './RoleIcon';
 
-const CARD_ROLES = [
+const WEREWOLF_ROLES = [
   'werewolf', 'seer', 'robber', 'troublemaker', 'minion',
   'drunk', 'insomniac', 'hunter', 'tanner', 'villager',
   'mason', 'witch', 'alphawolf', 'mysticwolf', 'revealer',
   'sentinel', 'paranormalinvestigator', 'bodyguard',
+];
+
+const ALIEN_CARD_ROLES = [
+  'alien', 'syntheticalien', 'cow', 'groob', 'zerb',
+  'oracle', 'rascal', 'exposer', 'psychic', 'mortician',
+  'leader', 'blob',
 ];
 
 function seededRandom(seed) {
@@ -16,9 +22,11 @@ function seededRandom(seed) {
   };
 }
 
-export default function FallingCards({ count = 12 }) {
+export default function FallingCards({ count = 12, gameMode = 'werewolf' }) {
+  const CARD_ROLES = gameMode === 'alien' ? ALIEN_CARD_ROLES : WEREWOLF_ROLES;
+
   const cards = useMemo(() => {
-    const rand = seededRandom(42);
+    const rand = seededRandom(gameMode === 'alien' ? 77 : 42);
     return Array.from({ length: count }, (_, i) => {
       const role = CARD_ROLES[i % CARD_ROLES.length];
       return {
@@ -34,7 +42,7 @@ export default function FallingCards({ count = 12 }) {
         swayDuration: 4 + rand() * 3,
       };
     });
-  }, [count]);
+  }, [count, gameMode, CARD_ROLES]);
 
   return (
     <div className="falling-cards-container">

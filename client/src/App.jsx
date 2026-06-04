@@ -6,6 +6,8 @@ import voiceChat from './voiceChat';
 import Icon from './components/Icon';
 import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
 import SceneBackground from './components/SceneBackground';
+import OracleSpecialEvent from './components/OracleSpecialEvent';
+import OracleVision from './components/OracleVision';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -32,6 +34,7 @@ export default function App() {
   const [demotedData, setDemotedData] = useState(null);
   const [isSimulation, setIsSimulation] = useState(false);
   const [preferredHostRole, setPreferredHostRole] = useState(null);
+  const [gameMode, setGameMode] = useState('werewolf');
 
   // Persistent knowledge accumulated during the night
   const [nightKnowledge, setNightKnowledge] = useState({
@@ -49,15 +52,23 @@ export default function App() {
   const [connectionLost, setConnectionLost] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
+  const [appAnnouncements, setAppAnnouncements] = useState([]);
+  const [oracleEvent, setOracleEvent] = useState(null); // { active, isOracle, oracleName, result }
+  const [oracleVision, setOracleVision] = useState(null); // persistent vision data { allCards, centerCards, nightLog }
+  const [oracleVisionOpen, setOracleVisionOpen] = useState(false); // overlay visibility (can close + reopen)
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
   const playersRef = useRef(players);
   const nightKnowledgeRef = useRef(nightKnowledge);
+  const gameModeRef = useRef(gameMode);
+  const settingsRef = useRef(settings);
   screenRef.current = screen;
   roomCodeRef.current = roomCode;
   playersRef.current = players;
   nightKnowledgeRef.current = nightKnowledge;
+  gameModeRef.current = gameMode;
+  settingsRef.current = settings;
 
   const audioInitialized = useRef(false);
 
@@ -171,14 +182,66 @@ export default function App() {
     socket.on('night_start', () => {
       setScreen('night');
       setNightState({ currentRole: null, isMyTurn: false, actionData: null, result: null });
+      setAppAnnouncements([]);
+      setOracleEvent(null);
+      setOracleVision(null);
+      setOracleVisionOpen(false);
       setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
-      startNightBGM();
+      startNightBGM(settingsRef.current?.gameMode || gameModeRef.current);
     });
 
-    socket.on('night_role_called', ({ role, roleName, instruction }) => {
+    socket.on('night_role_called', ({ role, roleName, instruction, appAnnounce }) => {
       setNightState(prev => ({ ...prev, currentRole: role, isMyTurn: false, actionData: null, result: null }));
+      if (appAnnounce) {
+        // Avoid only IMMEDIATE consecutive duplicates (anti-spam)
+        setAppAnnouncements(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.text === appAnnounce && Date.now() - last.time < 1000) return prev;
+          return [...prev, { text: appAnnounce, role, time: Date.now() }];
+        });
+      }
       if (role === 'werewolf' || role === 'alphawolf' || role === 'mysticwolf') sfxWolfHowl();
+    });
+
+    socket.on('oracle_vision', (data) => {
+      setOracleVision(data);
+      setOracleVisionOpen(true); // auto-open when first received
+    });
+
+    socket.on('oracle_identity_revealed', ({ oracleId, oracleName, oracleSeat }) => {
+      setNightKnowledge(prev => ({
+        ...prev,
+        oracleRevealed: { id: oracleId, name: oracleName, seat: oracleSeat },
+      }));
+      setAppAnnouncements(prev => [
+        ...prev,
+        { text: `👁️ Oracle đã đạt thấu thị! Oracle là ${oracleName} (ghế #${oracleSeat}) — mở mắt suốt đêm.`, time: Date.now() },
+      ]);
+    });
+
+    socket.on('oracle_special_event', (data) => {
+      if (data.stage === 'start') {
+        setOracleEvent({
+          active: true,
+          isOracle: data.oracleId === socket.id,
+          oracleName: data.oracleName,
+          result: null,
+        });
+      } else if (data.stage === 'result') {
+        setOracleEvent(prev => prev ? {
+          ...prev,
+          result: { correct: data.correct, secretNumber: data.secretNumber, answer: data.answer },
+        } : prev);
+      }
+    });
+
+    socket.on('alien_app_announce', ({ message }) => {
+      setAppAnnouncements(prev => {
+        const last = prev[prev.length - 1];
+        if (last && last.text === message && Date.now() - last.time < 1000) return prev;
+        return [...prev, { text: message, time: Date.now() }];
+      });
     });
 
     socket.on('night_action_request', ({ role, ...actionData }) => {
@@ -205,6 +268,26 @@ export default function App() {
           knownMasons: actionData.masons.map(m => m.id),
         }));
       }
+      // Alien mode: store known alien teammates
+      if (reqEffective === 'aliens' && actionData.aliens) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownAliens: actionData.aliens.map(a => a.id),
+          knownCow: actionData.cowPlayerId || null,
+        }));
+      }
+      if (reqEffective === 'groob_zerb' && actionData.partners) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownGroobZerb: actionData.partners.map(p => p.id),
+        }));
+      }
+      if (reqEffective === 'leader' && actionData.alienPlayers) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownAliens: actionData.alienPlayers.map(a => a.id),
+        }));
+      }
       if (reqEffective === 'auraseer' && Array.isArray(actionData.touched)) {
         setNightKnowledge(prev => ({
           ...prev,
@@ -217,6 +300,13 @@ export default function App() {
         setNightKnowledge(prev => ({
           ...prev,
           shieldedPlayer: actionData.shieldedPlayer,
+        }));
+      }
+      // Blob: store members for day phase knowledge
+      if (reqEffective === 'blob' && actionData.members) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          blobMembers: actionData.members,
         }));
       }
     });
@@ -286,6 +376,56 @@ export default function App() {
           next.revealedPlayers = { ...prev.revealedPlayers, [result.targetPlayer]: result.role };
         }
 
+        // ── Alien mode results ──
+        // Alien rotate → new role
+        if (effectiveRole === 'aliens' && result.rotated && result.newRole) {
+          next.myCurrentRole = result.newRole;
+        }
+        // Alien individual/group view → saw a player or center card
+        if (effectiveRole === 'aliens' && result.seen) {
+          if (result.seen.id?.startsWith('center')) {
+            next.revealedCenter = { ...prev.revealedCenter, [result.seen.id]: result.seen.role };
+          } else {
+            next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+          }
+        }
+        // Oracle center view
+        if (effectiveRole === 'oracle' && Array.isArray(result.seen)) {
+          const rc = { ...prev.revealedCenter };
+          result.seen.forEach(s => { rc[s.slot] = s.role; });
+          next.revealedCenter = rc;
+        }
+        // Oracle player number view
+        if (effectiveRole === 'oracle' && result.seen && !Array.isArray(result.seen) && result.seen.id) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+        }
+        // Psychic view
+        if (effectiveRole === 'psychic' && result.seen) {
+          if (Array.isArray(result.seen)) {
+            result.seen.forEach(s => {
+              if (s.id) next.revealedPlayers = { ...next.revealedPlayers, [s.id]: s.role };
+            });
+          } else if (result.seen.id) {
+            next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+          }
+        }
+        // Mortician view
+        if (effectiveRole === 'mortician' && result.seen) {
+          if (result.seen.id) {
+            next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+          }
+        }
+        // Exposer exposed center cards
+        if (effectiveRole === 'exposer' && Array.isArray(result.exposed)) {
+          const rc = { ...prev.revealedCenter };
+          result.exposed.forEach(e => { rc[e.slot] = e.role; });
+          next.revealedCenter = rc;
+        }
+        // Rascal robber → new role
+        if (effectiveRole === 'rascal' && result.newRole) {
+          next.myCurrentRole = result.newRole;
+        }
+
         return next;
       });
     });
@@ -294,17 +434,24 @@ export default function App() {
       setNightState(prev => ({ ...prev, isMyTurn: false, actionData: null }));
     });
 
-    socket.on('day_start', ({ timerEnd, players: dayPlayers, tokenPool, shieldedPlayer }) => {
+    socket.on('day_start', ({ timerEnd, players: dayPlayers, tokenPool, shieldedPlayer, exposedCenter }) => {
       setScreen('day');
       const merged = dayPlayers.map(dp => {
         const existing = playersRef.current.find(p => p.id === dp.id);
         return existing ? { ...existing, ...dp } : dp;
       });
-      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null });
+      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null, exposedCenter: exposedCenter || {} });
+      // Persist exposed center cards into night knowledge so GameTable shows them face-up
+      if (exposedCenter && Object.keys(exposedCenter).length > 0) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          revealedCenter: { ...prev.revealedCenter, ...exposedCenter },
+        }));
+      }
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       setChatMessages(prev => [...prev, { type: 'phase', text: '☀️ Ban ngày — Thảo luận', time: Date.now() }]);
       stopBGM();
-      setTimeout(() => startDayBGM(), 500);
+      setTimeout(() => startDayBGM(settingsRef.current?.gameMode || gameModeRef.current), 500);
     });
 
     socket.on('voting_phase_start', ({ votingTimerEnd }) => {
@@ -461,6 +608,28 @@ export default function App() {
         swappedPairs: [...prev.swappedPairs, ['center', action.targetPlayer]],
       }));
     }
+    // ── Rascal (alien mode) swap actions ──
+    if (effectiveRole === 'rascal' && action.target1 && action.target2) {
+      // Troublemaker action
+      setNightKnowledge(prev => ({
+        ...prev,
+        swappedPairs: [...prev.swappedPairs, [action.target1, action.target2]],
+      }));
+    }
+    if (effectiveRole === 'rascal' && action.targetPlayer && !action.target1) {
+      // Robber action
+      setNightKnowledge(prev => ({
+        ...prev,
+        swappedPairs: [...prev.swappedPairs, [socket.id, action.targetPlayer]],
+      }));
+    }
+    if (effectiveRole === 'rascal' && action.centerSlot && !action.skip) {
+      // Drunk action
+      setNightKnowledge(prev => ({
+        ...prev,
+        swappedPairs: [...prev.swappedPairs, [socket.id, action.centerSlot]],
+      }));
+    }
   }, []);
 
   const isHost = socket.id === hostId;
@@ -481,7 +650,7 @@ export default function App() {
   ) : null;
 
   if (screen === 'home') {
-    return <HomeScreen onJoin={handleJoinRoom} setError={setError} error={error} />;
+    return <HomeScreen onJoin={handleJoinRoom} setError={setError} error={error} gameMode={gameMode} onGameModeChange={setGameMode} />;
   }
   if (screen === 'lobby') {
     return (<>{connectionOverlay}
@@ -493,6 +662,7 @@ export default function App() {
         settings={settings}
         isSimulation={isSimulation}
         preferredHostRole={preferredHostRole}
+        gameMode={settings.gameMode || gameMode}
         onPreferredRoleChange={roleId => socket.emit('set_preferred_role', { roleId })}
         onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
         onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
@@ -516,10 +686,10 @@ export default function App() {
     </>);
   }
   if (screen === 'role_reveal') {
-    return <><SceneBackground scene={currentScene} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} chatMessages={chatMessages} /></>;
+    return <><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} chatMessages={chatMessages} /></>;
   }
   if (screen === 'night') {
-    return (<><SceneBackground scene={currentScene} />{connectionOverlay}
+    return (<><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}
       <NightScreen
         myRole={myRole}
         myId={socket.id}
@@ -532,11 +702,29 @@ export default function App() {
         isHost={isHost}
         voiceSpeaking={voiceSpeaking}
         chatMessages={chatMessages}
+        appAnnouncements={appAnnouncements}
+        gameMode={settings.gameMode || gameMode}
+        hasOracleVision={!!oracleVision}
+        onReopenVision={() => setOracleVisionOpen(true)}
       />
+      {oracleEvent?.active && (
+        <OracleSpecialEvent
+          isOracle={oracleEvent.isOracle}
+          oracleName={oracleEvent.oracleName}
+          result={oracleEvent.result}
+          onPick={(num) => {
+            socket.emit('night_action', { role: 'oracle', action: { answer: String(num) } });
+          }}
+          onClose={() => setOracleEvent(null)}
+        />
+      )}
+      {oracleVisionOpen && oracleVision && (
+        <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
+      )}
     </>);
   }
   if (screen === 'day') {
-    return (<><SceneBackground scene={currentScene} />{connectionOverlay}
+    return (<><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}
       <DayScreen
         dayState={dayState}
         myId={socket.id}
@@ -558,7 +746,14 @@ export default function App() {
         roomCode={roomCode}
         voiceSpeaking={voiceSpeaking}
         chatMessages={chatMessages}
+        appAnnouncements={appAnnouncements}
+        gameMode={settings.gameMode || gameMode}
+        hasOracleVision={!!oracleVision}
+        onReopenVision={() => setOracleVisionOpen(true)}
       />
+      {oracleVisionOpen && oracleVision && (
+        <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
+      )}
     </>);
   }
   if (screen === 'results') {
