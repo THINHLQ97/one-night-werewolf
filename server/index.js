@@ -676,8 +676,7 @@ async function runAlienNightPhase(room) {
     } else if (phase === 'leader') {
       // Phantom Echo — câu cố định, KHÔNG tiết lộ G/Z có/không trong trận.
       // Leader tự suy điều kiện thắng từ những gì thấy (ngón cái + phân biệt vai).
-      const base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt từng vai (Alien / Groob / Zerb / Synthetic). Nếu CẢ Groob VÀ Zerb cùng nhập trận, bạn chỉ thắng khi CẢ HAI sống sót; ngược lại bạn thắng cùng phe Dân khi một Alien bị loại.';
-      publicAnnounce = `🤖 → Leader: ${base} ⚠️ Leader Trap: nếu tất cả Alien (KHÔNG tính Synthetic — Synthetic không cần vote) cùng vote bạn ban ngày, Alien tự thắng — bất kể có Alien bị giết hay không!`;
+      publicAnnounce = '🤖 → Leader: Mở mắt. Alien giơ ngón cái — bạn thấy vị trí và phân biệt vai. ⚠️ Leader Trap: nếu mọi Alien thường + Groob + Zerb đồng loạt vote bạn → Alien thắng.';
     }
 
     // Emit night_role_called with public app announcement
