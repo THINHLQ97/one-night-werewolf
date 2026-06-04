@@ -662,6 +662,13 @@ async function runAlienNightPhase(room) {
       publicAnnounce = appInst.blobInstruction.publicAnnounce;
     } else if (phase === 'cow') {
       publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
+    } else if (phase === 'leader') {
+      // Check if both Groob+Zerb are in play to give the contextual dialogue
+      const bothGZ = room.players.some(p => room.originalCards[p.id] === 'groob')
+        && room.players.some(p => room.originalCards[p.id] === 'zerb');
+      publicAnnounce = bothGZ
+        ? '🤖 → Leader: Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb chỉ vào nhau — bạn chỉ thắng nếu CẢ HAI sống sót.'
+        : '🤖 → Leader: Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Bạn thắng cùng phe Dân nếu Alien bị loại.';
     }
 
     // Emit night_role_called with public app announcement
