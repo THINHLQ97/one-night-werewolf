@@ -1057,11 +1057,19 @@ function generateNightInstructions(room) {
 
   if (roleSet.has('psychic')) {
     state.psychicInstructions = {};
+    let hasPsychicPlayer = false;
     room.players.forEach(p => {
       if (room.originalCards[p.id] === 'psychic') {
         state.psychicInstructions[p.id] = generatePsychicInstruction(room, p.id);
+        hasPsychicPlayer = true;
       }
     });
+    if (!hasPsychicPlayer) {
+      // Psychic in center — generate PHANTOM instruction for identical broadcast
+      const randomPlayer = room.players[Math.floor(Math.random() * room.players.length)];
+      const phantom = generatePsychicInstruction(room, randomPlayer.id);
+      state.psychicPhantomInstruction = { ...phantom, phantom: true };
+    }
   }
 
   if (roleSet.has('mortician')) {
@@ -1072,6 +1080,13 @@ function generateNightInstructions(room) {
     const blobPlayer = room.players.find(p => room.originalCards[p.id] === 'blob');
     if (blobPlayer) {
       state.blobInstruction = generateBlobInstruction(room, blobPlayer.id);
+    } else {
+      // Blob in center — generate a PHANTOM instruction (random seat) so public
+      // announce uses identical format to maintain mystery
+      const randomPlayer = room.players[Math.floor(Math.random() * room.players.length)];
+      const phantom = generateBlobInstruction(room, randomPlayer.id);
+      // Strip the members so no one actually thinks they're in the Blob
+      state.blobInstruction = { ...phantom, members: [], phantom: true };
     }
   }
 
