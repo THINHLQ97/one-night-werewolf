@@ -755,8 +755,8 @@ async function runAlienNightPhase(room) {
     io.to(room.code).emit('night_role_done', { role: phase });
     // Standard inter-phase delay
     await new Promise(r => setTimeout(r, 1000));
-    // Extra 1s pause after Mortician (before Blob) so players can process the info
-    if (phase === 'mortician') {
+    // Extra 1s pause after Blob (last role) so players can process info before day starts
+    if (phase === 'blob') {
       await new Promise(r => setTimeout(r, 1000));
     }
   }
