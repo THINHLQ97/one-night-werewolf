@@ -1143,18 +1143,25 @@ function determineAlienWinners(room, eliminated) {
     return { winners: [...new Set(winners)], huntOracleMode: true, oracleInCenter: true };
   }
 
-  // ── Leader Trap: if ALL aliens (alien, syntheticalien, groob, zerb) voted for Leader → Alien team auto-wins
-  // (Wiki: "Village team loses and Alien team wins if all aliens point to Leader, even if an alien is killed.")
-  // Digital adaptation: "pointing" → "voting"
+  // ── Leader Trap: if ALL aliens point to Leader → Alien team auto-wins
+  // (Wiki: "Village team loses and Alien team wins if all aliens point to Leader, even if an alien is killed.
+  //  Note that the Synthetic Alien does not need to vote for the Leader for this to happen.")
+  // Digital adaptation: "pointing" → "voting". Synthetic is EXCLUDED from the required-voter check.
   const leaderPlayer = players.find(p => currentCards[p.id] === 'leader');
   if (leaderPlayer) {
-    const aliensInPlay = players.filter(p => isAlienAffiliation(currentCards[p.id]));
+    // "Trap aliens" = aliens whose vote IS required (alien, groob, zerb). Synthetic excluded.
+    const trapAliens = players.filter(p => {
+      const r = currentCards[p.id];
+      return r === 'alien' || r === 'groob' || r === 'zerb';
+    });
+    const allAliensInPlay = players.filter(p => isAlienAffiliation(currentCards[p.id]));
     const votes = room.dayPhase?.votes || {};
-    if (aliensInPlay.length > 0) {
-      const allVotedLeader = aliensInPlay.every(a => votes[a.id] === leaderPlayer.id);
+    // Trap requires at least ONE non-synthetic alien — pure-Synthetic game can't spring a trap
+    if (trapAliens.length > 0) {
+      const allVotedLeader = trapAliens.every(a => votes[a.id] === leaderPlayer.id);
       if (allVotedLeader) {
-        // Leader Trap! Alien team wins (every alien wins, plus Oracle if joined alien)
-        const trapWinners = aliensInPlay.map(a => a.id);
+        // Leader Trap! All aliens win (including Synthetic, even if it didn't vote Leader)
+        const trapWinners = allAliensInPlay.map(a => a.id);
         if (room.alienAppState?.oracleJoinedAlien) {
           const oraclePlayer = players.find(p => room.originalCards[p.id] === 'oracle');
           if (oraclePlayer) trapWinners.push(oraclePlayer.id);

@@ -45,7 +45,7 @@ const ALIEN_ROLES = {
   leader: {
     id: 'leader', name: 'Leader', nameVi: 'Thủ Lĩnh', team: 'village',
     nightOrder: 3, hasNightAction: true, maxCount: 1, emoji: '👑', expansion: 'alien',
-    description: 'Mở mắt. Alien giơ ngón cái — bạn thấy vị trí Alien. Nếu tất cả Alien chỉ vào bạn → Alien thắng.',
+    description: 'Mở mắt. Alien giơ ngón cái — thấy vị trí + phân biệt Groob/Zerb/Synthetic. Có cả Groob & Zerb → thắng chỉ khi CẢ HAI sống. Trap: tất cả Alien (trừ Synthetic) vote bạn → Alien thắng.',
     nightInstruction: 'Thủ Lĩnh, hãy mở mắt. Alien, hãy giơ ngón cái lên.',
     nightClose: 'Thủ Lĩnh, hãy nhắm mắt lại. Alien, hạ tay xuống.',
   },

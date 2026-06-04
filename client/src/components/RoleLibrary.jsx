@@ -310,12 +310,12 @@ const ROLES = [
   {
     id: 'leader', name: 'Leader', nameVi: 'Thủ Lĩnh', emoji: '👑',
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 3, expansion: 'alien',
-    lore: 'Thủ Lĩnh là người duy nhất trong làng biết chính xác Alien đang ẩn ở đâu. Trong đêm, tất cả Alien nhắm mắt và giơ ngón cái — Thủ Lĩnh nhìn thấy tất cả. Đây là sức mạnh cực lớn, nhưng cũng là gánh nặng: nếu tất cả Alien chỉ vào Thủ Lĩnh, Alien thắng ngay lập tức.',
-    nightAction: 'Mở mắt. Alien giơ ngón cái — bạn thấy vị trí tất cả Alien.',
-    winCondition: 'Nếu không có cả Groob & Zerb → thắng cùng Dân. Nếu có cả 2 → thắng chỉ khi cả 2 đều sống. ⚠️ Nếu TẤT CẢ Alien cùng vote bạn ban ngày → Alien tự thắng!',
-    tips: 'Bạn biết ai là Alien — dùng thông tin khéo léo. Nhưng đừng để Alien biết bạn là Leader — họ có thể bẫy bạn bằng đồng loạt vote.',
-    nightScript: '"Thủ Lĩnh, hãy mở mắt. Alien, hãy giơ ngón cái lên." Thủ Lĩnh quan sát. "Thủ Lĩnh, nhắm mắt. Alien, hạ tay."',
-    howToPlay: 'Ban đêm: Mở mắt. Tất cả Alien (bao gồm Groob, Zerb, Synthetic) nhắm mắt và giơ ngón cái.\n\n📋 BẠN THẤY: Vị trí chính xác của tất cả Alien!\n\n📋 ĐIỀU KIỆN THẮNG PHỨC TẠP:\n• Không có cả Groob & Zerb → thắng cùng phe Dân (khi Alien bị loại)\n• Có cả Groob & Zerb → thắng CHỈ KHI cả 2 đều SỐNG\n• ⚠️ LEADER TRAP: Nếu TẤT CẢ Alien cùng vote bạn ban ngày → Alien team tự thắng (kể cả 1 Alien bị loại)\n\nBan ngày: Chia sẻ thông tin khéo léo mà KHÔNG để Alien biết bạn là Leader — nếu họ đoán đúng, họ có thể đồng loạt vote bạn để kích hoạt Leader Trap.',
+    lore: 'Thủ Lĩnh là người duy nhất trong làng biết chính xác Alien đang ẩn ở đâu — và ai trong số đó là Groob, Zerb hay Synthetic. Trong đêm, tất cả Alien giơ ngón cái — Thủ Lĩnh nhìn rõ vị trí và phân biệt từng vai. Đây là sức mạnh cực lớn, nhưng cũng là gánh nặng: nếu tất cả Alien (trừ Synthetic) cùng chỉ vào Thủ Lĩnh ban ngày, Alien thắng ngay lập tức.',
+    nightAction: 'Mở mắt. Alien giơ ngón cái — bạn thấy vị trí và phân biệt từng vai (Alien/Groob/Zerb/Synthetic).',
+    winCondition: 'Không có cả Groob & Zerb (hoặc chỉ 1 trong 2) → thắng cùng Dân. Có cả 2 đều nhập trận → thắng chỉ khi CẢ 2 đều sống. ⚠️ Leader Trap: tất cả Alien (KHÔNG tính Synthetic) cùng vote bạn → Alien tự thắng!',
+    tips: 'Bạn biết ai là Alien và ai là Synthetic — dùng thông tin khéo léo. Nhưng đừng để Alien biết bạn là Leader: họ có thể bẫy bạn bằng đồng loạt vote (Synthetic không cần tham gia bẫy này).',
+    nightScript: '"Thủ Lĩnh, hãy mở mắt. Alien, hãy giơ ngón cái lên." Thủ Lĩnh quan sát từng vai. "Thủ Lĩnh, nhắm mắt. Alien, hạ tay."',
+    howToPlay: 'Ban đêm: Mở mắt. Tất cả Alien (bao gồm Groob, Zerb, Synthetic) giơ ngón cái.\n\n📋 BẠN THẤY: Vị trí chính xác từng Alien — và phân biệt được vai (Alien thường / Groob / Zerb / Synthetic).\n\n📋 ĐIỀU KIỆN THẮNG:\n• Không có cả Groob & Zerb, hoặc chỉ 1 trong 2 (vai còn lại ở giữa) → thắng cùng phe Dân khi một Alien bất kỳ bị loại\n• Có cả Groob & Zerb cùng nhập trận → thắng CHỈ KHI cả 2 đều SỐNG đến cuối ngày\n• ⚠️ LEADER TRAP: Nếu TẤT CẢ Alien (trừ Synthetic — Synthetic không cần) cùng vote bạn → Alien tự thắng (kể cả khi 1 Alien bị loại)\n\nBan ngày: Chia sẻ thông tin khéo léo mà KHÔNG để Alien biết bạn là Leader — nếu họ đoán đúng, Alien thường + Groob + Zerb có thể đồng loạt vote bạn để kích hoạt Trap. Synthetic vẫn có thể vote ai tùy ý.',
   },
   {
     id: 'cow', name: 'Cow', nameVi: 'Bò', emoji: '🐄',

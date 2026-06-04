@@ -795,9 +795,10 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
               <div className="text-center">
                 <p className="text-yellow-400 text-sm font-semibold mb-1">Thủ Lĩnh</p>
                 {actionData?.hasGroobAndZerb && (
-                  <p className="text-purple-400 text-xs mb-2">⚠️ Cả Groob & Zerb đều có trong game — bạn chỉ thắng nếu cả 2 đều SỐNG!</p>
+                  <p className="text-purple-400 text-xs mb-2">⚠️ Cả Groob & Zerb cùng nhập trận — bạn chỉ thắng nếu CẢ HAI cùng sống!</p>
                 )}
-                <p className="text-white/60 text-sm mb-2">Alien đang giơ ngón cái. Bạn thấy:</p>
+                <p className="text-white/60 text-sm mb-1">Tất cả Alien giơ ngón cái. Bạn thấy vị trí và phân biệt từng vai:</p>
+                <p className="text-white/40 text-xs mb-2">💡 Leader Trap: nếu tất cả Alien <span className="text-amber-300">(trừ Synthetic)</span> cùng vote bạn ban ngày → Alien thắng.</p>
                 {actionData?.alienPlayers?.length > 0 ? (
                   <div className="flex gap-2 justify-center flex-wrap mb-2">
                     {actionData.alienPlayers.map(a => {

@@ -683,19 +683,20 @@ async function runAlienNightPhase(room) {
 
       let base;
       if (bothGZInPlay) {
-        // Both G+Z with real players → rivalry active
-        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb chỉ vào nhau — bạn chỉ thắng nếu CẢ HAI sống sót.';
+        // Both G+Z with real players → rivalry active, Leader's win locks to BOTH alive
+        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Groob/Zerb/Synthetic. Cả Groob và Zerb đều có trong trận: bạn chỉ thắng nếu CẢ HAI cùng sống sót đến cuối ngày.';
       } else if (hasGroob && hasZerb) {
-        // Both in game but one in center → no rivalry, both behave as Alien
-        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb có trong game nhưng không cả hai cùng nhập trận — không kích hoạt duel. Bạn thắng cùng Dân nếu Alien bị loại.';
+        // Both in game but at least one in center → rivalry NOT active, Leader wins with village
+        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Groob/Zerb/Synthetic. Groob và Zerb đều có trong tập bài nhưng không cùng nhập trận — duel không kích hoạt. Bạn thắng cùng phe Dân nếu một Alien bất kỳ bị loại.';
       } else if (hasGroob || hasZerb) {
-        // Only one G or Z in game → behaves as Alien
+        // Only one of G/Z in game → behaves as plain Alien, Leader wins with village
         const which = hasGroob ? 'Groob' : 'Zerb';
-        base = `Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. ${which} có trong game và hoạt động như Alien thường. Bạn thắng cùng Dân nếu Alien bị loại.`;
+        base = `Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được ${which}/Synthetic. ${which} có trong game nhưng đối thủ duel vắng mặt — ${which} hoạt động như Alien thường. Bạn thắng cùng phe Dân nếu một Alien bị loại.`;
       } else {
-        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Bạn thắng cùng phe Dân nếu Alien bị loại.';
+        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Alien thường với Synthetic. Bạn thắng cùng phe Dân nếu một Alien bị loại.';
       }
-      publicAnnounce = `🤖 → Leader: ${base} ⚠️ Cảnh báo: nếu TẤT CẢ Alien cùng vote bạn ban ngày — Alien tự thắng bất chấp ai bị giết!`;
+      // Leader Trap warning — Synthetic không cần vote, đề cập rõ
+      publicAnnounce = `🤖 → Leader: ${base} ⚠️ Cảnh báo Leader Trap: nếu tất cả Alien (KHÔNG tính Synthetic — Synthetic không cần vote) cùng vote bạn ban ngày, Alien tự thắng — bất kể có Alien bị giết hay không!`;
     }
 
     // Emit night_role_called with public app announcement
