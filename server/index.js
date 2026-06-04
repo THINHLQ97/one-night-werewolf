@@ -216,6 +216,17 @@ const DOPPEL_IMMEDIATE_ROLES = [
 // Roles that MUST perform an action per ONUW rules (auto-executed if player AFK)
 const MANDATORY_NIGHT_ROLES = ['drunk', 'doppelganger'];
 
+// Alien phases that require auto-execute when Echo says "PHẢI" (mandatory) — for AFK humans
+function isMandatoryAlienPhase(room, phase) {
+  if (!room.alienAppState) return false;
+  if (phase === 'oracle') return true; // Oracle questions always auto-resolve (App picks if no answer)
+  if (phase === 'rascal') {
+    return !!room.alienAppState.rascalInstruction?.mandatory;
+  }
+  // Other alien phases are passive or have optional actions
+  return false;
+}
+
 // Auto-execute a mandatory action for an AFK player.
 // Uses bot AI to choose a random valid action, processes it, logs, and notifies player.
 // Returns true if auto-executed.
@@ -710,6 +721,35 @@ async function runAlienNightPhase(room) {
         nightPhase.pendingActions = [];
         nightPhase.resolver = resolve;
         nightPhase.timer = setTimeout(() => {
+          // ── AFK auto-execute for mandatory alien actions ──
+          // If Echo from Space said "PHẢI" (mandatory), auto-roll a random valid action
+          // for any human player who didn't act in time.
+          const stillPending = [...nightPhase.pendingPlayerIds];
+          for (const pid of stillPending) {
+            const p = room.players.find(pp => pp.id === pid);
+            if (!p || p.isBot) continue;
+            const isMandatoryAlienAction = isMandatoryAlienPhase(room, phase);
+            if (!isMandatoryAlienAction) continue;
+            try {
+              const action = decideAlienBotAction(room, pid, phase);
+              const result = processAlienNightAction(room, pid, phase, action);
+              if (!room.nightLog) room.nightLog = [];
+              room.nightLog.push({
+                role: phase, playerId: pid, playerName: p.name,
+                action: { ...action }, result: { ...result, autoExecuted: true },
+                autoExecuted: true,
+              });
+              if (io.sockets.sockets.has(pid)) {
+                io.to(pid).emit('night_action_result', { role: phase, result: { ...result, autoExecuted: true } });
+              }
+              if (result.publicAnnounce) io.to(room.code).emit('alien_app_announce', { message: result.publicAnnounce });
+              if (result.appReply && result.appReply !== result.publicAnnounce) {
+                io.to(room.code).emit('alien_app_announce', { message: result.appReply });
+              }
+            } catch (err) {
+              console.error('[alien autoExecute error]', phase, pid, err);
+            }
+          }
           nightPhase.pendingPlayerIds = [];
           nightPhase.resolver = null;
           resolve();

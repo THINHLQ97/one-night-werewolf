@@ -134,10 +134,19 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'blob':
         setActionStep('done');
         break;
-      case 'rascal':
-        setActionMode('player');
+      case 'rascal': {
+        // Action mode depends on which Echo instruction the Rascal got
+        const instType = actionData?.instruction?.type;
+        if (instType === 'drunk') {
+          setActionMode('center'); // Drunk action — swap with center card
+        } else if (instType === 'village_idiot') {
+          setActionMode(null); // Just pick left/right direction
+        } else {
+          setActionMode('player'); // troublemaker / robber
+        }
         setActionStep('choose');
         break;
+      }
       case 'exposer':
         setActionMode('center');
         setActionStep('choose');
