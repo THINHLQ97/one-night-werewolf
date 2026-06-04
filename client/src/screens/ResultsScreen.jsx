@@ -263,13 +263,12 @@ function getAlienEndSceneKey(results, players) {
     return aliensInGame ? 'no_one_die_aliens' : 'no_one_die_no_aliens';
   }
 
-  // ── Multi (≥2 voted out) ──
-  if (initialEliminated.length >= 2) {
+  // ── Multi (≥2 voted out) — alien mode has no Hunter cascade, so use `eliminated` directly ──
+  if (eliminated.length >= 2) {
     const aliensEliminated = eliminated.some(id => {
       const r = finalCards[id];
       return r === 'alien' || r === 'groob' || r === 'zerb' || r === 'syntheticalien';
     });
-    // Per user: file naming follows "are aliens in game" check
     return aliensEliminated ? 'multi_aliens_present' : 'multi_no_aliens';
   }
 
