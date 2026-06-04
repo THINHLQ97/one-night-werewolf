@@ -79,13 +79,13 @@ function getNeighborIds(room, playerId) {
 }
 
 // ── Oracle Question Generator ──────────────────────────────────────────────
-// Probabilities match the official One Night Ultimate Alien app:
+// Probabilities (custom-tuned):
+//   Even/Odd             — 20%
 //   Exchange (Drunk)     — 10%
 //   Center               — 10%
-//   Even/Odd             — 20%
 //   Player Number        — 10%
-//   Number Guess         — 5%
-//   Change Team          — 45%
+//   Number Guess         — 15%
+//   Change Team          — 35%
 function generateOracleQuestion(room) {
   const playerCount = room.players.length;
   const roll = Math.random() * 100;
@@ -138,8 +138,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 50-55: Number guess 1-10 (5%)
-  if (roll < 55) {
+  // 50-65: Number guess 1-10 (15%)
+  if (roll < 65) {
     const secretNumber = Math.floor(Math.random() * 10) + 1;
     return {
       id: 'number_guess',
@@ -152,7 +152,7 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 55-100: Change Team (45%)
+  // 65-100: Change Team (35%)
   // App picks an alien team that's in the game (here we have just "Alien" team)
   return {
     id: 'change_team',

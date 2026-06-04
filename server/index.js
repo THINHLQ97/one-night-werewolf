@@ -654,6 +654,8 @@ async function runAlienNightPhase(room) {
       publicAnnounce = appInst.morticianInstruction.publicAnnounce;
     } else if (phase === 'blob' && appInst.blobInstruction) {
       publicAnnounce = appInst.blobInstruction.publicAnnounce;
+    } else if (phase === 'cow') {
+      publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
     }
 
     // Emit night_role_called with public app announcement
@@ -751,7 +753,12 @@ async function runAlienNightPhase(room) {
     }
 
     io.to(room.code).emit('night_role_done', { role: phase });
+    // Standard inter-phase delay
     await new Promise(r => setTimeout(r, 1000));
+    // Extra 1s pause after Mortician (before Blob) so players can process the info
+    if (phase === 'mortician') {
+      await new Promise(r => setTimeout(r, 1000));
+    }
   }
 
   // ── Oracle Vision: if Oracle guessed correctly, show all cards + night log ──
