@@ -322,6 +322,17 @@ function KnowledgeSummary({ knowledge, players }) {
   }
   if (knowledge.knownGroobZerb?.length > 0) items.push(`👾 Groob & Zerb: ${knowledge.knownGroobZerb.map(id => nameMap[id] || '?').join(', ')}`);
   if (knowledge.knownCow) items.push(`🐄 Cow: ${nameMap[knowledge.knownCow] || '?'}`);
+  if (knowledge.cowTapResult) {
+    const c = knowledge.cowTapResult;
+    if (!c.wasTapped) {
+      items.push(`🐄 Cảm nhận: KHÔNG ai tap nắm đấm — cả ${c.leftPlayer?.name || '?'} (trái) và ${c.rightPlayer?.name || '?'} (phải) đều an toàn.`);
+    } else {
+      const taps = [];
+      if (c.leftIsAlien) taps.push(`${c.leftPlayer?.name || '?'} (trái)`);
+      if (c.rightIsAlien) taps.push(`${c.rightPlayer?.name || '?'} (phải)`);
+      items.push(`🐄 Bị tap bởi: ${taps.join(' & ')} — là Alien!`);
+    }
+  }
   if (knowledge.auraSeen) {
     if (auraTouched.length > 0) {
       items.push(`✨ Hào quang: ${auraTouched.map(t => t.name || nameMap[t.id] || '?').join(', ')}`);

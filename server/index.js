@@ -672,7 +672,7 @@ async function runAlienNightPhase(room) {
       // Always present (phantom generated if Blob in center — same format)
       publicAnnounce = appInst.blobInstruction.publicAnnounce;
     } else if (phase === 'cow') {
-      publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
+      publicAnnounce = '🤖 → Cow: Cow giơ nắm đấm trong đêm — nếu kẻ thù ngồi sát ngươi, ngươi sẽ cảm nhận được cú chạm lạnh từ bóng tối.';
     } else if (phase === 'leader') {
       // Phantom Echo — câu cố định, KHÔNG tiết lộ G/Z có/không trong trận.
       // Leader tự suy điều kiện thắng từ những gì thấy (ngón cái + phân biệt vai).

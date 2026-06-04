@@ -98,7 +98,7 @@ function generateOracleQuestion(room) {
       type: 'choice',
       question: 'Số ghế của bạn là CHẴN hay LẺ?',
       options: ['Chẵn', 'Lẻ'],
-      publicAnnounce: '🤖 → Oracle: Oracle, số ghế của bạn chẵn hay lẻ?',
+      publicAnnounce: '🤖 → Oracle: Oracle, vũ trụ thì thầm — số ghế của ngươi mang nhịp CHẴN hay LẺ?',
     };
   }
 
@@ -110,7 +110,7 @@ function generateOracleQuestion(room) {
       type: 'choice',
       question: 'Bạn có muốn đổi bài của mình với 1 bài giữa không? (Không xem bài mới)',
       options: ['Có, đổi bài', 'Không'],
-      publicAnnounce: '🤖 → Oracle: Oracle đang cân nhắc đổi bài...',
+      publicAnnounce: '🤖 → Oracle: Các vì sao mời gọi — Oracle có muốn đánh đổi vận mệnh với bóng tối ở giữa?',
     };
   }
 
@@ -122,7 +122,7 @@ function generateOracleQuestion(room) {
       type: 'choice',
       question: 'Bạn có muốn xem 3 lá bài ở giữa không?',
       options: ['Có, xem 3 lá', 'Không'],
-      publicAnnounce: '🤖 → Oracle: Oracle muốn xem 3 lá bài ở giữa?',
+      publicAnnounce: '🤖 → Oracle: Oracle, ngươi có muốn nhìn vào bóng tối — nơi 3 lá bài đang ngủ yên?',
     };
   }
 
@@ -134,7 +134,7 @@ function generateOracleQuestion(room) {
       type: 'pick_number',
       question: `Bạn muốn xem bài của người chơi số mấy? (1-${playerCount})`,
       min: 1, max: playerCount,
-      publicAnnounce: '🤖 → Oracle: Oracle muốn xem bài của người chơi số mấy?',
+      publicAnnounce: '🤖 → Oracle: Oracle, hãy gọi tên một con số — và ngươi sẽ thấu thị vận mệnh của kẻ ấy.',
     };
   }
 
@@ -148,7 +148,7 @@ function generateOracleQuestion(room) {
       question: 'Ta đang nghĩ đến một số từ 1 đến 10. Đó là số mấy?',
       min: 1, max: 10,
       secretNumber,
-      publicAnnounce: '🤖 → Oracle: Oracle, hãy đoán số ta đang nghĩ...',
+      publicAnnounce: '🤖 → Oracle: Vũ trụ đang nghĩ một con số. Oracle, đoán đúng — và cánh cửa thấu thị sẽ mở cả đêm.',
     };
   }
 
@@ -161,7 +161,7 @@ function generateOracleQuestion(room) {
     question: 'Bạn có muốn gia nhập phe ALIEN không? Bài Oracle sẽ trở thành Alien — bạn thức cùng phe Alien. Dù bị giết, phe của bạn vẫn thắng.',
     options: ['Có, gia nhập Alien', 'Không'],
     targetTeam: 'alien',
-    publicAnnounce: '🤖 → Oracle: Oracle, bạn có muốn gia nhập phe Alien không?',
+    publicAnnounce: '🤖 → Oracle: Bóng tối gọi tên ngươi, Oracle. Có muốn rời ánh sáng, sát cánh cùng Alien?',
   };
 }
 
@@ -190,13 +190,13 @@ function processOracleAnswer(room, playerId, question, answer) {
           questionId: question.id, answer,
           knownAliens: aliens,
           appReply: '🤖 → Oracle: Bạn đã gia nhập phe ALIEN (như Tay Sai). Bạn vẫn là Oracle nhưng giờ giúp phe Alien. Cow không tap bạn, Mortician không thấy bạn là Alien, nhưng bạn THẮNG cùng Alien. Dù bị giết, phe Alien vẫn thắng.',
-          publicAnnounce: '🤖 → Oracle: Oracle đã PHẢN BỘI — gia nhập phe Alien!',
+          publicAnnounce: '🤖 → Oracle: Oracle đã quay lưng với ánh sáng — bóng tối đón chào kẻ mới.',
         };
       }
       return {
         questionId: question.id, answer,
         appReply: '🤖 → Oracle: Oracle chọn trung thành với phe Dân.',
-        publicAnnounce: '🤖 → Oracle: Oracle đã đưa ra lựa chọn của mình.',
+        publicAnnounce: '🤖 → Oracle: Oracle đã định đoạt vận mệnh của mình — vũ trụ giữ kín câu trả lời.',
       };
     }
 
@@ -207,7 +207,7 @@ function processOracleAnswer(room, playerId, question, answer) {
         return {
           questionId: question.id, answer,
           appReply: '🤖 → Oracle: Khôn ngoan, giữ bài của mình.',
-          publicAnnounce: '🤖 → Oracle: Oracle giữ nguyên bài.',
+          publicAnnounce: '🤖 → Oracle: Oracle giữ vững vận mệnh của riêng mình.',
         };
       }
       // App has 30% chance to REFUSE the request (humorous)
@@ -215,7 +215,7 @@ function processOracleAnswer(room, playerId, question, answer) {
         return {
           questionId: question.id, answer, refused: true,
           appReply: '🤖 → Oracle: Hmm... ta đổi ý rồi. KHÔNG đổi bài! Haha.',
-          publicAnnounce: '🤖 → Oracle: Oracle muốn đổi bài — nhưng bị Tiếng vọng từ chối!',
+          publicAnnounce: '🤖 → Oracle: Oracle vươn tay về bóng tối — vũ trụ chối từ.',
         };
       }
       // Swap Oracle's card with random center slot
@@ -226,7 +226,7 @@ function processOracleAnswer(room, playerId, question, answer) {
       return {
         questionId: question.id, answer, swapped: true, slot,
         appReply: '🤖 → Oracle: Đã đổi bài Oracle với một bài giữa. Bạn KHÔNG biết bài mới!',
-        publicAnnounce: '🤖 → Oracle: Oracle đã đổi bài với 1 lá giữa (mù).',
+        publicAnnounce: '🤖 → Oracle: Oracle đã đánh đổi vận mệnh với một lá ở giữa — không hề biết mình trở thành ai.',
       };
     }
 
@@ -236,7 +236,7 @@ function processOracleAnswer(room, playerId, question, answer) {
         return {
           questionId: question.id, answer,
           appReply: '🤖 → Oracle: Không muốn xem? Cũng được.',
-          publicAnnounce: '🤖 → Oracle: Oracle không xem bài giữa.',
+          publicAnnounce: '🤖 → Oracle: Oracle quay lưng với bóng tối — 3 lá giữa vẫn ngủ yên.',
         };
       }
       // App decides how many — usually less than 3 (humorous)
@@ -251,7 +251,7 @@ function processOracleAnswer(room, playerId, question, answer) {
       return {
         questionId: question.id, answer, actualCount: actual, seen,
         appReply: teases[actual],
-        publicAnnounce: `🤖 → Oracle: Oracle xin xem 3 lá — App cho xem ${actual} lá.`,
+        publicAnnounce: `🤖 → Oracle: Oracle ngỏ ý xem 3 lá — vũ trụ chỉ hé lộ ${actual}.`,
       };
     }
 
@@ -259,7 +259,7 @@ function processOracleAnswer(room, playerId, question, answer) {
     case 'even_odd': {
       return {
         questionId: question.id, answer,
-        publicAnnounce: `🤖 → Oracle: Oracle trả lời là số ${answer}.`,
+        publicAnnounce: `🤖 → Oracle: Oracle thì thầm — ghế của ngươi mang nhịp ${answer}.`,
       };
     }
 
@@ -290,7 +290,7 @@ function processOracleAnswer(room, playerId, question, answer) {
         seen: { id: targetPlayer.id, name: targetPlayer.name, role: targetRole },
         appReply: trollMessage,
         // Publicly broadcast which player number was viewed (per official rules)
-        publicAnnounce: `🤖 → Oracle: Oracle đã xem bài của người chơi số ${actualIdx + 1} (${targetPlayer.name}).`,
+        publicAnnounce: `🤖 → Oracle: Oracle đã nhìn thấu vận mệnh của kẻ thứ ${actualIdx + 1} — ${targetPlayer.name}.`,
       };
     }
 
@@ -307,7 +307,7 @@ function processOracleAnswer(room, playerId, question, answer) {
           questionId: question.id, answer: guess, correct: true,
           secretNumber: question.secretNumber,
           appReply: `🤖 → Oracle: ${guess}... ĐÚNG RỒI! Không thể tin được! Oracle được THỨC SUỐT ĐÊM — bạn sẽ thấy mọi hành động!`,
-          publicAnnounce: `🤖 → Oracle: Oracle đoán ĐÚNG! Oracle được thức suốt đêm.`,
+          publicAnnounce: `🤖 → Oracle: Oracle đã nghe thấy vũ trụ — đoán ĐÚNG. Cánh cửa thấu thị mở trọn đêm.`,
           oracleChallenge: 'correct',
         };
       }
@@ -326,8 +326,8 @@ function processOracleAnswer(room, playerId, question, answer) {
         oracleInCenter,
         appReply: `🤖 → Oracle: ${guess}?! SAI! Ta nghĩ số ${question.secretNumber}! Oracle đã chọc giận ta!`,
         publicAnnounce: oracleInCenter
-          ? `🤖 → Oracle: Oracle đoán SAI! HỦY TẤT CẢ điều kiện thắng. Oracle ở bài giữa → chỉ thắng bằng CIRCLE VOTE!`
-          : `🤖 → Oracle: Oracle đoán SAI! HỦY TẤT CẢ điều kiện thắng. MỤC TIÊU MỚI: GIẾT ORACLE!`,
+          ? `🤖 → Oracle: Oracle đoán SAI — vũ trụ nổi giận! Mọi điều kiện thắng bị xóa sạch. Oracle vắng mặt trong hàng — chỉ Circle Vote mới định đoạt số phận.`
+          : `🤖 → Oracle: Oracle đoán SAI — vũ trụ nổi giận! Mọi điều kiện thắng bị xóa sạch. Mục tiêu mới: săn lùng Oracle!`,
         oracleChallenge: 'wrong',
       };
     }
@@ -351,7 +351,7 @@ function generateAlienInstruction(room) {
     return {
       type: 'swap_cards',
       announce: 'Alien, hãy hoán đổi bài của các bạn với nhau.',
-      publicAnnounce: '🤖 → Alien: Alien, hãy hoán đổi bài với nhau (Oracle kích hoạt).',
+      publicAnnounce: '🤖 → Alien: Vũ trụ rung chuyển vì Oracle — Alien, hãy hoán đổi vận mệnh giữa các ngươi.',
     };
   }
 
@@ -377,7 +377,7 @@ function generateAlienInstruction(room) {
       target: target.type,
       targetLabel: target.label,
       announce: `Mỗi Alien, hãy xem bài của 1 người ${target.label}.`,
-      publicAnnounce: `🤖 → Alien: Mỗi Alien, hãy xem 1 bài ${target.label}.`,
+      publicAnnounce: `🤖 → Alien: Mỗi Alien hãy lặng lẽ hé mở 1 lá ${target.label}.`,
     };
   }
 
@@ -389,7 +389,7 @@ function generateAlienInstruction(room) {
       target: target.type,
       targetLabel: target.label,
       announce: `Tất cả Alien cùng xem 1 bài ${target.label}.`,
-      publicAnnounce: `🤖 → Alien: Tất cả Alien cùng xem 1 bài ${target.label}.`,
+      publicAnnounce: `🤖 → Alien: Tất cả Alien hãy cùng dán mắt vào 1 lá ${target.label}.`,
     };
   }
 
@@ -398,7 +398,7 @@ function generateAlienInstruction(room) {
     return {
       type: 'stare',
       announce: 'Alien, hãy nhìn nhau rồi nhắm mắt lại.',
-      publicAnnounce: '🤖 → Alien: Alien chỉ nhìn nhau, không hành động.',
+      publicAnnounce: '🤖 → Alien: Đêm nay Alien chỉ trao nhau ánh mắt — không một cử động.',
     };
   }
 
@@ -407,7 +407,7 @@ function generateAlienInstruction(room) {
     return {
       type: 'rotate_left',
       announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN TRÁI. Bạn sẽ nhận bài từ Alien gần nhất bên phải.',
-      publicAnnounce: '🤖 → Alien: Tất cả Alien chuyền bài cho Alien gần nhất bên TRÁI.',
+      publicAnnounce: '🤖 → Alien: Vận mệnh trôi theo chiều gió — mỗi Alien chuyền bài sang đồng bọn gần nhất bên TRÁI.',
     };
   }
 
@@ -416,7 +416,7 @@ function generateAlienInstruction(room) {
     return {
       type: 'rotate_right',
       announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN PHẢI. Bạn sẽ nhận bài từ Alien gần nhất bên trái.',
-      publicAnnounce: '🤖 → Alien: Tất cả Alien chuyền bài cho Alien gần nhất bên PHẢI.',
+      publicAnnounce: '🤖 → Alien: Vận mệnh trôi theo chiều gió — mỗi Alien chuyền bài sang đồng bọn gần nhất bên PHẢI.',
     };
   }
 
@@ -424,7 +424,7 @@ function generateAlienInstruction(room) {
   return {
     type: 'show',
     announce: 'Mỗi Alien, hãy CHO các Alien khác xem bài của mình.',
-    publicAnnounce: '🤖 → Alien: Tất cả Alien lộ bài cho nhau xem.',
+    publicAnnounce: '🤖 → Alien: Đêm này không có bí mật giữa đồng bọn — tất cả Alien lộ bài cho nhau.',
   };
 }
 
@@ -455,17 +455,17 @@ function generateRascalInstruction(room) {
     mandatory: Math.random() < mandatoryChance[chosenType],
   };
 
-  const verb = chosen.mandatory ? 'PHẢI' : 'CÓ THỂ';
+  const verb = chosen.mandatory ? 'BUỘC PHẢI' : 'được phép';
 
   const labels = {
-    troublemaker: `hoán đổi bài của 2 người chơi khác`,
-    robber: `đổi bài của bạn với 1 người khác (xem bài mới)`,
-    drunk: `đổi bài của bạn với 1 bài giữa (không xem)`,
-    village_idiot: `xoay bài tất cả người khác sang trái hoặc phải`,
+    troublemaker: `tráo vận mệnh của 2 kẻ khác`,
+    robber: `đánh đổi vận mệnh với 1 kẻ — và nhìn thấu thân phận mới`,
+    drunk: `đánh đổi vận mệnh với 1 lá ở giữa — mù lòa trước thân phận mới`,
+    village_idiot: `quay vòng vận mệnh của tất cả kẻ khác — sang TRÁI hoặc PHẢI`,
   };
 
   chosen.announce = `Quỷ Nhỏ, bạn ${verb} ${labels[chosen.type]}.`;
-  chosen.publicAnnounce = `🤖 → Rascal: Rascal, bạn ${verb} ${labels[chosen.type]}.`;
+  chosen.publicAnnounce = `🤖 → Rascal: Rascal ${verb} ${labels[chosen.type]}.`;
 
   return chosen;
 }
@@ -478,7 +478,7 @@ function generateExposerInstruction() {
     type: 'expose',
     count,
     announce: `Kẻ Phơi Bày, bạn CÓ THỂ lật ${label} ở giữa (hoặc không lật gì).`,
-    publicAnnounce: `🤖 → Exposer: Exposer, bạn CÓ THỂ lật ${label} ở giữa.`,
+    publicAnnounce: `🤖 → Exposer: Exposer, ngươi được quyền vén bóng tối — lật ${label} ở giữa.`,
   };
 }
 
@@ -513,7 +513,7 @@ function generatePsychicInstruction(room, playerId) {
     count,
     targetNumbers: chosen.targetNumbers || null,
     announce: `Psychic, hãy xem ${chosen.label}.`,
-    publicAnnounce: `🤖 → Psychic: Psychic, hãy xem ${chosen.label}.`,
+    publicAnnounce: `🤖 → Psychic: Psychic, hãy mở tâm trí — và nhìn vào ${chosen.label}.`,
   };
 }
 
@@ -524,7 +524,7 @@ function generateMorticianInstruction() {
     return {
       type: 'mortician_view', viewCount: 0,
       announce: 'Nhà Quàn, đêm nay bạn không được xem bài ai.',
-      publicAnnounce: '🤖 → Mortician: Mortician, đêm nay bạn không được xem bài ai.',
+      publicAnnounce: '🤖 → Mortician: Đêm nay những xác chết câm lặng — Mortician không đọc được vận mệnh ai.',
     };
   }
   if (viewCount === 1) {
@@ -533,13 +533,13 @@ function generateMorticianInstruction() {
     return {
       type: 'mortician_view', viewCount: 1, side,
       announce: `Nhà Quàn, hãy xem bài hàng xóm ${sideLabel}.`,
-      publicAnnounce: `🤖 → Mortician: Mortician, hãy xem bài 1 hàng xóm.`,
+      publicAnnounce: `🤖 → Mortician: Mortician, hãy chạm vào linh hồn của 1 kẻ ngồi cạnh — đọc lấy vận mệnh.`,
     };
   }
   return {
     type: 'mortician_view', viewCount: 2,
     announce: 'Nhà Quàn, hãy xem bài cả 2 hàng xóm.',
-    publicAnnounce: '🤖 → Mortician: Mortician, hãy xem bài cả 2 hàng xóm.',
+    publicAnnounce: '🤖 → Mortician: Đêm nay cả 2 kẻ ngồi cạnh cùng hé lộ — Mortician đọc trọn vận mệnh đôi bờ.',
   };
 }
 
@@ -589,13 +589,13 @@ function generateBlobInstruction(room, playerId) {
   // Build descriptive announce with direction info
   let directionLabel;
   if (otherCount === 0) {
-    directionLabel = 'Blob không nhiễm ai thêm.';
+    directionLabel = 'Blob lan tỏa trong đêm — nhưng không một linh hồn nào bị nhiễm.';
   } else if (direction === 'both') {
-    directionLabel = `${otherCount / 2} người bên trái và ${otherCount / 2} người bên phải của Blob đã nhiễm Blob.`;
+    directionLabel = `Blob lan tỏa cả hai phía — ${otherCount / 2} kẻ bên trái và ${otherCount / 2} kẻ bên phải đã hòa vào Blob.`;
   } else if (direction === 'left') {
-    directionLabel = `${otherCount} người bên trái của Blob đã nhiễm Blob.`;
+    directionLabel = `Blob trườn về bên TRÁI — ${otherCount} kẻ đã hòa vào Blob.`;
   } else {
-    directionLabel = `${otherCount} người bên phải của Blob đã nhiễm Blob.`;
+    directionLabel = `Blob trườn về bên PHẢI — ${otherCount} kẻ đã hòa vào Blob.`;
   }
 
   // Build member names for public announce

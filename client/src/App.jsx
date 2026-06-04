@@ -295,6 +295,19 @@ export default function App() {
           knownAlienRoles: roleMap,
         }));
       }
+      // Cow's own tap result — store so day log can recall it
+      if (reqEffective === 'cow' && actionData.leftPlayer && actionData.rightPlayer) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          cowTapResult: {
+            wasTapped: !!actionData.wasTapped,
+            leftIsAlien: !!actionData.leftIsAlien,
+            rightIsAlien: !!actionData.rightIsAlien,
+            leftPlayer: actionData.leftPlayer,
+            rightPlayer: actionData.rightPlayer,
+          },
+        }));
+      }
       if (reqEffective === 'auraseer' && Array.isArray(actionData.touched)) {
         setNightKnowledge(prev => ({
           ...prev,
