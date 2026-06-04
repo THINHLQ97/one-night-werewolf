@@ -430,30 +430,31 @@ function generateAlienInstruction(room) {
 
 // ── Rascal Instruction Generator ───────────────────────────────────────────
 function generateRascalInstruction(room) {
-  const actions = [
-    {
-      type: 'troublemaker',
-      mandatory: Math.random() < 0.4,
-      announce: null, // set below
-    },
-    {
-      type: 'robber',
-      mandatory: Math.random() < 0.4,
-      announce: null,
-    },
-    {
-      type: 'drunk',
-      mandatory: Math.random() < 0.5,
-      announce: null,
-    },
-    {
-      type: 'village_idiot',
-      mandatory: Math.random() < 0.3,
-      announce: null,
-    },
-  ];
+  // Tuned weights: Village Idiot 5%, others ~31.67% each (total 100%)
+  const roll = Math.random() * 100;
+  let chosenType;
+  if (roll < 5) {
+    chosenType = 'village_idiot';
+  } else if (roll < 5 + 95 / 3) {
+    chosenType = 'troublemaker';
+  } else if (roll < 5 + (2 * 95) / 3) {
+    chosenType = 'robber';
+  } else {
+    chosenType = 'drunk';
+  }
 
-  const chosen = pick(actions);
+  const mandatoryChance = {
+    troublemaker: 0.4,
+    robber: 0.4,
+    drunk: 0.5,
+    village_idiot: 0.3,
+  };
+
+  const chosen = {
+    type: chosenType,
+    mandatory: Math.random() < mandatoryChance[chosenType],
+  };
+
   const verb = chosen.mandatory ? 'PHẢI' : 'CÓ THỂ';
 
   const labels = {
