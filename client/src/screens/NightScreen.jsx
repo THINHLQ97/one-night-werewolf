@@ -169,6 +169,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         if (prev.length >= 2) return prev;
         return [...prev, id];
       });
+    } else if (effectiveRole === 'exposer') {
+      // Exposer: app dictates exact count (1, 2 or 3) — let player toggle within that limit
+      const maxCount = actionData?.instruction?.count || 1;
+      setSelected(prev => {
+        if (prev.includes(id)) return prev.filter(x => x !== id);
+        if (prev.length >= maxCount) return prev;
+        return [...prev, id];
+      });
     } else {
       setSelected([id]);
     }
@@ -305,6 +313,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const canSubmit = (() => {
     if (effectiveRole === 'troublemaker' || effectiveRole === 'rascal') return selected.length === 2;
     if ((effectiveRole === 'seer' || effectiveRole === 'oracle') && actionMode === 'center') return selected.length === 2;
+    if (effectiveRole === 'exposer') return selected.length === (actionData?.instruction?.count || 1);
     return selected.length === 1;
   })();
 
