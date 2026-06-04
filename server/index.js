@@ -674,11 +674,27 @@ async function runAlienNightPhase(room) {
     } else if (phase === 'cow') {
       publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
     } else if (phase === 'leader') {
-      const bothGZ = room.players.some(p => room.originalCards[p.id] === 'groob')
+      // Check ALL cards (players + center) — G/Z presence in game matters for context
+      const allCards = Object.values(room.originalCards || {});
+      const hasGroob = allCards.includes('groob');
+      const hasZerb = allCards.includes('zerb');
+      const bothGZInPlay = room.players.some(p => room.originalCards[p.id] === 'groob')
         && room.players.some(p => room.originalCards[p.id] === 'zerb');
-      const base = bothGZ
-        ? 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb chỉ vào nhau — bạn chỉ thắng nếu CẢ HAI sống sót.'
-        : 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Bạn thắng cùng phe Dân nếu Alien bị loại.';
+
+      let base;
+      if (bothGZInPlay) {
+        // Both G+Z with real players → rivalry active
+        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb chỉ vào nhau — bạn chỉ thắng nếu CẢ HAI sống sót.';
+      } else if (hasGroob && hasZerb) {
+        // Both in game but one in center → no rivalry, both behave as Alien
+        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Groob và Zerb có trong game nhưng không cả hai cùng nhập trận — không kích hoạt duel. Bạn thắng cùng Dân nếu Alien bị loại.';
+      } else if (hasGroob || hasZerb) {
+        // Only one G or Z in game → behaves as Alien
+        const which = hasGroob ? 'Groob' : 'Zerb';
+        base = `Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. ${which} có trong game và hoạt động như Alien thường. Bạn thắng cùng Dân nếu Alien bị loại.`;
+      } else {
+        base = 'Leader, hãy mở mắt. Alien giơ ngón cái lộ vị trí. Bạn thắng cùng phe Dân nếu Alien bị loại.';
+      }
       publicAnnounce = `🤖 → Leader: ${base} ⚠️ Cảnh báo: nếu TẤT CẢ Alien cùng vote bạn ban ngày — Alien tự thắng bất chấp ai bị giết!`;
     }
 
