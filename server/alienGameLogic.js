@@ -1194,34 +1194,40 @@ function determineAlienWinners(room, eliminated) {
     return { winners: [syntheticPlayer.id], syntheticWin: true };
   }
 
-  // Check Groob/Zerb rivalry
-  const hasGroob = players.some(p => currentCards[p.id] === 'groob');
-  const hasZerb = players.some(p => currentCards[p.id] === 'zerb');
+  // Check Groob/Zerb rivalry — based on ORIGINAL cards (rivalry is set at start of night)
+  const hasGroob = room.settings.selectedRoles.includes('groob');
+  const hasZerb = room.settings.selectedRoles.includes('zerb');
   const bothGroobZerb = hasGroob && hasZerb;
 
-  // Groob/Zerb individual wins
+  // Groob/Zerb individual wins (who currently HOLDS the card)
   if (bothGroobZerb) {
     const groobPlayer = players.find(p => currentCards[p.id] === 'groob');
     const zerbPlayer = players.find(p => currentCards[p.id] === 'zerb');
-    const groobDead = eliminated.includes(groobPlayer.id);
-    const zerbDead = eliminated.includes(zerbPlayer.id);
 
-    if (zerbDead && !groobDead) winners.push(groobPlayer.id);
-    if (groobDead && !zerbDead) winners.push(zerbPlayer.id);
+    if (groobPlayer && zerbPlayer) {
+      const groobDead = eliminated.includes(groobPlayer.id);
+      const zerbDead = eliminated.includes(zerbPlayer.id);
+
+      if (zerbDead && !groobDead) winners.push(groobPlayer.id);
+      if (groobDead && !zerbDead) winners.push(zerbPlayer.id);
+    }
   }
 
-  // Leader win condition (under G+Z rivalry: leader wins only if both G+Z and leader survive)
-  // Note: leaderPlayer already computed earlier for Leader Trap check
+  // Leader win condition: when both Groob & Zerb are in the game,
+  // Leader has a SEPARATE win condition — Groob + Zerb + Leader all survive.
+  // Leader does NOT win with village in this case.
   if (leaderPlayer) {
     if (bothGroobZerb) {
       const groobPlayer = players.find(p => currentCards[p.id] === 'groob');
       const zerbPlayer = players.find(p => currentCards[p.id] === 'zerb');
-      const bothAlive = !eliminated.includes(groobPlayer.id) && !eliminated.includes(zerbPlayer.id);
-      if (bothAlive && !eliminated.includes(leaderPlayer.id)) {
-        winners.push(leaderPlayer.id);
+      if (groobPlayer && zerbPlayer) {
+        const bothAlive = !eliminated.includes(groobPlayer.id) && !eliminated.includes(zerbPlayer.id);
+        if (bothAlive && !eliminated.includes(leaderPlayer.id)) {
+          winners.push(leaderPlayer.id);
+        }
       }
     } else {
-      // Leader wins with village
+      // No rivalry → Leader wins with village normally
       // (handled below in village win check)
     }
   }

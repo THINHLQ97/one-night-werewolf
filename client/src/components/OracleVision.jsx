@@ -18,7 +18,7 @@ function describeAction(entry) {
   const { role, action, result, targetName, target1Name, target2Name } = entry;
   switch (role) {
     case 'oracle':
-      if (result?.appReply) return result.appReply.replace('🤖 → Oracle: ', '');
+      if (result?.appReply) return result.appReply;
       return `trả lời: ${result?.answer || 'không rõ'}`;
     case 'aliens':
       if (result?.seen) return `xem bài → ${ROLE_NAMES[result.seen.role] || result.seen.role}`;

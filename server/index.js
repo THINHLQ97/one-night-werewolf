@@ -672,11 +672,9 @@ async function runAlienNightPhase(room) {
       // Always present (phantom generated if Blob in center — same format)
       publicAnnounce = appInst.blobInstruction.publicAnnounce;
     } else if (phase === 'cow') {
-      publicAnnounce = '🤖 → Cow: Cow giơ nắm đấm trong đêm — nếu kẻ thù ngồi sát ngươi, ngươi sẽ cảm nhận được cú chạm lạnh từ bóng tối.';
+      publicAnnounce = 'Mọi người giơ nắm đấm. Alien ngồi cạnh Cow, hãy tap nắm đấm của Cow.';
     } else if (phase === 'leader') {
-      // Phantom Echo — câu cố định, KHÔNG tiết lộ G/Z có/không trong trận.
-      // Leader tự suy điều kiện thắng từ những gì thấy (ngón cái + phân biệt vai).
-      publicAnnounce = '🤖 → Leader: Mở mắt và thấy các Alien, nhưng nếu tất cả Alien quyết tâm tiêu diệt ngươi, Alien sẽ chiến thắng. Nếu Zerb và Groob có trong trò chơi, ngươi phải giữ cho 2 kẻ thù này sống sót để giành được chiến thắng của riêng mình.';
+      publicAnnounce = 'Leader, hãy mở mắt. Alien, hãy giơ ngón cái lên.';
     }
 
     // Emit night_role_called with public app announcement

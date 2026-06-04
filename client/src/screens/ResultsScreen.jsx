@@ -102,6 +102,7 @@ const ALIEN_END_SCENE_IMAGES = {
   vote_leader: '/images/endscene-alien/vote-leader.webp',
   vote_mortician: '/images/endscene-alien/vote-mortician.webp',
   vote_oracle: '/images/endscene-alien/vote-oracle.webp',
+  vote_oracle_traitor: '/images/endscene-alien/vote-oracle.webp',
   vote_psychic: '/images/endscene-alien/vote-psychic.webp',
   vote_rascal: '/images/endscene-alien/vote-rascal.webp',
   vote_exposer: '/images/endscene-alien/vote-exposer.webp',
@@ -131,6 +132,7 @@ const ALIEN_END_SCENE_NARRATIONS = {
   vote_leader: 'Thủ Lĩnh bị hạ — cây cột chống đỡ ngôi làng vừa đổ sụp. Bóng tối ngoài hành tinh giờ đây không gì cản nổi.',
   vote_mortician: 'Nhà Quàn bị treo cổ — kẻ độc cô đã nhập cuộc cuối cùng vào hàng ngũ những người chết.',
   vote_oracle: 'Nhà Tiên Tri đã không nhìn thấy chính cái chết của mình. Lời nguyền vũ trụ vẫn tiếp tục.',
+  vote_oracle_traitor: 'Oracle đã phản bội phe Dân để gia nhập Alien — và dù bị vote, cái chết của kẻ phản bội không cứu được ngôi làng. Phe Alien vẫn thắng.',
   vote_psychic: 'Ngoại Cảm đã không đoán được số phận của chính mình. Tiếng vọng vũ trụ giờ đây không còn ai nghe được.',
   vote_rascal: 'Quỷ Nhỏ bị bắt — kẻ phá rối cuối cùng cũng phải trả giá cho những trò đùa của mình.',
   vote_exposer: 'Kẻ Phơi Bày bị tiêu diệt — ánh sáng sự thật đã tắt, bóng tối lại bao trùm.',
@@ -288,6 +290,12 @@ function getAlienEndSceneKey(results, players) {
   // ── Single vote — vote-{role} priority ──
   const primary = initialEliminated[0] ?? eliminated[0];
   const primaryRole = finalCards[primary];
+
+  // Oracle traitor (joined alien but got voted out)
+  if (primaryRole === 'oracle' && alienAppState.oracleJoinedAlien) {
+    return 'vote_oracle_traitor';
+  }
+
   return ALIEN_VOTE_KEYS[primaryRole] || null;
 }
 
@@ -785,7 +793,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
             <h3 className="text-lime-400 font-semibold mb-2 flex items-center gap-1.5">
               🟢 Thành viên Blob
             </h3>
-            <p className="text-white/50 text-xs mb-2">{results.alienAppState.blobInstruction.publicAnnounce?.replace('🤖 → Blob: ', '')}</p>
+            <p className="text-white/50 text-xs mb-2">{results.alienAppState.blobInstruction.publicAnnounce}</p>
             <div className="flex gap-2 flex-wrap">
               {results.alienAppState.blobInstruction.members.map((id, i) => {
                 const name = results.alienAppState.blobInstruction.memberNames[i];
