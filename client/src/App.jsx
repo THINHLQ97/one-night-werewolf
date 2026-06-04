@@ -224,13 +224,16 @@ export default function App() {
       if (data.stage === 'start') {
         setOracleEvent({
           active: true,
-          isOracle: data.oracleId === socket.id,
-          oracleName: data.oracleName,
+          isOracle: !!data.isOracle,
+          // oracleName is null for spectators — identity stays hidden until correct guess
+          oracleName: data.oracleName || null,
           result: null,
         });
       } else if (data.stage === 'result') {
         setOracleEvent(prev => prev ? {
           ...prev,
+          // If oracleName provided here (correct guess), reveal it to spectators now
+          oracleName: data.oracleName || prev.oracleName,
           result: { correct: data.correct, secretNumber: data.secretNumber, answer: data.answer },
         } : prev);
       }

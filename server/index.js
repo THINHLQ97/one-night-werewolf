@@ -678,13 +678,18 @@ async function runAlienNightPhase(room) {
       const realPlayers = actingPlayers.filter(p => !p.isBot);
       const botPlayers = actingPlayers.filter(p => p.isBot);
 
-      // Broadcast special event start to ALL when Oracle gets number_guess
+      // Broadcast special event start when Oracle gets number_guess
+      // Send Oracle's identity ONLY to the Oracle player; spectators stay blind.
       if (phase === 'oracle' && room.alienAppState?.oracleQuestion?.id === 'number_guess') {
         const oraclePlayer = players.find(p => room.originalCards[p.id] === 'oracle');
-        io.to(room.code).emit('oracle_special_event', {
-          stage: 'start',
-          oracleId: oraclePlayer?.id || null,
-          oracleName: oraclePlayer?.name || null,
+        room.players.forEach(p => {
+          const isOracle = !!oraclePlayer && p.id === oraclePlayer.id;
+          io.to(p.id).emit('oracle_special_event', {
+            stage: 'start',
+            isOracle,
+            // Only the Oracle player gets their own name; spectators get null
+            oracleName: isOracle ? oraclePlayer.name : null,
+          });
         });
       }
 
@@ -715,12 +720,15 @@ async function runAlienNightPhase(room) {
               room.nightLog.push({ role: phase, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
 
               // Broadcast Oracle special event result to ALL
+              // Reveal Oracle's name ONLY on correct guess (identity stays hidden if wrong)
               if (phase === 'oracle' && result.oracleChallenge) {
+                const isCorrect = result.oracleChallenge === 'correct';
                 io.to(room.code).emit('oracle_special_event', {
                   stage: 'result',
-                  correct: result.oracleChallenge === 'correct',
+                  correct: isCorrect,
                   secretNumber: result.secretNumber,
                   answer: result.answer,
+                  oracleName: isCorrect ? bot.name : null,
                 });
               }
 
@@ -1479,12 +1487,15 @@ io.on('connection', socket => {
       }
 
       // Broadcast Oracle special event result to ALL (when human Oracle answers)
+      // Reveal Oracle's name ONLY on correct guess
       if (phase === 'oracle' && result.oracleChallenge) {
+        const isCorrect = result.oracleChallenge === 'correct';
         io.to(room.code).emit('oracle_special_event', {
           stage: 'result',
-          correct: result.oracleChallenge === 'correct',
+          correct: isCorrect,
           secretNumber: result.secretNumber,
           answer: result.answer,
+          oracleName: isCorrect ? playerName : null,
         });
       }
 

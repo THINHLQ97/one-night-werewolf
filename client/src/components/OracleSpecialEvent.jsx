@@ -73,7 +73,7 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
             <p className="text-white/60 text-xs sm:text-sm mb-4 italic">
               {isOracle
                 ? `"Đoán đúng — bí mật của vũ trụ sẽ mở ra trước mắt ngươi.\nĐoán sai — cả làng sẽ săn lùng ngươi đến hơi thở cuối cùng."`
-                : `"${oracleName || 'Oracle'} đang đối mặt với thách thức tối thượng. Cả làng nín thở chờ đợi..."`
+                : `"Nhà Tiên Tri đang đối mặt với thách thức tối thượng. Cả làng nín thở chờ đợi... Danh tính cô vẫn ẩn."`
               }
             </p>
             {isOracle ? (
@@ -137,7 +137,7 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
               // SPECTATOR MODE: just wait
               <div>
                 <p className="text-emerald-300 text-base mb-2">
-                  <strong className="text-emerald-200">{oracleName || 'Oracle'}</strong> đang chọn số...
+                  <strong className="text-emerald-200">Nhà Tiên Tri</strong> đang chọn số...
                 </p>
                 <p className="text-white/50 text-sm italic mb-3">Đừng can thiệp. Hãy chờ định mệnh phán xét.</p>
                 <div className="flex justify-center gap-1">
@@ -179,15 +179,13 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
                 <p className="text-wolf-300 text-sm leading-relaxed mb-2 italic">
                   {isOracle
                     ? `"Ta nghĩ số ${result.secretNumber}. Ngươi đã chọc giận ta..."`
-                    : `"${oracleName || 'Oracle'} đã đoán SAI! Tiếng vọng nổi giận — số đúng là ${result.secretNumber}."`}
+                    : `"Oracle đã đoán SAI! Tiếng vọng nổi giận — số đúng là ${result.secretNumber}. Nhưng danh tính Oracle vẫn ẩn..."`}
                 </p>
                 <p className="text-white/70 text-sm mb-2">
                   Mọi điều kiện thắng đã bị <strong className="text-wolf-400">HỦY BỎ</strong>.
                 </p>
                 <p className="text-yellow-300 text-sm font-semibold mb-4">
-                  {isOracle
-                    ? 'Mục tiêu mới: TÌM VÀ TIÊU DIỆT ORACLE!'
-                    : `Mục tiêu mới: TÌM VÀ TIÊU DIỆT ${(oracleName || 'ORACLE').toUpperCase()}!`}
+                  Mục tiêu mới: TÌM VÀ TIÊU DIỆT ORACLE!
                 </p>
               </>
             )}
