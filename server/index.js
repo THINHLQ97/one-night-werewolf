@@ -800,6 +800,20 @@ async function runAlienNightPhase(room) {
       });
     } else {
       await new Promise(r => setTimeout(r, 3000));
+
+      // Phantom response when role is in center (no acting player)
+      if (phase === 'oracle' && appInst.oracleQuestion) {
+        const q = appInst.oracleQuestion;
+        let phantomResponse;
+        if (q.id === 'change_team') phantomResponse = 'Oracle đã đưa ra lựa chọn của mình.';
+        else if (q.id === 'exchange') phantomResponse = 'Oracle chọn giữ nguyên bài.';
+        else if (q.id === 'center') phantomResponse = 'Oracle không xem bài giữa.';
+        else if (q.id === 'even_odd') phantomResponse = `Oracle đã trả lời: số ${Math.random() < 0.5 ? 'Chẵn' : 'Lẻ'}.`;
+        else if (q.id === 'player_number') phantomResponse = `Oracle đã xem bài người chơi số ${Math.floor(Math.random() * players.length) + 1}.`;
+        else if (q.id === 'number_guess') phantomResponse = 'Oracle đã đoán số.';
+        else phantomResponse = 'Oracle đã trả lời.';
+        io.to(room.code).emit('alien_app_announce', { message: phantomResponse });
+      }
     }
 
     // Broadcast result announcements from oracle
