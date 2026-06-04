@@ -286,9 +286,13 @@ export default function App() {
         }));
       }
       if (reqEffective === 'leader' && actionData.alienPlayers) {
+        // Leader phân biệt từng vai (Alien/Groob/Zerb/Synthetic) — lưu mapping id→role
+        const roleMap = {};
+        actionData.alienPlayers.forEach(a => { roleMap[a.id] = a.role; });
         setNightKnowledge(prev => ({
           ...prev,
           knownAliens: actionData.alienPlayers.map(a => a.id),
+          knownAlienRoles: roleMap,
         }));
       }
       if (reqEffective === 'auraseer' && Array.isArray(actionData.touched)) {

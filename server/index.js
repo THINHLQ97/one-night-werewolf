@@ -674,29 +674,10 @@ async function runAlienNightPhase(room) {
     } else if (phase === 'cow') {
       publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
     } else if (phase === 'leader') {
-      // Check ALL cards (players + center) — G/Z presence in game matters for context
-      const allCards = Object.values(room.originalCards || {});
-      const hasGroob = allCards.includes('groob');
-      const hasZerb = allCards.includes('zerb');
-      const bothGZInPlay = room.players.some(p => room.originalCards[p.id] === 'groob')
-        && room.players.some(p => room.originalCards[p.id] === 'zerb');
-
-      let base;
-      if (bothGZInPlay) {
-        // Both G+Z with real players → rivalry active, Leader's win locks to BOTH alive
-        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Groob/Zerb/Synthetic. Cả Groob và Zerb đều có trong trận: bạn chỉ thắng nếu CẢ HAI cùng sống sót đến cuối ngày.';
-      } else if (hasGroob && hasZerb) {
-        // Both in game but at least one in center → rivalry NOT active, Leader wins with village
-        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Groob/Zerb/Synthetic. Groob và Zerb đều có trong tập bài nhưng không cùng nhập trận — duel không kích hoạt. Bạn thắng cùng phe Dân nếu một Alien bất kỳ bị loại.';
-      } else if (hasGroob || hasZerb) {
-        // Only one of G/Z in game → behaves as plain Alien, Leader wins with village
-        const which = hasGroob ? 'Groob' : 'Zerb';
-        base = `Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được ${which}/Synthetic. ${which} có trong game nhưng đối thủ duel vắng mặt — ${which} hoạt động như Alien thường. Bạn thắng cùng phe Dân nếu một Alien bị loại.`;
-      } else {
-        base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt được Alien thường với Synthetic. Bạn thắng cùng phe Dân nếu một Alien bị loại.';
-      }
-      // Leader Trap warning — Synthetic không cần vote, đề cập rõ
-      publicAnnounce = `🤖 → Leader: ${base} ⚠️ Cảnh báo Leader Trap: nếu tất cả Alien (KHÔNG tính Synthetic — Synthetic không cần vote) cùng vote bạn ban ngày, Alien tự thắng — bất kể có Alien bị giết hay không!`;
+      // Phantom Echo — câu cố định, KHÔNG tiết lộ G/Z có/không trong trận.
+      // Leader tự suy điều kiện thắng từ những gì thấy (ngón cái + phân biệt vai).
+      const base = 'Leader, hãy mở mắt. Tất cả Alien giơ ngón cái — bạn thấy vị trí và phân biệt từng vai (Alien / Groob / Zerb / Synthetic). Nếu CẢ Groob VÀ Zerb cùng nhập trận, bạn chỉ thắng khi CẢ HAI sống sót; ngược lại bạn thắng cùng phe Dân khi một Alien bị loại.';
+      publicAnnounce = `🤖 → Leader: ${base} ⚠️ Leader Trap: nếu tất cả Alien (KHÔNG tính Synthetic — Synthetic không cần vote) cùng vote bạn ban ngày, Alien tự thắng — bất kể có Alien bị giết hay không!`;
     }
 
     // Emit night_role_called with public app announcement

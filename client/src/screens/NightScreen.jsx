@@ -1261,7 +1261,16 @@ function KnowledgeSummary({ knowledge, players }) {
   if (knowledge.doppelgangerCopiedRole) items.push(`🎭 Hóa Thân → ${ROLE_SHORT[knowledge.doppelgangerCopiedRole] || knowledge.doppelgangerCopiedRole}`);
   if (knownWerewolves.length > 0) items.push(`🐺 Sói: ${knownWerewolves.map(id => nameMap[id] || '?').join(', ')}`);
   if (knownMasons.length > 0) items.push(`Sinh Đôi: ${knownMasons.map(id => nameMap[id] || '?').join(', ')}`);
-  if (knowledge.knownAliens?.length > 0) items.push(`👽 Alien: ${knowledge.knownAliens.map(id => nameMap[id] || '?').join(', ')}`);
+  if (knowledge.knownAliens?.length > 0) {
+    const roles = knowledge.knownAlienRoles || {};
+    const labelOf = (r) => r === 'groob' ? 'Groob' : r === 'zerb' ? 'Zerb' : r === 'syntheticalien' ? 'Synthetic' : r === 'alien' ? 'Alien' : null;
+    const formatted = knowledge.knownAliens.map(id => {
+      const name = nameMap[id] || '?';
+      const lab = labelOf(roles[id]);
+      return lab ? `${name} (${lab})` : name;
+    }).join(', ');
+    items.push(`👽 Alien: ${formatted}`);
+  }
   if (knowledge.knownGroobZerb?.length > 0) items.push(`👾 Groob & Zerb: ${knowledge.knownGroobZerb.map(id => nameMap[id] || '?').join(', ')}`);
   if (knowledge.knownCow) items.push(`🐄 Cow: ${nameMap[knowledge.knownCow] || '?'}`);
   if (knowledge.auraSeen) {
