@@ -649,11 +649,21 @@ async function runAlienNightPhase(room) {
     } else if (phase === 'psychic') {
       const pInsts = appInst.psychicInstructions || {};
       const firstInst = Object.values(pInsts)[0];
-      if (firstInst) publicAnnounce = firstInst.publicAnnounce;
+      if (firstInst) {
+        publicAnnounce = firstInst.publicAnnounce;
+      } else {
+        // Psychic in center — still broadcast to maintain mystery
+        publicAnnounce = '🤖 → Psychic: Psychic, hãy mở mắt và xem bài theo chỉ thị.';
+      }
     } else if (phase === 'mortician' && appInst.morticianInstruction) {
       publicAnnounce = appInst.morticianInstruction.publicAnnounce;
-    } else if (phase === 'blob' && appInst.blobInstruction) {
-      publicAnnounce = appInst.blobInstruction.publicAnnounce;
+    } else if (phase === 'blob') {
+      if (appInst.blobInstruction) {
+        publicAnnounce = appInst.blobInstruction.publicAnnounce;
+      } else {
+        // Blob in center — still broadcast so players can't tell from silence
+        publicAnnounce = '🤖 → Blob: Blob, hãy xem ai thuộc Blob.';
+      }
     } else if (phase === 'cow') {
       publicAnnounce = '🤖 → Cow: Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
     }
