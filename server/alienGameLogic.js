@@ -1209,14 +1209,9 @@ function determineAlienWinners(room, eliminated) {
       });
     } else {
       // No alien killed → alien team wins. Oracle (if joined) also wins.
+      // NOTE: When Groob+Zerb rivalry is active, they are NOT in coreAlienPlayerIds.
+      // They have their own win condition (rival must die) — they do NOT auto-win with alien team.
       coreAlienPlayerIds.forEach(id => winners.push(id));
-      // Groob/Zerb (when rivalry active) also win with alien team if no alien died
-      if (bothGroobZerb) {
-        const groobPlayer = players.find(p => currentCards[p.id] === 'groob');
-        const zerbPlayer = players.find(p => currentCards[p.id] === 'zerb');
-        if (groobPlayer) winners.push(groobPlayer.id);
-        if (zerbPlayer) winners.push(zerbPlayer.id);
-      }
       if (oracleIsMinion && oraclePlayer) winners.push(oraclePlayer.id);
       // Oracle joined alien → wins (even if she was killed — her death doesn't count)
       if (oracleJoinedAlien && oraclePlayer) winners.push(oraclePlayer.id);
