@@ -1,3 +1,8 @@
+// Inline alien-team check (avoid importing from alienRoles to keep ranking self-contained)
+function isAlienAffiliation(roleId) {
+  return roleId === 'alien' || roleId === 'syntheticalien' || roleId === 'groob' || roleId === 'zerb';
+}
+
 // Rank tiers: 1 (Iron) through 8 (Challenger), progressive gaps, cap at 2000
 const RANKS = [
   { tier: 1, name: 'Iron',       nameVi: 'Sắt',        minPoints: 0,    image: '1-iron.png',       frameScale: 1.5 },
@@ -43,13 +48,18 @@ const ALIEN_BONUS = {
   NORMAL:  0,  // Standard team wins
 };
 
-function getAlienBonus(playerId, originalCards, finalCards, alienAppState, eliminated) {
+function getAlienBonus(playerId, originalCards, finalCards, alienAppState, eliminated, gameResult) {
   const orig = originalCards[playerId];
   const curr = finalCards[playerId];
 
   // 🥇 MYTHIC: Synthetic Alien killed and wins solo (everyone else lost)
   if (curr === 'syntheticalien' && eliminated.includes(playerId)) {
     return ALIEN_BONUS.MYTHIC;
+  }
+
+  // 🥈 HARD: Leader Trap (all aliens voted Leader) — coordinated alien team win
+  if (gameResult?.leaderTrap && (isAlienAffiliation(curr) || (alienAppState?.oracleJoinedAlien && orig === 'oracle'))) {
+    return ALIEN_BONUS.HARD;
   }
 
   // Hunt Mode logic
@@ -88,7 +98,7 @@ function getAlienBonus(playerId, originalCards, finalCards, alienAppState, elimi
 
 // Calculate alien-mode points: base pool + role bonus for winners
 function calculateAlienGamePoints(players, winners, totalPlayerCount, gameContext) {
-  const { originalCards = {}, finalCards = {}, alienAppState = {}, eliminated = [] } = gameContext || {};
+  const { originalCards = {}, finalCards = {}, alienAppState = {}, eliminated = [], gameResult = {} } = gameContext || {};
   const loserCount = totalPlayerCount - winners.length;
   const totalPool = loserCount * LOSS_PER_PLAYER * 2;
   const baseShare = winners.length > 0 ? Math.round(totalPool / winners.length) : 0;
@@ -99,7 +109,7 @@ function calculateAlienGamePoints(players, winners, totalPlayerCount, gameContex
       results[p.id] = -LOSS_PER_PLAYER;
       return;
     }
-    const bonus = getAlienBonus(p.id, originalCards, finalCards, alienAppState, eliminated);
+    const bonus = getAlienBonus(p.id, originalCards, finalCards, alienAppState, eliminated, gameResult);
     results[p.id] = baseShare + bonus;
   });
   return results;

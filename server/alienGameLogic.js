@@ -1143,6 +1143,27 @@ function determineAlienWinners(room, eliminated) {
     return { winners: [...new Set(winners)], huntOracleMode: true, oracleInCenter: true };
   }
 
+  // ── Leader Trap: if ALL aliens (alien, syntheticalien, groob, zerb) voted for Leader → Alien team auto-wins
+  // (Wiki: "Village team loses and Alien team wins if all aliens point to Leader, even if an alien is killed.")
+  // Digital adaptation: "pointing" → "voting"
+  const leaderPlayer = players.find(p => currentCards[p.id] === 'leader');
+  if (leaderPlayer) {
+    const aliensInPlay = players.filter(p => isAlienAffiliation(currentCards[p.id]));
+    const votes = room.dayPhase?.votes || {};
+    if (aliensInPlay.length > 0) {
+      const allVotedLeader = aliensInPlay.every(a => votes[a.id] === leaderPlayer.id);
+      if (allVotedLeader) {
+        // Leader Trap! Alien team wins (every alien wins, plus Oracle if joined alien)
+        const trapWinners = aliensInPlay.map(a => a.id);
+        if (room.alienAppState?.oracleJoinedAlien) {
+          const oraclePlayer = players.find(p => room.originalCards[p.id] === 'oracle');
+          if (oraclePlayer) trapWinners.push(oraclePlayer.id);
+        }
+        return { winners: [...new Set(trapWinners)], leaderTrap: true };
+      }
+    }
+  }
+
   // Check Synthetic Alien
   const syntheticPlayer = players.find(p => currentCards[p.id] === 'syntheticalien');
   const syntheticKilled = syntheticPlayer && eliminated.includes(syntheticPlayer.id);
@@ -1167,8 +1188,8 @@ function determineAlienWinners(room, eliminated) {
     if (groobDead && !zerbDead) winners.push(zerbPlayer.id);
   }
 
-  // Leader win condition
-  const leaderPlayer = players.find(p => currentCards[p.id] === 'leader');
+  // Leader win condition (under G+Z rivalry: leader wins only if both G+Z and leader survive)
+  // Note: leaderPlayer already computed earlier for Leader Trap check
   if (leaderPlayer) {
     if (bothGroobZerb) {
       const groobPlayer = players.find(p => currentCards[p.id] === 'groob');
@@ -1268,13 +1289,17 @@ function determineAlienWinners(room, eliminated) {
 
 function computeAlienResults(room) {
   const { tally, eliminated } = alienTallyVotes(room);
-  const { winners } = determineAlienWinners(room, eliminated);
+  const { winners, leaderTrap, huntOracleMode, syntheticWin, oracleInCenter } = determineAlienWinners(room, eliminated);
 
   room.results = {
     tally,
     votes: { ...(room.dayPhase?.votes || {}) },
     eliminated,
     winners,
+    leaderTrap: leaderTrap || false,
+    huntOracleMode: huntOracleMode || false,
+    syntheticWin: syntheticWin || false,
+    oracleInCenter: oracleInCenter || false,
     finalCards: { ...room.currentCards },
     originalCards: { ...room.originalCards },
     exposedCenter: room.exposedCenter || {},

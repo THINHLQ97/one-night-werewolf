@@ -312,10 +312,10 @@ const ROLES = [
     team: 'village', teamLabel: 'Phe Dân', nightOrder: 3, expansion: 'alien',
     lore: 'Thủ Lĩnh là người duy nhất trong làng biết chính xác Alien đang ẩn ở đâu. Trong đêm, tất cả Alien nhắm mắt và giơ ngón cái — Thủ Lĩnh nhìn thấy tất cả. Đây là sức mạnh cực lớn, nhưng cũng là gánh nặng: nếu tất cả Alien chỉ vào Thủ Lĩnh, Alien thắng ngay lập tức.',
     nightAction: 'Mở mắt. Alien giơ ngón cái — bạn thấy vị trí tất cả Alien.',
-    winCondition: 'Nếu không có cả Groob & Zerb → thắng cùng Dân. Nếu có cả 2 → thắng chỉ khi cả 2 đều sống. Nếu TẤT CẢ Alien chỉ vào bạn → Alien thắng.',
-    tips: 'Bạn biết ai là Alien — dùng thông tin khéo léo. Nhưng đừng để Alien biết bạn là Leader.',
+    winCondition: 'Nếu không có cả Groob & Zerb → thắng cùng Dân. Nếu có cả 2 → thắng chỉ khi cả 2 đều sống. ⚠️ Nếu TẤT CẢ Alien cùng vote bạn ban ngày → Alien tự thắng!',
+    tips: 'Bạn biết ai là Alien — dùng thông tin khéo léo. Nhưng đừng để Alien biết bạn là Leader — họ có thể bẫy bạn bằng đồng loạt vote.',
     nightScript: '"Thủ Lĩnh, hãy mở mắt. Alien, hãy giơ ngón cái lên." Thủ Lĩnh quan sát. "Thủ Lĩnh, nhắm mắt. Alien, hạ tay."',
-    howToPlay: 'Ban đêm: Mở mắt. Tất cả Alien (bao gồm Groob, Zerb, Synthetic) nhắm mắt và giơ ngón cái.\n\n📋 BẠN THẤY: Vị trí chính xác của tất cả Alien!\n\n📋 ĐIỀU KIỆN THẮNG PHỨC TẠP:\n• Không có cả Groob & Zerb → thắng cùng phe Dân\n• Có cả Groob & Zerb → thắng CHỈ KHI cả 2 đều SỐNG\n• Nếu TẤT CẢ Alien chỉ vào bạn → Alien thắng (bất kể có Alien bị giết)\n\nBan ngày: Chia sẻ thông tin khéo léo mà không để Alien biết bạn là Leader.',
+    howToPlay: 'Ban đêm: Mở mắt. Tất cả Alien (bao gồm Groob, Zerb, Synthetic) nhắm mắt và giơ ngón cái.\n\n📋 BẠN THẤY: Vị trí chính xác của tất cả Alien!\n\n📋 ĐIỀU KIỆN THẮNG PHỨC TẠP:\n• Không có cả Groob & Zerb → thắng cùng phe Dân (khi Alien bị loại)\n• Có cả Groob & Zerb → thắng CHỈ KHI cả 2 đều SỐNG\n• ⚠️ LEADER TRAP: Nếu TẤT CẢ Alien cùng vote bạn ban ngày → Alien team tự thắng (kể cả 1 Alien bị loại)\n\nBan ngày: Chia sẻ thông tin khéo léo mà KHÔNG để Alien biết bạn là Leader — nếu họ đoán đúng, họ có thể đồng loạt vote bạn để kích hoạt Leader Trap.',
   },
   {
     id: 'cow', name: 'Cow', nameVi: 'Bò', emoji: '🐄',

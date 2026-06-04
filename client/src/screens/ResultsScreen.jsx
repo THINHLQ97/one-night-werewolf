@@ -118,6 +118,8 @@ const ALIEN_END_SCENE_IMAGES = {
   // Oracle Hunt mode specials
   oracle_hunt_survives: '/images/endscene-alien/oracle-win-special-event.webp',  // Oracle NOT voted → survives → wins alone
   oracle_hunt_dies: '/images/endscene-alien/vote-oracle-special-event.webp',     // Oracle voted out → others win
+  // Leader Trap (all aliens voted Leader) — reuses vote-leader scene contextually
+  leader_trap: '/images/endscene-alien/vote-leader.webp',
 };
 
 const ALIEN_END_SCENE_NARRATIONS = {
@@ -141,6 +143,7 @@ const ALIEN_END_SCENE_NARRATIONS = {
   mortician_win_with_villager: 'Nhà Quàn mỉm cười khi hàng xóm Dân ngã xuống. Một cái chết không trả thù được — nhưng Nhà Quàn đã thắng.',
   oracle_hunt_survives: 'Oracle sống sót qua cuộc săn đuổi điên cuồng — không ai vote cô. Một mình cô ta chiến thắng — bí mật của vũ trụ vẫn thuộc về cô.',
   oracle_hunt_dies: 'Cả làng đã hợp sức bỏ phiếu tiêu diệt Oracle — kẻ đoán sai số bí mật của vũ trụ. Tiếng vọng từ không gian cuối cùng cũng im lặng.',
+  leader_trap: 'Cả bầy Alien đồng loạt chỉ tay về Thủ Lĩnh — một âm mưu đã được sắp đặt từ trong bóng tối. Dân làng dù bắt được một Alien cũng vô ích — ngôi làng đã rơi vào tay người ngoài hành tinh.',
 };
 
 const ALIEN_VOTE_KEYS = {
@@ -195,6 +198,11 @@ function getAlienWinningTeam(results, players) {
   const { winners = [], eliminated = [], finalCards = {}, originalCards = {}, alienAppState = {} } = results;
   if (winners.length === 0) return null;
 
+  // Leader Trap: alien team auto-wins → use alien scene
+  if (results.leaderTrap) {
+    return 'alien';
+  }
+
   // Hunt mode: use Oracle-Special-Event scenes based on Oracle's fate
   if (alienAppState.oracleHuntMode) {
     const oraclePlayer = players.find(p => originalCards[p.id] === 'oracle');
@@ -238,6 +246,11 @@ function getAlienEndSceneKey(results, players) {
     const r = finalCards[p.id];
     return r === 'alien' || r === 'groob' || r === 'zerb' || r === 'syntheticalien';
   });
+
+  // ── Leader Trap special (highest priority) ──
+  if (results.leaderTrap) {
+    return 'leader_trap';
+  }
 
   // ── Hunt Mode special ──
   if (alienAppState.oracleHuntMode) {
