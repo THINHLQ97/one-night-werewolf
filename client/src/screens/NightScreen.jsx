@@ -37,6 +37,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [actionStep, setActionStep] = useState('choose');
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [echoTyping, setEchoTyping] = useState(false);
 
   const step = actionData?.step || 1;
   // For doppelganger step 2+, effectiveRole = the copied role
@@ -369,7 +370,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
       {/* Alien Command Terminal — visible to ALL players */}
       {gameMode === 'alien' && (
-        <AlienTerminal messages={appAnnouncements} maxLines={5} />
+        <AlienTerminal messages={appAnnouncements} maxLines={5} onTypingChange={setEchoTyping} />
       )}
 
       {/* Current role narration */}
@@ -400,7 +401,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         knownAliens={roleHidden ? [] : knownAliens}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
-        selectable={isMyTurn && !submitted ? actionMode : null}
+        selectable={isMyTurn && !submitted && !(gameMode === 'alien' && echoTyping) ? actionMode : null}
         selected={selected}
         onSelect={handleSelect}
         isNight={true}
@@ -411,7 +412,20 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
       {/* Action Panel */}
       <div className="mt-3 flex-1">
-        {isMyTurn && !submitted && (
+        {/* Block actions while Echo from Space is still typing */}
+        {isMyTurn && !submitted && gameMode === 'alien' && echoTyping && (
+          <div className="card fade-in text-center">
+            <p className="text-green-400/70 text-sm flex items-center justify-center gap-2">
+              <span className="flex gap-1">
+                {[0, 1, 2].map(i => (
+                  <span key={i} className="w-1.5 h-1.5 rounded-full bg-green-400" style={{ animation: `oracleDot 1.4s ease-in-out ${i * 0.2}s infinite` }} />
+                ))}
+              </span>
+              Đang nhận lệnh từ Echo...
+            </p>
+          </div>
+        )}
+        {isMyTurn && !submitted && !(gameMode === 'alien' && echoTyping) && (
           <div className="card fade-in">
             {/* Doppelganger step 1: pick a player to copy */}
             {currentRole === 'doppelganger' && step === 1 && (

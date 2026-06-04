@@ -8,11 +8,12 @@ const BODY_FONT = "'VT323', 'Courier New', monospace";       // supports Vietnam
  * AlienTerminal — retro 8-bit CRT terminal displaying alien app instructions.
  * Features: typing animation, scanlines, blinking cursor, green phosphor glow.
  */
-export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: initialCollapsed = false }) {
+export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: initialCollapsed = false, onTypingChange }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [displayedMessages, setDisplayedMessages] = useState([]);
   const scrollRef = useRef(null);
   const prevLenRef = useRef(0);
+  const typingRef = useRef(false);
 
   // On mount with existing messages (e.g. DayScreen recap), show all as already typed
   useEffect(() => {
@@ -38,7 +39,15 @@ export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: 
   // Typing animation
   useEffect(() => {
     const unfinished = displayedMessages.findIndex(m => !m.done);
-    if (unfinished === -1) return;
+    const isTyping = unfinished !== -1;
+
+    // Notify parent of typing state changes
+    if (isTyping !== typingRef.current) {
+      typingRef.current = isTyping;
+      onTypingChange?.(isTyping);
+    }
+
+    if (!isTyping) return;
 
     const msg = displayedMessages[unfinished];
     if (msg.typed.length >= msg.full.length) {
@@ -55,7 +64,7 @@ export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: 
     }, speed);
 
     return () => clearTimeout(timer);
-  }, [displayedMessages]);
+  }, [displayedMessages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -82,11 +91,7 @@ export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: 
         }}
       >
         <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-500/60" />
-            <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
-            <span className="w-2 h-2 rounded-full bg-green-500/80" />
-          </div>
+          <span className="text-green-400/80 flex-shrink-0" style={{ fontSize: '14px' }}>👁️</span>
           <span
             className="text-green-400/90 uppercase tracking-wider"
             style={{ fontFamily: HEADER_FONT, fontSize: '8px' }}

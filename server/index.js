@@ -650,7 +650,7 @@ async function runAlienNightPhase(room) {
     let publicAnnounce = null;
     const appInst = room.alienAppState;
     if (phase === 'oracle' && appInst.oracleQuestion) {
-      publicAnnounce = `🤖 → Oracle: ${appInst.oracleQuestion.question}`;
+      publicAnnounce = appInst.oracleQuestion.publicAnnounce;
     } else if (phase === 'aliens' && appInst.alienInstruction) {
       publicAnnounce = appInst.alienInstruction.publicAnnounce;
     } else if (phase === 'rascal' && appInst.rascalInstruction) {

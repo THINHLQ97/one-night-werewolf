@@ -819,7 +819,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
         {results.alienAppState && (
           <AlienTerminal
             messages={[
-              results.alienAppState.oracleQuestion && { text: `Oracle: "${results.alienAppState.oracleQuestion.question}"`, time: 0 },
+              results.alienAppState.oracleQuestion && { text: results.alienAppState.oracleQuestion.publicAnnounce || `Oracle: "${results.alienAppState.oracleQuestion.question}"`, time: 0 },
               results.alienAppState.alienInstruction && { text: results.alienAppState.alienInstruction.publicAnnounce, time: 1 },
               results.alienAppState.rascalInstruction && { text: results.alienAppState.rascalInstruction.publicAnnounce, time: 2 },
               results.alienAppState.exposerInstruction && { text: results.alienAppState.exposerInstruction.publicAnnounce, time: 3 },
