@@ -410,6 +410,8 @@ const RIPPLE_ACTIONS = [
 ];
 
 function shouldRippleOccur(room) {
+  // Ripple must be enabled in settings
+  if (!room.settings?.enableRipple) return false;
   // number_guess occurred → no Ripple
   if (room.alienAppState?.oracleStaysAwake || room.alienAppState?.oracleHuntMode) return false;
   // Oracle triggered Ripple → 100%
@@ -1559,6 +1561,10 @@ module.exports = {
   alienTallyVotes,
   getNeighborIds,
   isAlienAffiliation,
+  generateRascalInstruction,
+  generateExposerInstruction,
+  generatePsychicInstruction,
+  generateMorticianInstruction,
   shouldRippleOccur,
   generateRippleAction,
 };

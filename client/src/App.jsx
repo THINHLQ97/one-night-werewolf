@@ -9,6 +9,7 @@ import SceneBackground from './components/SceneBackground';
 import OracleSpecialEvent from './components/OracleSpecialEvent';
 import OracleVision from './components/OracleVision';
 import RippleEvent from './components/RippleEvent';
+import RippleActionPanel from './components/RippleActionPanel';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -58,6 +59,7 @@ export default function App() {
   const [oracleVision, setOracleVision] = useState(null); // persistent vision data { allCards, centerCards, nightLog }
   const [oracleVisionOpen, setOracleVisionOpen] = useState(false); // overlay visibility (can close + reopen)
   const [rippleEvent, setRippleEvent] = useState(null); // { action } from ripple_event
+  const [rippleAction, setRippleAction] = useState(null); // { actionId, otherPlayers, result } interactive ripple
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -189,6 +191,7 @@ export default function App() {
       setOracleVision(null);
       setOracleVisionOpen(false);
       setRippleEvent(null);
+      setRippleAction(null);
       setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
       startNightBGM(settingsRef.current?.gameMode || gameModeRef.current);
@@ -246,6 +249,49 @@ export default function App() {
       setRippleEvent({ action });
     });
 
+    socket.on('ripple_action_request', (data) => {
+
+      setRippleAction({ ...data, result: null });
+    });
+
+    socket.on('ripple_action_result', (result) => {
+
+      setRippleAction(prev => prev ? { ...prev, result } : null);
+      // Update nightKnowledge with Ripple results
+      if (result.newRole || result.stolen) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          myCurrentRole: result.newRole || prev.myCurrentRole,
+        }));
+      }
+      if (result.seen && Array.isArray(result.seen)) {
+        setNightKnowledge(prev => {
+          const rp = { ...prev.revealedPlayers };
+          result.seen.forEach(s => { if (s.id && s.role) rp[s.id] = s.role; });
+          return { ...prev, revealedPlayers: rp };
+        });
+      }
+      if (result.revealed && result.revealed.id) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          revealedPlayers: { ...prev.revealedPlayers, [result.revealed.id]: result.revealed.role },
+        }));
+      }
+      if (result.dualShuffle && result.newRole) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          myCurrentRole: result.newRole,
+        }));
+      }
+    });
+
+    socket.on('ripple_insomniac', ({ currentRole }) => {
+      setNightKnowledge(prev => ({
+        ...prev,
+        myCurrentRole: currentRole,
+      }));
+    });
+
     socket.on('alien_app_announce', ({ message }) => {
       setAppAnnouncements(prev => {
         const last = prev[prev.length - 1];
@@ -255,7 +301,7 @@ export default function App() {
     });
 
     socket.on('night_action_request', ({ role, ...actionData }) => {
-      setNightState(prev => ({ ...prev, isMyTurn: true, actionData, result: null }));
+      setNightState(prev => ({ ...prev, isMyTurn: true, actionData, result: null, requestSeq: (prev.requestSeq || 0) + 1 }));
 
       // For doppelganger step 2+, use copiedRole for knowledge updates
       const reqEffective = (role === 'doppelganger' && actionData.copiedRole) ? actionData.copiedRole : role;
@@ -691,7 +737,13 @@ export default function App() {
         preferredHostRole={preferredHostRole}
         gameMode={settings.gameMode || gameMode}
         onPreferredRoleChange={roleId => socket.emit('set_preferred_role', { roleId })}
-        onSettingsChange={sel => socket.emit('update_settings', { selectedRoles: sel })}
+        onSettingsChange={data => {
+          if (Array.isArray(data)) {
+            socket.emit('update_settings', { selectedRoles: data });
+          } else {
+            socket.emit('update_settings', data);
+          }
+        }}
         onModeChange={mode => socket.emit('update_settings', { gameMode: mode })}
         onStartGame={cb => socket.emit('start_game', {}, cb)}
         onLeave={() => {
@@ -749,7 +801,13 @@ export default function App() {
         <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
       )}
       {rippleEvent && (
-        <RippleEvent action={rippleEvent.action} onClose={() => setRippleEvent(null)} />
+        <RippleEvent action={rippleEvent.action} onClose={() => {
+          socket.emit('ripple_ack');
+          setRippleEvent(null);
+        }} />
+      )}
+      {rippleAction && (
+        <RippleActionPanel data={rippleAction} onDone={() => setRippleAction(null)} />
       )}
     </>);
   }
@@ -783,9 +841,6 @@ export default function App() {
       />
       {oracleVisionOpen && oracleVision && (
         <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
-      )}
-      {rippleEvent && (
-        <RippleEvent action={rippleEvent.action} onClose={() => setRippleEvent(null)} />
       )}
     </>);
   }

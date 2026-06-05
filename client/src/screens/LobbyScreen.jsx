@@ -438,8 +438,27 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           </div>
         )}
         {isAlienMode && (
-          <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <span className="text-emerald-400 text-xs font-medium">👽 One Night Ultimate Alien</span>
+          <div className="mb-3 space-y-2">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-emerald-400 text-xs font-medium">👽 One Night Ultimate Alien</span>
+            </div>
+            <label className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
+              settings.enableRipple
+                ? 'bg-purple-500/15 border-purple-500/30'
+                : 'bg-white/5 border-white/10'
+            } ${isHost ? 'hover:bg-purple-500/10' : 'opacity-60'}`}>
+              <input
+                type="checkbox"
+                checked={!!settings.enableRipple}
+                onChange={(e) => isHost && onSettingsChange?.({ enableRipple: e.target.checked })}
+                disabled={!isHost}
+                className="accent-purple-500 w-4 h-4"
+              />
+              <div>
+                <span className="text-purple-300 text-xs font-semibold">⚡ The Ripple (Vết Nứt)</span>
+                <p className="text-white/40 text-[10px]">20% xảy ra sau đêm — thay đổi luật chơi bất ngờ</p>
+              </div>
+            </label>
           </div>
         )}
 

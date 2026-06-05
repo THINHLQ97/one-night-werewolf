@@ -834,6 +834,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
               ...(Object.values(results.alienAppState.psychicInstructions || {}).map((inst, i) => ({ text: inst.publicAnnounce, time: 4 + i }))),
               results.alienAppState.morticianInstruction && { text: results.alienAppState.morticianInstruction.publicAnnounce, time: 6 },
               results.alienAppState.blobInstruction && { text: results.alienAppState.blobInstruction.publicAnnounce, time: 7 },
+              results.alienAppState.ripple && { text: `⚡ THE RIPPLE — ${results.alienAppState.ripple.description}`, time: 8 },
             ].filter(Boolean)}
             maxLines={10}
             collapsed={true}
@@ -1026,6 +1027,29 @@ function NightLogEntry({ entry, playerMap, results }) {
       AFK • tự động
     </span>
   ) : null;
+
+  // ── Ripple entries: special rendering ──
+  if (role === '_ripple') {
+    return (
+      <div className="flex items-start gap-2 px-2 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+        <span className="text-purple-400 text-sm flex-shrink-0 mt-0.5">⚡</span>
+        <div className="min-w-0">
+          <span className="text-purple-300 text-xs font-bold">THE RIPPLE</span>
+          <span className="text-purple-400/60 text-xs ml-1">({action.label})</span>
+          <p className="text-purple-200/70 text-[11px] leading-tight">{result.description}</p>
+        </div>
+      </div>
+    );
+  }
+  if (role === '_ripple_separator') {
+    return (
+      <div className="flex items-center gap-2 py-2">
+        <div className="flex-1 h-px bg-purple-500/30" />
+        <span className="text-purple-400/70 text-[10px] font-semibold whitespace-nowrap">🔄 ĐÊM LẶP LẠI</span>
+        <div className="flex-1 h-px bg-purple-500/30" />
+      </div>
+    );
+  }
 
   // ── Doppelganger: merge step 1 (copy) + step 2 (action) into one readable entry ──
   if (role === 'doppelganger') {

@@ -29,7 +29,7 @@ const ROLE_NAMES = {
 };
 
 export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
-  const { currentRole, isMyTurn, actionData, result } = nightState;
+  const { currentRole, isMyTurn, actionData, result, requestSeq = 0 } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
   const [selected, setSelected] = useState([]);
@@ -44,7 +44,8 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const effectiveRole = (currentRole === 'doppelganger' && step >= 2 && actionData?.copiedRole)
     ? actionData.copiedRole : currentRole;
   const isDoppelAction = currentRole === 'doppelganger' && step >= 2;
-  const actionKey = `${currentRole}-${step}`;
+  // Include requestSeq so repeat night requests for same role get a new key
+  const actionKey = `${currentRole}-${step}-${requestSeq}`;
 
   if (submitted && actionKey !== submittedKey) {
     setSubmitted(false);

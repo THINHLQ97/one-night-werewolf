@@ -35,10 +35,10 @@ export default function RippleEvent({ action, onClose }) {
 
   const info = RIPPLE_NARRATIONS[action?.actionId] || { title: '⚡ The Ripple', narration: action?.description || '' };
 
-  // Auto-advance from intro to action after 3 seconds
+  // Auto-advance from intro to action after 4 seconds
   useEffect(() => {
     if (stage === 'intro') {
-      const timer = setTimeout(() => setStage('action'), 3000);
+      const timer = setTimeout(() => setStage('action'), 4000);
       return () => clearTimeout(timer);
     }
   }, [stage]);

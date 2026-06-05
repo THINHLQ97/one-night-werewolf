@@ -9,7 +9,7 @@ const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { ALIEN_ROLES, isAlienAffiliation } = require('./alienRoles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
-const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults, shouldRippleOccur, generateRippleAction } = require('./alienGameLogic');
+const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults, shouldRippleOccur, generateRippleAction, generateRascalInstruction, generateExposerInstruction, generatePsychicInstruction, generateMorticianInstruction } = require('./alienGameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
@@ -919,16 +919,43 @@ async function runAlienNightPhase(room) {
     const rippleAction = generateRippleAction(room);
     room.alienAppState.ripple = rippleAction;
 
-    // Broadcast Ripple announcement to all
+    // Step 1: Show popup to all players (NO Echo yet)
+    io.to(room.code).emit('ripple_event', { action: rippleAction });
+
+    // Wait for ALL human players to dismiss the popup (or 20s timeout)
+    const humanIds = new Set(players.filter(p => !p.isBot).map(p => p.id));
+    const acked = new Set();
+    await new Promise(resolve => {
+      const onAck = (socketId) => {
+        acked.add(socketId);
+        if ([...humanIds].every(id => acked.has(id))) {
+          clearTimeout(fallback);
+          resolve();
+        }
+      };
+      // Listen for ripple_ack from each player
+      players.filter(p => !p.isBot).forEach(p => {
+        const s = io.sockets.sockets.get(p.id);
+        if (s) s.once('ripple_ack', () => onAck(p.id));
+      });
+      // Fallback timeout
+      const fallback = setTimeout(() => resolve(), 20000);
+    });
+
+    // Step 2: Immediately show in Echo from Space
     io.to(room.code).emit('alien_app_announce', {
       message: `⚡ THE RIPPLE — ${rippleAction.description}`,
     });
-    io.to(room.code).emit('ripple_event', { action: rippleAction });
 
-    // Process immediate card-changing ripple actions
+    // ── Process Ripple actions ──
     const { currentCards } = room;
+    const INTERACTIVE_RIPPLE = ['troublemaker', 'steal', 'witch', 'drunk'];
+    const actorId = rippleAction.actor?.id;
+    const actorPlayer = actorId ? players.find(p => p.id === actorId) : null;
+    const isActorHuman = actorPlayer && !actorPlayer.isBot;
+
+    // Passive actions (no player interaction needed)
     if (rippleAction.actionId === 'insomniac' && rippleAction.targetPlayers) {
-      // Each target sees their current card
       rippleAction.targetPlayers.forEach(tp => {
         const player = players.find(p => p.id === tp.id);
         if (player && !player.isBot) {
@@ -936,80 +963,312 @@ async function runAlienNightPhase(room) {
         }
       });
     }
-
     if (rippleAction.actionId === '1_minute') {
-      room.alienAppState.rippleTimer = 60 * 1000; // Override day timer to 1 minute
+      room.alienAppState.rippleTimer = 60 * 1000;
     }
-
     if (rippleAction.actionId === 'two_hand_vote' && rippleAction.targetPlayers) {
       room.alienAppState.twoHandVoters = rippleAction.targetPlayers.map(p => p.id);
     }
-
     if (rippleAction.actionId === 'may_not_speak' && rippleAction.targetPlayers) {
       room.alienAppState.silencedPlayers = rippleAction.targetPlayers.map(p => p.id);
     }
-
     if (rippleAction.actionId === 'face_away' && rippleAction.targetPlayers) {
       room.alienAppState.facingAway = rippleAction.targetPlayers.map(p => p.id);
     }
 
-    // Actions requiring player interaction will be handled via ripple_action socket events
-    // For now, bot auto-execute for card-changing actions
-    if (rippleAction.actionId === 'drunk' && rippleAction.actor) {
-      const slot = ['center0', 'center1', 'center2'][Math.floor(Math.random() * 3)];
-      const myRole = currentCards[rippleAction.actor.id];
-      currentCards[rippleAction.actor.id] = currentCards[slot];
-      currentCards[slot] = myRole;
-      rippleAction.executedSlot = slot;
+    // View actions (auto — targets pre-chosen by app, just send result)
+    if (rippleAction.actionId === 'view_1' && rippleAction.viewTargets && isActorHuman) {
+      const t = rippleAction.viewTargets[0];
+      io.to(actorId).emit('ripple_action_result', { seen: [{ id: t.id, name: t.name, role: currentCards[t.id] }] });
     }
-
+    if (rippleAction.actionId === 'view_2' && rippleAction.viewTargets && isActorHuman) {
+      const seen = rippleAction.viewTargets.map(t => ({ id: t.id, name: t.name, role: currentCards[t.id] }));
+      io.to(actorId).emit('ripple_action_result', { seen });
+    }
+    if (rippleAction.actionId === 'dual_view' && rippleAction.viewers && rippleAction.viewTargets) {
+      const t = rippleAction.viewTargets[0];
+      const seen = [{ id: t.id, name: t.name, role: currentCards[t.id] }];
+      rippleAction.viewers.forEach(v => {
+        const vp = players.find(p => p.id === v.id);
+        if (vp && !vp.isBot) io.to(v.id).emit('ripple_action_result', { seen });
+      });
+    }
+    if (rippleAction.actionId === 'reveal' && rippleAction.revealTarget && isActorHuman) {
+      const t = rippleAction.revealTarget;
+      const role = currentCards[t.id];
+      rippleAction.revealedRole = role;
+      io.to(room.code).emit('ripple_action_result', { revealed: { id: t.id, name: t.name, role } });
+    }
     if (rippleAction.actionId === 'dual_shuffle' && rippleAction.shufflePair) {
       const [p1, p2] = rippleAction.shufflePair;
-      // Reveal to each other, then randomly shuffle
-      rippleAction.revealedCards = {
-        [p1.id]: currentCards[p1.id],
-        [p2.id]: currentCards[p2.id],
-      };
+      rippleAction.revealedCards = { [p1.id]: currentCards[p1.id], [p2.id]: currentCards[p2.id] };
       if (Math.random() < 0.5) {
         const temp = currentCards[p1.id];
         currentCards[p1.id] = currentCards[p2.id];
         currentCards[p2.id] = temp;
         rippleAction.swapped = true;
       }
+      // Notify both players
+      [p1, p2].forEach(pp => {
+        const pl = players.find(p => p.id === pp.id);
+        if (pl && !pl.isBot) {
+          io.to(pp.id).emit('ripple_action_result', {
+            dualShuffle: true,
+            otherCard: rippleAction.revealedCards[pp.id === p1.id ? p2.id : p1.id],
+            swapped: rippleAction.swapped,
+            newRole: currentCards[pp.id],
+          });
+        }
+      });
     }
 
-    // Brief pause for players to read Ripple announcement
-    await new Promise(r => setTimeout(r, 5000));
+    // ── Interactive actions: actor must choose targets ──
+    let rippleResult = null;
+    if (INTERACTIVE_RIPPLE.includes(rippleAction.actionId) && actorId) {
+      const otherPlayers = players.filter(p => p.id !== actorId).map(p => ({ id: p.id, name: p.name }));
 
-    // Repeat night if 'repeat' action
+      if (isActorHuman) {
+        io.to(actorId).emit('ripple_action_request', {
+          actionId: rippleAction.actionId,
+          label: rippleAction.label,
+          description: rippleAction.description,
+          otherPlayers,
+        });
+
+        rippleResult = await new Promise(resolve => {
+          const s = io.sockets.sockets.get(actorId);
+          const fallback = setTimeout(() => {
+            resolve(autoExecuteRipple(room, rippleAction, actorId, otherPlayers));
+          }, 20000);
+          if (s) {
+            s.once('ripple_action', (data) => {
+              clearTimeout(fallback);
+              resolve(processRippleAction(room, rippleAction, actorId, data));
+            });
+          }
+        });
+
+        if (rippleResult && Object.keys(rippleResult).length > 0) {
+          io.to(actorId).emit('ripple_action_result', rippleResult);
+        }
+      } else {
+        rippleResult = autoExecuteRipple(room, rippleAction, actorId, otherPlayers);
+      }
+    }
+
+    // Auto-execute drunk for bots
+    if (rippleAction.actionId === 'drunk' && actorId && !isActorHuman) {
+      const slot = ['center0', 'center1', 'center2'][Math.floor(Math.random() * 3)];
+      const myRole = currentCards[actorId];
+      currentCards[actorId] = currentCards[slot];
+      currentCards[slot] = myRole;
+      rippleAction.executedSlot = slot;
+    }
+
+    // Add detailed Ripple entry to nightLog (AFTER actions processed)
+    if (!room.nightLog) room.nightLog = [];
+    const nameMap = {};
+    players.forEach(p => { nameMap[p.id] = p.name; });
+
+    // Build detailed description based on what actually happened
+    let rippleDetail = rippleAction.description;
+    if (rippleAction.actionId === 'steal' && actorId) {
+      const actorName = nameMap[actorId] || '?';
+      const targetName = rippleResult?.targetName || '?';
+      const newRole = rippleResult?.newRole || '?';
+      rippleDetail = `${actorName} cướp bài của ${targetName} → nhận ${newRole}.`;
+    }
+    if (rippleAction.actionId === 'troublemaker' && actorId) {
+      const t1 = rippleResult?.target1Name || '?';
+      const t2 = rippleResult?.target2Name || '?';
+      rippleDetail = `${nameMap[actorId] || '?'} hoán đổi bài ${t1} ↔ ${t2}.`;
+    }
+    if (rippleAction.actionId === 'drunk' && actorId) {
+      const slot = rippleResult?.slot || rippleAction.executedSlot || '?';
+      const slotLabel = slot === 'center0' ? 'Giữa 1' : slot === 'center1' ? 'Giữa 2' : slot === 'center2' ? 'Giữa 3' : slot;
+      rippleDetail = `${nameMap[actorId] || '?'} đổi bài với ${slotLabel} (không xem).`;
+    }
+    if (rippleAction.actionId === 'witch' && actorId) {
+      const seenRole = rippleResult?.seen?.role || '?';
+      rippleDetail = `${nameMap[actorId] || '?'} xem bài giữa → ${seenRole}${rippleResult?.swapped ? ' (đã đổi)' : ''}.`;
+    }
+    if (rippleAction.actionId === 'view_1' && actorId && rippleAction.viewTargets?.[0]) {
+      rippleDetail = `${nameMap[actorId] || '?'} xem bài của ${rippleAction.viewTargets[0].name}.`;
+    }
+    if (rippleAction.actionId === 'view_2' && actorId && rippleAction.viewTargets) {
+      rippleDetail = `${nameMap[actorId] || '?'} xem bài của ${rippleAction.viewTargets.map(t => t.name).join(' và ')}.`;
+    }
+    if (rippleAction.actionId === 'reveal' && actorId && rippleAction.revealTarget) {
+      rippleDetail = `${nameMap[actorId] || '?'} lật bài của ${rippleAction.revealTarget.name}${rippleAction.revealedRole ? ` → ${rippleAction.revealedRole}` : ''}.`;
+    }
+    if (rippleAction.actionId === 'dual_view' && rippleAction.viewers && rippleAction.viewTargets?.[0]) {
+      rippleDetail = `${rippleAction.viewers.map(v => v.name).join(' và ')} cùng xem bài của ${rippleAction.viewTargets[0].name}.`;
+    }
+    if (rippleAction.actionId === 'dual_shuffle' && rippleAction.shufflePair) {
+      const [sp1, sp2] = rippleAction.shufflePair;
+      rippleDetail = `${sp1.name} và ${sp2.name} lộ bài cho nhau${rippleAction.swapped ? ' rồi hoán đổi.' : ' (không đổi).'}`;
+    }
+    if (rippleAction.actionId === 'insomniac' && rippleAction.targetPlayers) {
+      rippleDetail = `${rippleAction.targetPlayers.map(p => p.name).join(', ')} xem lại bài của mình.`;
+    }
+    if (rippleAction.actionId === 'two_hand_vote' && rippleAction.targetPlayers) {
+      rippleDetail = `${rippleAction.targetPlayers.map(p => p.name).join(', ')} vote 2 phiếu.`;
+    }
+    if (rippleAction.actionId === 'may_not_speak' && rippleAction.targetPlayers) {
+      rippleDetail = `${rippleAction.targetPlayers.map(p => p.name).join(', ')} bị cấm nói.`;
+    }
+    if (rippleAction.actionId === 'face_away' && rippleAction.targetPlayers) {
+      rippleDetail = `${rippleAction.targetPlayers.map(p => p.name).join(', ')} phải quay mặt đi.`;
+    }
+
+    room.nightLog.push({
+      role: '_ripple',
+      playerName: `⚡ THE RIPPLE`,
+      action: { rippleId: rippleAction.actionId, label: rippleAction.label },
+      result: { description: rippleDetail },
+    });
+
+    // Repeat night if 'repeat' action — full re-run (skip Oracle)
     if (rippleAction.actionId === 'repeat') {
       room.alienAppState.isRepeatNight = true;
-      // Re-run night but skip Oracle
-      const originalOrder = room.nightPhase.roleOrder;
-      room.nightPhase.roleOrder = originalOrder.filter(p => p !== 'oracle');
-      room.nightPhase.currentRoleIndex = -1;
 
-      // Re-generate instructions (except oracle)
-      if (room.alienAppState.rascalInstruction) {
-        const { generateRascalInstruction } = require('./alienGameLogic');
+      // Add separator to nightLog
+      room.nightLog.push({ role: '_ripple_separator', playerName: '⚡ THE RIPPLE — Vòng Lặp Thời Gian', action: {}, result: {} });
+
+      // Re-generate ALL random instructions for repeat night
+      const appState = room.alienAppState;
+      generateAlienInstructionPostOracle(room); // new alien instruction
+      const roleSet = new Set(room.settings.selectedRoles);
+      if (roleSet.has('rascal')) {
+        appState.rascalInstruction = generateRascalInstruction(room);
+      }
+      if (roleSet.has('exposer')) {
+        appState.exposerInstruction = generateExposerInstruction();
+      }
+      if (roleSet.has('psychic')) {
+        appState.psychicInstructions = {};
+        room.players.forEach(p => {
+          if (room.originalCards[p.id] === 'psychic') {
+            appState.psychicInstructions[p.id] = generatePsychicInstruction(room, p.id);
+          }
+        });
+      }
+      if (roleSet.has('mortician')) {
+        appState.morticianInstruction = generateMorticianInstruction();
       }
 
-      io.to(room.code).emit('alien_app_announce', { message: 'Vòng lặp thời gian! Đêm diễn ra lần nữa...' });
+      const repeatOrder = room.nightPhase.roleOrder.filter(p => p !== 'oracle');
+
+      io.to(room.code).emit('alien_app_announce', { message: '🔄 Vòng lặp thời gian! Đêm diễn ra lần nữa...' });
+      // NOTE: Do NOT emit 'night_start' here — it would clear appAnnouncements
       await new Promise(r => setTimeout(r, 2000));
 
-      // Re-run the night loop (simplified — reuse existing phases minus oracle)
-      for (let i = 0; i < room.nightPhase.roleOrder.length; i++) {
+      for (let ri = 0; ri < repeatOrder.length; ri++) {
         if (room.state !== 'night') break;
-        const phase = room.nightPhase.roleOrder[i];
-        // Emit role called and wait briefly
+        const phase = repeatOrder[ri];
         const label = PHASE_LABELS[phase] || { name: phase, nameVi: phase };
+
+        // Build public announcement (same as main night)
+        let publicAnnounce = null;
+        if (phase === 'aliens' && appState.alienInstruction) {
+          publicAnnounce = appState.alienInstruction.publicAnnounce;
+        } else if (phase === 'rascal' && appState.rascalInstruction) {
+          publicAnnounce = appState.rascalInstruction.publicAnnounce;
+        } else if (phase === 'exposer' && appState.exposerInstruction) {
+          publicAnnounce = appState.exposerInstruction.publicAnnounce;
+        } else if (phase === 'psychic') {
+          const pInsts = appState.psychicInstructions || {};
+          const firstInst = Object.values(pInsts)[0];
+          if (firstInst) publicAnnounce = firstInst.publicAnnounce;
+        } else if (phase === 'mortician' && appState.morticianInstruction) {
+          publicAnnounce = appState.morticianInstruction.publicAnnounce;
+        } else if (phase === 'blob' && appState.blobInstruction) {
+          publicAnnounce = appState.blobInstruction.publicAnnounce;
+        } else if (phase === 'cow') {
+          publicAnnounce = 'Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
+        } else if (phase === 'leader') {
+          publicAnnounce = 'Leader, mở mắt và thấy các Alien.';
+        }
+
+        const roleData = ALIEN_ROLES[phase] || ALIEN_ROLES[phase.replace('_', '')] || {};
         io.to(room.code).emit('night_role_called', {
           role: phase, roleName: label.nameVi,
-          instruction: `${label.nameVi}, hãy mở mắt.`,
-          closeInstruction: `${label.nameVi}, hãy nhắm mắt lại.`,
-          appAnnounce: null,
+          instruction: roleData.nightInstruction || `${label.nameVi}, hãy mở mắt.`,
+          closeInstruction: roleData.nightClose || `${label.nameVi}, hãy nhắm mắt lại.`,
+          appAnnounce: publicAnnounce,
         });
-        await new Promise(r => setTimeout(r, 3000));
+
+        // Determine acting players (same logic as main night)
+        let actingPlayers = [];
+        switch (phase) {
+          case 'aliens':
+            actingPlayers = players.filter(p => isAlienAffiliation(room.originalCards[p.id]));
+            break;
+          case 'groob_zerb':
+            actingPlayers = players.filter(p => room.originalCards[p.id] === 'groob' || room.originalCards[p.id] === 'zerb');
+            break;
+          case 'leader':
+            actingPlayers = players.filter(p => room.originalCards[p.id] === 'leader');
+            break;
+          case 'cow':
+            actingPlayers = players.filter(p => room.originalCards[p.id] === 'cow');
+            break;
+          default:
+            actingPlayers = players.filter(p => room.originalCards[p.id] === phase);
+            break;
+        }
+
+        if (actingPlayers.length > 0) {
+          const realPlayers = actingPlayers.filter(p => !p.isBot);
+          const botPlayers = actingPlayers.filter(p => p.isBot);
+
+          // Send action data to human players
+          realPlayers.forEach(p => {
+            const actionData = getAlienNightActionData(room, phase, p.id);
+            io.to(p.id).emit('night_action_request', { role: phase, ...actionData });
+          });
+
+          await new Promise(resolve => {
+            nightPhase.pendingPlayerIds = actingPlayers.map(p => p.id);
+            nightPhase.pendingActions = [];
+            nightPhase.resolver = resolve;
+            nightPhase.timer = setTimeout(() => {
+              nightPhase.pendingPlayerIds = [];
+              nightPhase.resolver = null;
+              resolve();
+            }, 30000);
+
+            // Bot actions
+            if (botPlayers.length > 0) {
+              setTimeout(() => {
+                botPlayers.forEach(bot => {
+                  if (!nightPhase.pendingPlayerIds.includes(bot.id)) return;
+                  const action = decideAlienBotAction(room, bot.id, phase);
+                  const result = processAlienNightAction(room, bot.id, phase, action);
+                  room.nightLog.push({ role: phase, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result }, isRepeatNight: true });
+
+                  if (result.publicAnnounce) {
+                    io.to(room.code).emit('alien_app_announce', { message: result.publicAnnounce });
+                  }
+
+                  const idx2 = nightPhase.pendingPlayerIds.indexOf(bot.id);
+                  if (idx2 !== -1) nightPhase.pendingPlayerIds.splice(idx2, 1);
+                  nightPhase.pendingActions.push({ playerId: bot.id, role: phase, action: {} });
+                });
+
+                if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+                  clearTimeout(nightPhase.timer);
+                  const r = nightPhase.resolver;
+                  nightPhase.resolver = null;
+                  r();
+                }
+              }, 1500);
+            }
+          });
+        } else {
+          await new Promise(r => setTimeout(r, 3000));
+        }
+
         io.to(room.code).emit('night_role_done', { role: phase });
         await new Promise(r => setTimeout(r, 1000));
       }
@@ -1017,6 +1276,78 @@ async function runAlienNightPhase(room) {
   }
 
   startDayPhase(room);
+}
+
+// ── Ripple interactive action processing ──
+function processRippleAction(room, rippleAction, actorId, data) {
+  const { currentCards } = room;
+  switch (rippleAction.actionId) {
+    case 'troublemaker': {
+      const { target1, target2 } = data;
+      if (!target1 || !target2 || target1 === target2 || target1 === actorId || target2 === actorId) return {};
+      const r1 = currentCards[target1], r2 = currentCards[target2];
+      currentCards[target1] = r2;
+      currentCards[target2] = r1;
+      const p1 = room.players.find(p => p.id === target1);
+      const p2 = room.players.find(p => p.id === target2);
+      return { swapped: true, target1Name: p1?.name, target2Name: p2?.name };
+    }
+    case 'steal': {
+      const { targetPlayer } = data;
+      if (!targetPlayer || targetPlayer === actorId) return {};
+      const targetP = room.players.find(p => p.id === targetPlayer);
+      const theirRole = currentCards[targetPlayer];
+      const myRole = currentCards[actorId];
+      currentCards[actorId] = theirRole;
+      currentCards[targetPlayer] = myRole;
+      return { stolen: true, newRole: theirRole, targetName: targetP?.name || '?', targetId: targetPlayer };
+    }
+    case 'witch': {
+      const { centerSlot, targetPlayer } = data;
+      if (!centerSlot || !['center0', 'center1', 'center2'].includes(centerSlot)) return {};
+      const centerRole = currentCards[centerSlot];
+      if (targetPlayer) {
+        currentCards[centerSlot] = currentCards[targetPlayer];
+        currentCards[targetPlayer] = centerRole;
+      }
+      return { seen: { slot: centerSlot, role: centerRole }, swapped: !!targetPlayer };
+    }
+    case 'drunk': {
+      const { centerSlot } = data;
+      const slot = centerSlot && ['center0', 'center1', 'center2'].includes(centerSlot)
+        ? centerSlot : ['center0', 'center1', 'center2'][Math.floor(Math.random() * 3)];
+      const myRole = currentCards[actorId];
+      currentCards[actorId] = currentCards[slot];
+      currentCards[slot] = myRole;
+      return { swapped: true, slot };
+    }
+    default: return {};
+  }
+}
+
+function autoExecuteRipple(room, rippleAction, actorId, otherPlayers) {
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  switch (rippleAction.actionId) {
+    case 'troublemaker': {
+      if (otherPlayers.length < 2) return {};
+      const t1 = pick(otherPlayers);
+      const t2 = pick(otherPlayers.filter(p => p.id !== t1.id));
+      return processRippleAction(room, rippleAction, actorId, { target1: t1.id, target2: t2.id });
+    }
+    case 'steal': {
+      if (otherPlayers.length === 0) return {};
+      return processRippleAction(room, rippleAction, actorId, { targetPlayer: pick(otherPlayers).id });
+    }
+    case 'witch': {
+      const slot = pick(['center0', 'center1', 'center2']);
+      const tp = otherPlayers.length > 0 ? pick(otherPlayers).id : null;
+      return processRippleAction(room, rippleAction, actorId, { centerSlot: slot, targetPlayer: tp });
+    }
+    case 'drunk': {
+      return processRippleAction(room, rippleAction, actorId, { centerSlot: pick(['center0', 'center1', 'center2']) });
+    }
+    default: return {};
+  }
 }
 
 function decideAlienBotAction(room, botId, phase) {
@@ -1605,11 +1936,12 @@ io.on('connection', socket => {
   });
 
   // ── Update settings (host only) ──
-  socket.on('update_settings', ({ selectedRoles, gameMode }) => {
+  socket.on('update_settings', ({ selectedRoles, gameMode, enableRipple }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id) return;
     if (selectedRoles) room.settings.selectedRoles = selectedRoles;
     if (gameMode) room.settings.gameMode = gameMode;
+    if (enableRipple !== undefined) room.settings.enableRipple = enableRipple;
     broadcastSettings(room);
   });
 
