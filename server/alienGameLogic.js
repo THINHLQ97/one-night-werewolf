@@ -1408,10 +1408,10 @@ function determineAlienWinners(room, eliminated) {
     return { winners: [syntheticPlayer.id], syntheticWin: true };
   }
 
-  // Check Groob/Zerb rivalry — based on ORIGINAL cards (rivalry is set at start of night)
-  const hasGroob = room.settings.selectedRoles.includes('groob');
-  const hasZerb = room.settings.selectedRoles.includes('zerb');
-  const bothGroobZerb = hasGroob && hasZerb;
+  // Check Groob/Zerb rivalry — BOTH must be dealt to PLAYERS (not center) for rivalry to activate
+  const groobDealtToPlayer = players.some(p => room.originalCards[p.id] === 'groob');
+  const zerbDealtToPlayer = players.some(p => room.originalCards[p.id] === 'zerb');
+  const bothGroobZerb = groobDealtToPlayer && zerbDealtToPlayer;
 
   // Groob/Zerb individual wins (who currently HOLDS the card)
   if (bothGroobZerb) {
