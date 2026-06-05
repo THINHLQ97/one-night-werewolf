@@ -1027,13 +1027,13 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           </div>
         )}
 
-        {isMyTurn && submitted && (
+        {submitted && result && (
           <div className="card fade-in text-center">
             <p className="text-village-400 text-sm font-semibold">Đã hoàn thành</p>
             {result?.autoExecuted && (
               <p className="text-yellow-300 text-[11px] mt-1 italic">⚠️ Bạn không hoạt động — hệ thống tự động chọn ngẫu nhiên</p>
             )}
-            {result && <ActionResultInline role={currentRole} result={result} step={step} />}
+            <ActionResultInline role={currentRole} result={result} step={step} />
           </div>
         )}
 
