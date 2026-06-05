@@ -8,6 +8,7 @@ import RankUpPopup, { DemotedPopup } from './components/RankUpPopup';
 import SceneBackground from './components/SceneBackground';
 import OracleSpecialEvent from './components/OracleSpecialEvent';
 import OracleVision from './components/OracleVision';
+import RippleEvent from './components/RippleEvent';
 import HomeScreen from './screens/HomeScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import RoleRevealScreen from './screens/RoleRevealScreen';
@@ -56,6 +57,7 @@ export default function App() {
   const [oracleEvent, setOracleEvent] = useState(null); // { active, isOracle, oracleName, result }
   const [oracleVision, setOracleVision] = useState(null); // persistent vision data { allCards, centerCards, nightLog }
   const [oracleVisionOpen, setOracleVisionOpen] = useState(false); // overlay visibility (can close + reopen)
+  const [rippleEvent, setRippleEvent] = useState(null); // { action } from ripple_event
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -186,6 +188,7 @@ export default function App() {
       setOracleEvent(null);
       setOracleVision(null);
       setOracleVisionOpen(false);
+      setRippleEvent(null);
       setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
       startNightBGM(settingsRef.current?.gameMode || gameModeRef.current);
@@ -237,6 +240,10 @@ export default function App() {
           result: { correct: data.correct, secretNumber: data.secretNumber, answer: data.answer },
         } : prev);
       }
+    });
+
+    socket.on('ripple_event', ({ action }) => {
+      setRippleEvent({ action });
     });
 
     socket.on('alien_app_announce', ({ message }) => {
@@ -741,6 +748,9 @@ export default function App() {
       {oracleVisionOpen && oracleVision && (
         <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
       )}
+      {rippleEvent && (
+        <RippleEvent action={rippleEvent.action} onClose={() => setRippleEvent(null)} />
+      )}
     </>);
   }
   if (screen === 'day') {
@@ -773,6 +783,9 @@ export default function App() {
       />
       {oracleVisionOpen && oracleVision && (
         <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />
+      )}
+      {rippleEvent && (
+        <RippleEvent action={rippleEvent.action} onClose={() => setRippleEvent(null)} />
       )}
     </>);
   }
