@@ -976,28 +976,41 @@ async function runAlienNightPhase(room) {
       room.alienAppState.facingAway = rippleAction.targetPlayers.map(p => p.id);
     }
 
-    // View actions (auto — targets pre-chosen by app, just send result)
-    if (rippleAction.actionId === 'view_1' && rippleAction.viewTargets && isActorHuman) {
+    // View actions (auto — targets pre-chosen by app)
+    if (rippleAction.actionId === 'view_1' && rippleAction.viewTargets) {
       const t = rippleAction.viewTargets[0];
-      io.to(actorId).emit('ripple_action_result', { seen: [{ id: t.id, name: t.name, role: currentCards[t.id] }] });
+      const role = currentCards[t.id];
+      rippleAction.viewedRoles = [{ id: t.id, name: t.name, role }];
+      if (actorId && isActorHuman) {
+        io.to(actorId).emit('ripple_action_result', { seen: [{ id: t.id, name: t.name, role }] });
+      }
     }
-    if (rippleAction.actionId === 'view_2' && rippleAction.viewTargets && isActorHuman) {
+    if (rippleAction.actionId === 'view_2' && rippleAction.viewTargets) {
       const seen = rippleAction.viewTargets.map(t => ({ id: t.id, name: t.name, role: currentCards[t.id] }));
-      io.to(actorId).emit('ripple_action_result', { seen });
+      rippleAction.viewedRoles = seen;
+      if (actorId && isActorHuman) {
+        io.to(actorId).emit('ripple_action_result', { seen });
+      }
     }
     if (rippleAction.actionId === 'dual_view' && rippleAction.viewers && rippleAction.viewTargets) {
       const t = rippleAction.viewTargets[0];
-      const seen = [{ id: t.id, name: t.name, role: currentCards[t.id] }];
+      const role = currentCards[t.id];
+      const seen = [{ id: t.id, name: t.name, role }];
+      rippleAction.viewedRoles = seen;
       rippleAction.viewers.forEach(v => {
         const vp = players.find(p => p.id === v.id);
         if (vp && !vp.isBot) io.to(v.id).emit('ripple_action_result', { seen });
       });
     }
-    if (rippleAction.actionId === 'reveal' && rippleAction.revealTarget && isActorHuman) {
+    // Reveal = Revealer action → flip card publicly for ALL players to see
+    if (rippleAction.actionId === 'reveal' && rippleAction.revealTarget) {
       const t = rippleAction.revealTarget;
       const role = currentCards[t.id];
       rippleAction.revealedRole = role;
+      // Broadcast to ALL players (public reveal)
       io.to(room.code).emit('ripple_action_result', { revealed: { id: t.id, name: t.name, role } });
+      // Also add to exposed/revealed for DayScreen knowledge
+      io.to(room.code).emit('night_public_reveal', { playerId: t.id, role });
     }
     if (rippleAction.actionId === 'dual_shuffle' && rippleAction.shufflePair) {
       const [p1, p2] = rippleAction.shufflePair;
@@ -1092,17 +1105,20 @@ async function runAlienNightPhase(room) {
       const seenRole = rippleResult?.seen?.role || '?';
       rippleDetail = `${nameMap[actorId] || '?'} xem bài giữa → ${seenRole}${rippleResult?.swapped ? ' (đã đổi)' : ''}.`;
     }
-    if (rippleAction.actionId === 'view_1' && actorId && rippleAction.viewTargets?.[0]) {
-      rippleDetail = `${nameMap[actorId] || '?'} xem bài của ${rippleAction.viewTargets[0].name}.`;
+    if (rippleAction.actionId === 'view_1' && actorId && rippleAction.viewedRoles?.[0]) {
+      const v = rippleAction.viewedRoles[0];
+      rippleDetail = `${nameMap[actorId] || '?'} xem bài của ${v.name} → ${v.role}.`;
     }
-    if (rippleAction.actionId === 'view_2' && actorId && rippleAction.viewTargets) {
-      rippleDetail = `${nameMap[actorId] || '?'} xem bài của ${rippleAction.viewTargets.map(t => t.name).join(' và ')}.`;
+    if (rippleAction.actionId === 'view_2' && actorId && rippleAction.viewedRoles) {
+      rippleDetail = `${nameMap[actorId] || '?'} xem bài: ${rippleAction.viewedRoles.map(v => `${v.name} → ${v.role}`).join(', ')}.`;
     }
-    if (rippleAction.actionId === 'reveal' && actorId && rippleAction.revealTarget) {
-      rippleDetail = `${nameMap[actorId] || '?'} lật bài của ${rippleAction.revealTarget.name}${rippleAction.revealedRole ? ` → ${rippleAction.revealedRole}` : ''}.`;
+    if (rippleAction.actionId === 'reveal' && rippleAction.revealTarget) {
+      const actorName = actorId ? (nameMap[actorId] || '?') : 'Echo';
+      rippleDetail = `${actorName} lật bài của ${rippleAction.revealTarget.name} → ${rippleAction.revealedRole || '?'} (công khai).`;
     }
-    if (rippleAction.actionId === 'dual_view' && rippleAction.viewers && rippleAction.viewTargets?.[0]) {
-      rippleDetail = `${rippleAction.viewers.map(v => v.name).join(' và ')} cùng xem bài của ${rippleAction.viewTargets[0].name}.`;
+    if (rippleAction.actionId === 'dual_view' && rippleAction.viewers && rippleAction.viewedRoles?.[0]) {
+      const v = rippleAction.viewedRoles[0];
+      rippleDetail = `${rippleAction.viewers.map(vw => vw.name).join(' và ')} cùng xem bài của ${v.name} → ${v.role}.`;
     }
     if (rippleAction.actionId === 'dual_shuffle' && rippleAction.shufflePair) {
       const [sp1, sp2] = rippleAction.shufflePair;
