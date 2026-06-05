@@ -507,13 +507,13 @@ export default function App() {
       setNightState(prev => ({ ...prev, isMyTurn: false, actionData: null }));
     });
 
-    socket.on('day_start', ({ timerEnd, players: dayPlayers, tokenPool, shieldedPlayer, exposedCenter }) => {
+    socket.on('day_start', ({ timerEnd, players: dayPlayers, tokenPool, shieldedPlayer, exposedCenter, ripple, silencedPlayers, facingAway, twoHandVoters }) => {
       setScreen('day');
       const merged = dayPlayers.map(dp => {
         const existing = playersRef.current.find(p => p.id === dp.id);
         return existing ? { ...existing, ...dp } : dp;
       });
-      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null, exposedCenter: exposedCenter || {} });
+      setDayState({ timerEnd, votes: {}, players: merged, paused: false, shieldedPlayer: shieldedPlayer || null, votingPhase: false, votingTimerEnd: null, exposedCenter: exposedCenter || {}, ripple: ripple || null, silencedPlayers: silencedPlayers || [], facingAway: facingAway || [], twoHandVoters: twoHandVoters || [] });
       // Persist exposed center cards into night knowledge so GameTable shows them face-up
       if (exposedCenter && Object.keys(exposedCenter).length > 0) {
         setNightKnowledge(prev => ({

@@ -43,7 +43,7 @@ function centerName(slot) {
 }
 
 export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
-  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd } = dayState;
+  const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd, silencedPlayers = [], facingAway = [], twoHandVoters = [] } = dayState;
   // Use voting timer when in voting phase, otherwise discussion timer
   const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
   const remaining = useCountdown(activeTimerEnd, votingPhase ? false : paused, votingPhase ? null : pausedRemaining);
@@ -127,6 +127,54 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
       {/* Alien Terminal — recap of night app instructions */}
       {gameMode === 'alien' && appAnnouncements.length > 0 && (
         <AlienTerminal messages={appAnnouncements} maxLines={6} collapsed={true} />
+      )}
+
+      {/* Ripple status banners */}
+      {(silencedPlayers.length > 0 || facingAway.length > 0 || twoHandVoters.length > 0) && (
+        <div className="space-y-1.5 mb-3">
+          {silencedPlayers.includes(myId) && (
+            <div className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/25 text-center">
+              <p className="text-purple-300 text-xs font-bold">🤐 THE RIPPLE — BẠN BỊ CẤM NÓI</p>
+              <p className="text-purple-200/60 text-[10px]">Bạn không được nói cho đến khi bỏ phiếu.</p>
+            </div>
+          )}
+          {facingAway.includes(myId) && (
+            <div className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/25 text-center">
+              <p className="text-purple-300 text-xs font-bold">🙈 THE RIPPLE — QUAY MẶT ĐI</p>
+              <p className="text-purple-200/60 text-[10px]">Bạn phải quay mặt đi cho đến khi vote xong.</p>
+            </div>
+          )}
+          {twoHandVoters.includes(myId) && (
+            <div className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/25 text-center">
+              <p className="text-purple-300 text-xs font-bold">✌️ THE RIPPLE — VOTE 2 PHIẾU</p>
+              <p className="text-purple-200/60 text-[10px]">Bạn vote bằng 2 tay — phiếu của bạn tính GẤP ĐÔI.</p>
+            </div>
+          )}
+          {silencedPlayers.length > 0 && !silencedPlayers.includes(myId) && (
+            <div className="px-2 py-1.5 rounded-lg bg-purple-500/8 border border-purple-500/15">
+              <p className="text-purple-400/70 text-[10px]">🤐 Bị cấm nói: {silencedPlayers.map(id => {
+                const p = players.find(pp => pp.id === id);
+                return p?.name || '?';
+              }).join(', ')}</p>
+            </div>
+          )}
+          {facingAway.length > 0 && !facingAway.includes(myId) && (
+            <div className="px-2 py-1.5 rounded-lg bg-purple-500/8 border border-purple-500/15">
+              <p className="text-purple-400/70 text-[10px]">🙈 Quay mặt đi: {facingAway.map(id => {
+                const p = players.find(pp => pp.id === id);
+                return p?.name || '?';
+              }).join(', ')}</p>
+            </div>
+          )}
+          {twoHandVoters.length > 0 && !twoHandVoters.includes(myId) && (
+            <div className="px-2 py-1.5 rounded-lg bg-purple-500/8 border border-purple-500/15">
+              <p className="text-purple-400/70 text-[10px]">✌️ Vote 2 phiếu: {twoHandVoters.map(id => {
+                const p = players.find(pp => pp.id === id);
+                return p?.name || '?';
+              }).join(', ')}</p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Game Table with voting */}
