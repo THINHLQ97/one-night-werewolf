@@ -80,25 +80,25 @@ function getNeighborIds(room, playerId) {
 
 // ── Oracle Question Generator ──────────────────────────────────────────────
 // Probabilities (custom-tuned):
-//   Even/Odd             — 20%
+//   Even/Odd             — 15%
 //   Exchange (Drunk)     — 10%
 //   Center               — 10%
 //   Player Number        — 10%
-//   Number Guess         — 15%
+//   Number Guess         — 10%
+//   Ripple Trigger       — 10%
 //   Change Team          — 35%
 function generateOracleQuestion(room) {
   const playerCount = room.players.length;
   const oracleInCenter = !room.players.some(p => room.originalCards[p.id] === 'oracle');
   let roll = Math.random() * 100;
 
-  // number_guess (50-65) must NOT happen when Oracle is in center
-  if (oracleInCenter && roll >= 50 && roll < 65) {
-    // Redistribute to other question types
-    roll = roll < 57.5 ? Math.random() * 50 : 65 + Math.random() * 35;
+  // number_guess (45-55) must NOT happen when Oracle is in center
+  if (oracleInCenter && roll >= 45 && roll < 55) {
+    roll = roll < 50 ? Math.random() * 45 : 55 + Math.random() * 45;
   }
 
-  // 0-20: Even/Odd (20%)
-  if (roll < 20) {
+  // 0-15: Even/Odd (15%)
+  if (roll < 15) {
     return {
       id: 'even_odd',
       group: 'info',
@@ -109,8 +109,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 20-30: Exchange / Drunk action (10%)
-  if (roll < 30) {
+  // 15-25: Exchange / Drunk action (10%)
+  if (roll < 25) {
     return {
       id: 'exchange',
       group: 'action',
@@ -121,8 +121,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 30-40: Center cards (10%)
-  if (roll < 40) {
+  // 25-35: Center cards (10%)
+  if (roll < 35) {
     return {
       id: 'center',
       group: 'action',
@@ -133,8 +133,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 40-50: Player Number (10%)
-  if (roll < 50) {
+  // 35-45: Player Number (10%)
+  if (roll < 45) {
     return {
       id: 'player_number',
       group: 'action',
@@ -145,8 +145,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 50-65: Number guess 1-10 (15%)
-  if (roll < 65) {
+  // 45-55: Number guess 1-10 (10%)
+  if (roll < 55) {
     const secretNumber = Math.floor(Math.random() * 10) + 1;
     return {
       id: 'number_guess',
@@ -159,8 +159,19 @@ function generateOracleQuestion(room) {
     };
   }
 
+  // 55-65: Ripple Trigger (10%)
+  if (roll < 65) {
+    return {
+      id: 'ripple_trigger',
+      group: 'action',
+      type: 'choice',
+      question: 'Ngươi có muốn The Ripple (Vết Nứt) xảy ra không? Nếu đồng ý, cuối game sẽ có sự kiện đặc biệt.',
+      options: ['Có, kích hoạt Ripple', 'Không'],
+      publicAnnounce: 'Oracle, ngươi có muốn The Ripple xảy ra không?',
+    };
+  }
+
   // 65-100: Change Team (35%)
-  // App picks an alien team that's in the game (here we have just "Alien" team)
   return {
     id: 'change_team',
     group: 'switch',
@@ -354,9 +365,198 @@ function processOracleAnswer(room, playerId, question, answer) {
       };
     }
 
+    // ── RIPPLE TRIGGER ──
+    case 'ripple_trigger': {
+      if (answer.includes('Có')) {
+        room.alienAppState.oracleTriggeredRipple = true;
+        return {
+          questionId: question.id, answer,
+          appReply: 'The Ripple sẽ xảy ra khi kết thúc game!',
+          publicAnnounce: 'Oracle đã kích hoạt The Ripple — vết nứt thời không sẽ mở ra cuối game.',
+        };
+      }
+      return {
+        questionId: question.id, answer,
+        appReply: 'Oracle từ chối. The Ripple sẽ không xảy ra.',
+        publicAnnounce: 'Oracle đã đưa ra lựa chọn của mình.',
+      };
+    }
+
     default:
       return { questionId: question.id, answer };
   }
+}
+
+// ── The Ripple Generator ──────────────────────────────────────────────────
+// The Ripple (Vết Nứt) — post-game event. Triggers:
+//   1. Oracle chose ripple_trigger → 100%
+//   2. Random 20% chance (unless number_guess occurred)
+const RIPPLE_ACTIONS = [
+  { id: '1_minute', weight: 10, label: '1 Minute', description: 'Thời gian thảo luận chỉ còn 1 phút.' },
+  { id: 'repeat', weight: 5, label: 'Repeat', description: 'Vòng lặp thời gian! Đêm diễn ra lần nữa, nhưng một số vai sẽ không được gọi.' },
+  { id: 'insomniac', weight: 5, label: 'Insomniac', description: 'Một số người chơi được xem lại bài của mình.' },
+  { id: 'may_not_speak', weight: 5, label: 'May Not Speak', description: 'Một số người chơi không được nói cho đến khi vote.' },
+  { id: 'face_away', weight: 5, label: 'Face Away', description: 'Một số người chơi phải quay mặt đi cho đến khi vote xong.' },
+  { id: 'troublemaker', weight: 5, label: 'Trouble Maker', description: 'Một người chơi được hoán đổi bài của 2 người khác.' },
+  { id: 'steal', weight: 5, label: 'Steal', description: 'Một người chơi được cướp bài của người khác (xem bài mới).' },
+  { id: 'witch', weight: 5, label: 'Witch', description: 'Một người chơi được thực hiện hành động Phù Thủy.' },
+  { id: 'view_1', weight: 5, label: 'View 1', description: 'Một người chơi được xem bài 1 người khác.' },
+  { id: 'view_2', weight: 5, label: 'View 2', description: 'Một người chơi được xem bài 2 người khác.' },
+  { id: 'reveal', weight: 5, label: 'Reveal', description: 'Một người chơi được lật bài 1 người khác.' },
+  { id: 'dual_view', weight: 5, label: 'Dual View', description: '2 người chơi cùng xem bài 1 người khác.' },
+  { id: 'two_hand_vote', weight: 5, label: 'Two Hand Vote', description: 'Một số người chơi vote bằng 2 tay (2 phiếu).' },
+  { id: 'dual_shuffle', weight: 5, label: 'Dual Shuffle', description: '2 người chơi lộ bài cho nhau rồi xáo trộn.' },
+  { id: 'drunk', weight: 5, label: 'Drunk', description: 'Một người chơi phải đổi bài với 1 lá ở giữa (không xem).' },
+];
+
+function shouldRippleOccur(room) {
+  // number_guess occurred → no Ripple
+  if (room.alienAppState?.oracleStaysAwake || room.alienAppState?.oracleHuntMode) return false;
+  // Oracle triggered Ripple → 100%
+  if (room.alienAppState?.oracleTriggeredRipple) return true;
+  // Random 20% chance
+  return Math.random() < 0.20;
+}
+
+function generateRippleAction(room) {
+  const totalWeight = RIPPLE_ACTIONS.reduce((sum, a) => sum + a.weight, 0);
+  let roll = Math.random() * totalWeight;
+  let chosen = RIPPLE_ACTIONS[0];
+  for (const action of RIPPLE_ACTIONS) {
+    roll -= action.weight;
+    if (roll <= 0) { chosen = action; break; }
+  }
+
+  const players = room.players;
+  const playerCount = players.length;
+
+  // Pick random target player(s) for actions that need them
+  const randomPlayer = () => players[Math.floor(Math.random() * playerCount)];
+  const randomPlayerExcluding = (excludeIds) => {
+    const pool = players.filter(p => !excludeIds.includes(p.id));
+    return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : randomPlayer();
+  };
+
+  const result = { actionId: chosen.id, label: chosen.label, description: chosen.description };
+
+  switch (chosen.id) {
+    case '1_minute':
+      // Timer override — handled in startDayPhase
+      break;
+
+    case 'repeat':
+      // Night repeats — server handles this
+      break;
+
+    case 'insomniac': {
+      // Pick 2-3 random players to view their own card
+      const count = Math.min(playerCount, pick([2, 2, 3]));
+      const chosen_players = shuffle([...players]).slice(0, count);
+      result.targetPlayers = chosen_players.map(p => ({ id: p.id, name: p.name }));
+      result.description = `${chosen_players.map(p => p.name).join(', ')} được xem lại bài của mình.`;
+      break;
+    }
+
+    case 'may_not_speak': {
+      const count = Math.min(playerCount, pick([1, 2, 2, 3]));
+      const chosen_players = shuffle([...players]).slice(0, count);
+      result.targetPlayers = chosen_players.map(p => ({ id: p.id, name: p.name }));
+      result.description = `${chosen_players.map(p => p.name).join(', ')} không được nói cho đến khi vote.`;
+      break;
+    }
+
+    case 'face_away': {
+      const count = Math.min(playerCount, pick([1, 2, 2]));
+      const chosen_players = shuffle([...players]).slice(0, count);
+      result.targetPlayers = chosen_players.map(p => ({ id: p.id, name: p.name }));
+      result.description = `${chosen_players.map(p => p.name).join(', ')} phải quay mặt đi cho đến khi vote xong.`;
+      break;
+    }
+
+    case 'troublemaker': {
+      const actor = randomPlayer();
+      result.actor = { id: actor.id, name: actor.name };
+      result.description = `${actor.name} được hoán đổi bài của 2 người khác.`;
+      break;
+    }
+
+    case 'steal': {
+      const actor = randomPlayer();
+      result.actor = { id: actor.id, name: actor.name };
+      result.description = `${actor.name} được cướp bài 1 người khác (xem bài mới).`;
+      break;
+    }
+
+    case 'witch': {
+      const actor = randomPlayer();
+      result.actor = { id: actor.id, name: actor.name };
+      result.description = `${actor.name} được thực hiện hành động Phù Thủy.`;
+      break;
+    }
+
+    case 'view_1': {
+      const actor = randomPlayer();
+      const target = randomPlayerExcluding([actor.id]);
+      result.actor = { id: actor.id, name: actor.name };
+      result.viewTargets = [{ id: target.id, name: target.name }];
+      result.description = `${actor.name} được xem bài của ${target.name}.`;
+      break;
+    }
+
+    case 'view_2': {
+      const actor = randomPlayer();
+      const t1 = randomPlayerExcluding([actor.id]);
+      const t2 = randomPlayerExcluding([actor.id, t1.id]);
+      result.actor = { id: actor.id, name: actor.name };
+      result.viewTargets = [{ id: t1.id, name: t1.name }, { id: t2.id, name: t2.name }];
+      result.description = `${actor.name} được xem bài của ${t1.name} và ${t2.name}.`;
+      break;
+    }
+
+    case 'reveal': {
+      const actor = randomPlayer();
+      const target = randomPlayerExcluding([actor.id]);
+      result.actor = { id: actor.id, name: actor.name };
+      result.revealTarget = { id: target.id, name: target.name };
+      result.description = `${actor.name} được lật bài của ${target.name}.`;
+      break;
+    }
+
+    case 'dual_view': {
+      const viewer1 = randomPlayer();
+      const viewer2 = randomPlayerExcluding([viewer1.id]);
+      const target = randomPlayerExcluding([viewer1.id, viewer2.id]);
+      result.viewers = [{ id: viewer1.id, name: viewer1.name }, { id: viewer2.id, name: viewer2.name }];
+      result.viewTargets = [{ id: target.id, name: target.name }];
+      result.description = `${viewer1.name} và ${viewer2.name} cùng xem bài của ${target.name}.`;
+      break;
+    }
+
+    case 'two_hand_vote': {
+      const count = Math.min(playerCount, pick([1, 1, 2]));
+      const chosen_players = shuffle([...players]).slice(0, count);
+      result.targetPlayers = chosen_players.map(p => ({ id: p.id, name: p.name }));
+      result.description = `${chosen_players.map(p => p.name).join(', ')} vote bằng 2 tay (2 phiếu).`;
+      break;
+    }
+
+    case 'dual_shuffle': {
+      const p1 = randomPlayer();
+      const p2 = randomPlayerExcluding([p1.id]);
+      result.shufflePair = [{ id: p1.id, name: p1.name }, { id: p2.id, name: p2.name }];
+      result.description = `${p1.name} và ${p2.name} lộ bài cho nhau rồi xáo trộn.`;
+      break;
+    }
+
+    case 'drunk': {
+      const actor = randomPlayer();
+      result.actor = { id: actor.id, name: actor.name };
+      result.description = `${actor.name} phải đổi bài với 1 lá ở giữa (không xem).`;
+      break;
+    }
+  }
+
+  return result;
 }
 
 // ── Alien Instruction Generator ────────────────────────────────────────────
@@ -1125,11 +1325,16 @@ function generateAlienInstructionPostOracle(room) {
 function alienTallyVotes(room) {
   const { players, dayPhase } = room;
   const votes = dayPhase.votes;
+  const twoHandVoters = room.alienAppState?.twoHandVoters || [];
 
   const tally = {};
   players.forEach(p => { tally[p.id] = 0; });
-  Object.values(votes).forEach(targetId => {
-    if (tally[targetId] !== undefined) tally[targetId]++;
+  Object.entries(votes).forEach(([voterId, targetId]) => {
+    if (tally[targetId] !== undefined) {
+      // Two Hand Vote ripple: some players count double
+      const weight = twoHandVoters.includes(voterId) ? 2 : 1;
+      tally[targetId] += weight;
+    }
   });
 
   const maxVotes = Math.max(0, ...Object.values(tally));
@@ -1354,4 +1559,6 @@ module.exports = {
   alienTallyVotes,
   getNeighborIds,
   isAlienAffiliation,
+  shouldRippleOccur,
+  generateRippleAction,
 };

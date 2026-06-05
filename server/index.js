@@ -9,7 +9,7 @@ const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { ALIEN_ROLES, isAlienAffiliation } = require('./alienRoles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
-const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults } = require('./alienGameLogic');
+const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults, shouldRippleOccur, generateRippleAction } = require('./alienGameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
@@ -830,6 +830,10 @@ async function runAlienNightPhase(room) {
           phantomResponse = Math.random() < 0.35
             ? `Ngươi muốn xem số ${num} ư? Không đâu, ngươi chỉ được xem số ${((num % players.length) + 1)} thôi!`
             : `Được rồi, hãy xem người chơi số ${num} là gì nào.`;
+        } else if (q.id === 'ripple_trigger') {
+          phantomResponse = Math.random() < 0.4
+            ? 'Oracle đã kích hoạt The Ripple — vết nứt thời không sẽ mở ra cuối game.'
+            : 'Oracle đã đưa ra lựa chọn của mình.';
         } else {
           phantomResponse = 'Oracle đã trả lời.';
         }
@@ -907,6 +911,108 @@ async function runAlienNightPhase(room) {
 
       // Brief pause for Oracle to read overlay (5s) before day phase
       await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+
+  // ── The Ripple (Vết Nứt) — post-night event ──
+  if (shouldRippleOccur(room)) {
+    const rippleAction = generateRippleAction(room);
+    room.alienAppState.ripple = rippleAction;
+
+    // Broadcast Ripple announcement to all
+    io.to(room.code).emit('alien_app_announce', {
+      message: `⚡ THE RIPPLE — ${rippleAction.description}`,
+    });
+    io.to(room.code).emit('ripple_event', { action: rippleAction });
+
+    // Process immediate card-changing ripple actions
+    const { currentCards } = room;
+    if (rippleAction.actionId === 'insomniac' && rippleAction.targetPlayers) {
+      // Each target sees their current card
+      rippleAction.targetPlayers.forEach(tp => {
+        const player = players.find(p => p.id === tp.id);
+        if (player && !player.isBot) {
+          io.to(tp.id).emit('ripple_insomniac', { currentRole: currentCards[tp.id] });
+        }
+      });
+    }
+
+    if (rippleAction.actionId === '1_minute') {
+      room.alienAppState.rippleTimer = 60 * 1000; // Override day timer to 1 minute
+    }
+
+    if (rippleAction.actionId === 'two_hand_vote' && rippleAction.targetPlayers) {
+      room.alienAppState.twoHandVoters = rippleAction.targetPlayers.map(p => p.id);
+    }
+
+    if (rippleAction.actionId === 'may_not_speak' && rippleAction.targetPlayers) {
+      room.alienAppState.silencedPlayers = rippleAction.targetPlayers.map(p => p.id);
+    }
+
+    if (rippleAction.actionId === 'face_away' && rippleAction.targetPlayers) {
+      room.alienAppState.facingAway = rippleAction.targetPlayers.map(p => p.id);
+    }
+
+    // Actions requiring player interaction will be handled via ripple_action socket events
+    // For now, bot auto-execute for card-changing actions
+    if (rippleAction.actionId === 'drunk' && rippleAction.actor) {
+      const slot = ['center0', 'center1', 'center2'][Math.floor(Math.random() * 3)];
+      const myRole = currentCards[rippleAction.actor.id];
+      currentCards[rippleAction.actor.id] = currentCards[slot];
+      currentCards[slot] = myRole;
+      rippleAction.executedSlot = slot;
+    }
+
+    if (rippleAction.actionId === 'dual_shuffle' && rippleAction.shufflePair) {
+      const [p1, p2] = rippleAction.shufflePair;
+      // Reveal to each other, then randomly shuffle
+      rippleAction.revealedCards = {
+        [p1.id]: currentCards[p1.id],
+        [p2.id]: currentCards[p2.id],
+      };
+      if (Math.random() < 0.5) {
+        const temp = currentCards[p1.id];
+        currentCards[p1.id] = currentCards[p2.id];
+        currentCards[p2.id] = temp;
+        rippleAction.swapped = true;
+      }
+    }
+
+    // Brief pause for players to read Ripple announcement
+    await new Promise(r => setTimeout(r, 5000));
+
+    // Repeat night if 'repeat' action
+    if (rippleAction.actionId === 'repeat') {
+      room.alienAppState.isRepeatNight = true;
+      // Re-run night but skip Oracle
+      const originalOrder = room.nightPhase.roleOrder;
+      room.nightPhase.roleOrder = originalOrder.filter(p => p !== 'oracle');
+      room.nightPhase.currentRoleIndex = -1;
+
+      // Re-generate instructions (except oracle)
+      if (room.alienAppState.rascalInstruction) {
+        const { generateRascalInstruction } = require('./alienGameLogic');
+      }
+
+      io.to(room.code).emit('alien_app_announce', { message: 'Vòng lặp thời gian! Đêm diễn ra lần nữa...' });
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Re-run the night loop (simplified — reuse existing phases minus oracle)
+      for (let i = 0; i < room.nightPhase.roleOrder.length; i++) {
+        if (room.state !== 'night') break;
+        const phase = room.nightPhase.roleOrder[i];
+        // Emit role called and wait briefly
+        const label = PHASE_LABELS[phase] || { name: phase, nameVi: phase };
+        io.to(room.code).emit('night_role_called', {
+          role: phase, roleName: label.nameVi,
+          instruction: `${label.nameVi}, hãy mở mắt.`,
+          closeInstruction: `${label.nameVi}, hãy nhắm mắt lại.`,
+          appAnnounce: null,
+        });
+        await new Promise(r => setTimeout(r, 3000));
+        io.to(room.code).emit('night_role_done', { role: phase });
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
   }
 
@@ -1017,9 +1123,13 @@ function startDayPhase(room) {
   const pool = [...room.settings.selectedRoles];
   if (room.hasAlphaWolf) pool.push('werewolf');
 
+  // Ripple '1_minute' override — discussion = 1 minute total (no separate voting)
+  const rippleTimer = room.alienAppState?.rippleTimer;
+  const discussionTime = rippleTimer || 5 * 60 * 1000;
+
   room.dayPhase = {
     votes: {},
-    timerEnd: Date.now() + 5 * 60 * 1000,
+    timerEnd: Date.now() + discussionTime,
     votingPhase: false,       // false = discussion, true = voting
     votingTimerEnd: null,
     tokenClaims: {
@@ -1027,6 +1137,10 @@ function startDayPhase(room) {
       deductions: {},  // { playerId: { position: roleId, ... } }
       conflicts: [],
     },
+    ripple: room.alienAppState?.ripple || null,
+    silencedPlayers: room.alienAppState?.silencedPlayers || [],
+    facingAway: room.alienAppState?.facingAway || [],
+    twoHandVoters: room.alienAppState?.twoHandVoters || [],
   };
 
   io.to(room.code).emit('day_start', {
@@ -1035,10 +1149,14 @@ function startDayPhase(room) {
     tokenPool: pool,
     shieldedPlayer: room.shieldedPlayer || null,
     votingPhase: false,
-    exposedCenter: room.exposedCenter || {},  // Public: center cards flipped face-up by Exposer
+    exposedCenter: room.exposedCenter || {},
+    ripple: room.dayPhase.ripple,
+    silencedPlayers: room.dayPhase.silencedPlayers,
+    facingAway: room.dayPhase.facingAway,
+    twoHandVoters: room.dayPhase.twoHandVoters,
   });
 
-  // After discussion ends → start 1-minute voting phase
+  // After discussion ends → start voting phase
   room.dayPhase.autoEndTimer = setTimeout(() => {
     if (room.state === 'day') startVotingPhase(room);
   }, 5 * 60 * 1000);
