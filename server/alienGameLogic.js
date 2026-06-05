@@ -88,7 +88,14 @@ function getNeighborIds(room, playerId) {
 //   Change Team          — 35%
 function generateOracleQuestion(room) {
   const playerCount = room.players.length;
-  const roll = Math.random() * 100;
+  const oracleInCenter = !room.players.some(p => room.originalCards[p.id] === 'oracle');
+  let roll = Math.random() * 100;
+
+  // number_guess (50-65) must NOT happen when Oracle is in center
+  if (oracleInCenter && roll >= 50 && roll < 65) {
+    // Redistribute to other question types
+    roll = roll < 57.5 ? Math.random() * 50 : 65 + Math.random() * 35;
+  }
 
   // 0-20: Even/Odd (20%)
   if (roll < 20) {

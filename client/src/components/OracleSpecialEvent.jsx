@@ -23,9 +23,14 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
   const [stage, setStage] = useState('intro');
   const [picked, setPicked] = useState(null);
 
-  // Auto-advance to result stage when result arrives
+  // Auto-advance to result stage when result arrives — with dramatic delay
   useEffect(() => {
     if (result && stage !== 'result') {
+      // If still on 'picking' (Oracle just chose), add suspense delay
+      if (stage === 'picking') {
+        const delay = setTimeout(() => setStage('result'), 2500);
+        return () => clearTimeout(delay);
+      }
       setStage('result');
     }
   }, [result, stage]);
@@ -118,10 +123,16 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
               ) : (
                 <div>
                   <p className="text-emerald-300 text-base mb-2">Bạn đã chọn:</p>
-                  <div className="text-5xl font-bold text-emerald-400 mb-2" style={{ textShadow: '0 0 20px rgba(74,222,128,0.8)' }}>
+                  <div className="text-5xl font-bold text-emerald-400 mb-3" style={{ textShadow: '0 0 20px rgba(74,222,128,0.8)', animation: 'oraclePulse 1.5s ease-in-out infinite' }}>
                     {picked}
                   </div>
-                  <p className="text-white/50 text-sm italic">Tiếng vọng đang suy nghĩ...</p>
+                  {result ? (
+                    <p className="text-yellow-300/80 text-sm font-semibold" style={{ animation: 'eventFadeIn 0.5s ease-out' }}>
+                      Vũ trụ đang phán xét...
+                    </p>
+                  ) : (
+                    <p className="text-white/50 text-sm italic">Echo đang suy nghĩ...</p>
+                  )}
                   <div className="mt-3 flex justify-center gap-1">
                     {[0, 1, 2].map(i => (
                       <span
@@ -136,10 +147,21 @@ export default function OracleSpecialEvent({ isOracle = false, oracleName = null
             ) : (
               // SPECTATOR MODE: just wait
               <div>
-                <p className="text-emerald-300 text-base mb-2">
-                  <strong className="text-emerald-200">Nhà Tiên Tri</strong> đang chọn số...
-                </p>
-                <p className="text-white/50 text-sm italic mb-3">Đừng can thiệp. Hãy chờ định mệnh phán xét.</p>
+                {result ? (
+                  <>
+                    <p className="text-yellow-300/80 text-base font-semibold mb-2" style={{ animation: 'eventFadeIn 0.5s ease-out' }}>
+                      Vũ trụ đang phán xét...
+                    </p>
+                    <p className="text-white/40 text-sm italic mb-3">Định mệnh sắp được phán quyết.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-emerald-300 text-base mb-2">
+                      <strong className="text-emerald-200">Nhà Tiên Tri</strong> đang chọn số...
+                    </p>
+                    <p className="text-white/50 text-sm italic mb-3">Đừng can thiệp. Hãy chờ định mệnh phán xét.</p>
+                  </>
+                )}
                 <div className="flex justify-center gap-1">
                   {[0, 1, 2].map(i => (
                     <span

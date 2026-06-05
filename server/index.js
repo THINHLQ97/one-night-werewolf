@@ -802,16 +802,37 @@ async function runAlienNightPhase(room) {
       await new Promise(r => setTimeout(r, 3000));
 
       // Phantom response when role is in center (no acting player)
+      // MUST be indistinguishable from real Oracle — randomize outcomes
       if (phase === 'oracle' && appInst.oracleQuestion) {
         const q = appInst.oracleQuestion;
         let phantomResponse;
-        if (q.id === 'change_team') phantomResponse = 'Oracle đã đưa ra lựa chọn của mình.';
-        else if (q.id === 'exchange') phantomResponse = 'Oracle chọn giữ nguyên bài.';
-        else if (q.id === 'center') phantomResponse = 'Oracle không xem bài giữa.';
-        else if (q.id === 'even_odd') phantomResponse = `Oracle đã trả lời: số ${Math.random() < 0.5 ? 'Chẵn' : 'Lẻ'}.`;
-        else if (q.id === 'player_number') phantomResponse = `Oracle đã xem bài người chơi số ${Math.floor(Math.random() * players.length) + 1}.`;
-        else if (q.id === 'number_guess') phantomResponse = 'Oracle đã đoán số.';
-        else phantomResponse = 'Oracle đã trả lời.';
+        if (q.id === 'change_team') {
+          // Randomly pretend Oracle joined or not — so players can't deduce Oracle is absent
+          phantomResponse = Math.random() < 0.3
+            ? 'Oracle đã PHẢN BỘI — gia nhập phe Alien!'
+            : 'Oracle đã đưa ra lựa chọn của mình.';
+        } else if (q.id === 'exchange') {
+          phantomResponse = Math.random() < 0.5
+            ? 'Oracle đã đổi bài với 1 lá ở giữa (mù).'
+            : 'Oracle chọn giữ nguyên bài.';
+        } else if (q.id === 'center') {
+          const n = [1, 1, 2, 2, 3][Math.floor(Math.random() * 5)];
+          phantomResponse = Math.random() < 0.3
+            ? 'Oracle không xem bài giữa.'
+            : n === 1 ? 'Thật là kẻ tham lam, ngươi chỉ được xem MỘT lá thôi!'
+            : n === 2 ? '3 lá là quá nhiều, ngươi chỉ được xem HAI lá thôi.'
+            : 'Hôm nay ta rộng lượng — ngươi được xem cả 3 lá!';
+        } else if (q.id === 'even_odd') {
+          phantomResponse = `Oracle đã trả lời: số ${Math.random() < 0.5 ? 'Chẵn' : 'Lẻ'}.`;
+        } else if (q.id === 'player_number') {
+          const num = Math.floor(Math.random() * players.length) + 1;
+          const pName = players[num - 1]?.name || `số ${num}`;
+          phantomResponse = Math.random() < 0.35
+            ? `Ngươi muốn xem số ${num} ư? Không đâu, ngươi chỉ được xem số ${((num % players.length) + 1)} thôi!`
+            : `Được rồi, hãy xem người chơi số ${num} là gì nào.`;
+        } else {
+          phantomResponse = 'Oracle đã trả lời.';
+        }
         io.to(room.code).emit('alien_app_announce', { message: phantomResponse });
       }
     }
