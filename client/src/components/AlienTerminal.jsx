@@ -122,7 +122,7 @@ export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: 
             border: '1px solid #1a3a1a',
             borderTop: 'none',
             borderRadius: '0 0 8px 8px',
-            maxHeight: '140px',
+            maxHeight: '220px',
             overflowY: 'auto',
             padding: '10px 12px',
             boxShadow: 'inset 0 0 30px rgba(0, 255, 0, 0.03), 0 0 15px rgba(0, 255, 0, 0.05)',

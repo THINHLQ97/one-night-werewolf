@@ -24,6 +24,8 @@ export function initAudio() {
    '/audio/win-effect.mp3', '/audio/lose-effect.mp3',
    // Alien-specific
    '/audio/alien-night-effect.MP3', '/audio/alien-night-bgm.mp3', '/audio/alien-day-bgm.mp3',
+   // Ripple
+   '/audio/the-ripple-bgm.mp3',
   ].forEach(src => getAudio(src));
 }
 
@@ -152,6 +154,20 @@ export function sfxWin() {
 
 export function sfxLose() {
   playEffect('/audio/lose-effect.mp3', 0.5);
+}
+
+export function sfxRipple() {
+  playEffect('/audio/the-ripple-sound-effect.MP3', 0.6);
+}
+
+export function startRippleBGM() {
+  if (!initialized) initAudio();
+  killCurrentBgm();
+  const bgm = getAudio('/audio/the-ripple-bgm.mp3');
+  bgm.currentTime = 0;
+  bgm.loop = true;
+  currentBgm = bgm;
+  fadeIn(bgm, 0.25, 1500);
 }
 
 // ─── BGM volume control ─────────────────────────────────────────────────────

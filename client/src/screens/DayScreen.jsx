@@ -101,7 +101,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
             </button>
           )}
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
-          <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} />
+          <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} isSilenced={silencedPlayers.includes(myId)} />
         </div>
         <p className="text-white/40 text-xs mt-1">
           {votingPhase
@@ -196,6 +196,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         hasAlphaWolf={hasAlphaWolf}
         shieldedPlayer={shieldedPlayer}
         voiceSpeaking={voiceSpeaking || {}}
+        unvotable={facingAway}
       />
 
       {/* Token Claim Board */}

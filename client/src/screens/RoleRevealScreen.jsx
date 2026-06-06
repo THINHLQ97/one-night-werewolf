@@ -68,41 +68,66 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
         </div>
       </div>
 
-      {!revealed ? (
-        /* Card back — tap to flip */
-        <button
-          onClick={() => setRevealed(true)}
-          className="rounded-2xl border-2 border-moon-400/40 overflow-hidden relative hover:border-moon-400 transition-all active:scale-95 cursor-pointer group shadow-lg"
-          style={{ width: 180, height: 252 }}
-        >
-          <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
-            <span className="text-moon-300 font-semibold text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm group-hover:bg-black/70 transition-colors">Lật bài</span>
-          </div>
-        </button>
-      ) : roleHidden ? (
+      {roleHidden ? (
         <div className="rounded-2xl border-2 border-white/20 bg-night-700 flex flex-col items-center justify-center gap-4" style={{ width: 180, height: 252 }}>
           <Icon name="eyeOff" size={48} className="text-white/30" />
           <span className="text-white/40 font-semibold text-sm">Vai đã ẩn</span>
         </div>
       ) : (
-        /* Revealed: full card on top + info below */
-        <div className="flex flex-col items-center fade-in">
-          {/* Card portrait */}
-          <div className={`rounded-2xl overflow-hidden border-2 ${style.bg} ${style.glow}`} style={{ width: 180, height: 252 }}>
-            <RoleIcon roleId={myRole.roleId} size={180} className="!rounded-xl" />
+        <div className="flex flex-col items-center">
+          {/* 3D Flip Card */}
+          <div
+            onClick={() => !revealed && setRevealed(true)}
+            className={!revealed ? 'cursor-pointer group' : ''}
+            style={{ width: 180, height: 252, perspective: '800px' }}
+          >
+            <div style={{
+              width: '100%', height: '100%',
+              position: 'relative',
+              transformStyle: 'preserve-3d',
+              transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: revealed ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}>
+              {/* Back face */}
+              <div className="rounded-2xl overflow-hidden border-2 border-moon-400/40 group-hover:border-moon-400 transition-colors shadow-lg" style={{
+                position: 'absolute', inset: 0,
+                backfaceVisibility: 'hidden',
+              }}>
+                <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4">
+                  <span className="text-moon-300 font-semibold text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm group-hover:bg-black/70 transition-colors">Lật bài</span>
+                </div>
+              </div>
+              {/* Front face */}
+              <div className={`rounded-2xl overflow-hidden border-2 ${style.bg} ${style.glow}`} style={{
+                position: 'absolute', inset: 0,
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+              }}>
+                <RoleIcon roleId={myRole.roleId} size={180} className="!rounded-xl" />
+              </div>
+            </div>
           </div>
 
-          {/* Role info below card */}
-          <div className="mt-4 text-center max-w-xs">
-            <h3 className="text-2xl font-bold text-white mb-1">{myRole.name}</h3>
-            <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-white/10 ${style.text}`}>
-              {style.label}
-            </span>
-            <p className="text-white/60 text-sm mt-3 leading-relaxed">{myRole.description}</p>
-          </div>
+          {/* Role info — slides in after flip */}
+          {revealed && (
+            <div className="mt-4 text-center max-w-xs" style={{ animation: 'revealInfoSlideIn 0.5s ease-out 0.4s both' }}>
+              <h3 className="text-2xl font-bold text-white mb-1">{myRole.name}</h3>
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-white/10 ${style.text}`}>
+                {style.label}
+              </span>
+              <p className="text-white/60 text-sm mt-3 leading-relaxed">{myRole.description}</p>
+            </div>
+          )}
         </div>
       )}
+
+      <style>{`
+        @keyframes revealInfoSlideIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       <div className="mt-8 w-full max-w-sm mx-auto px-4">
         <div className="relative rounded-2xl overflow-hidden backdrop-blur-md"

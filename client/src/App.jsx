@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import socket, { playerToken } from './socket';
-import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxWin, sfxLose } from './audio';
+import { initAudio, resumeAudio, startNightBGM, startDayBGM, stopBGM, sfxWolfHowl, sfxWin, sfxLose, sfxRipple, startRippleBGM } from './audio';
 import { useAuth } from './contexts/AuthContext';
 import voiceChat from './voiceChat';
 import Icon from './components/Icon';
@@ -60,6 +60,7 @@ export default function App() {
   const [oracleVisionOpen, setOracleVisionOpen] = useState(false); // overlay visibility (can close + reopen)
   const [rippleEvent, setRippleEvent] = useState(null); // { action } from ripple_event
   const [rippleAction, setRippleAction] = useState(null); // { actionId, otherPlayers, result } interactive ripple
+  const [rippleActive, setRippleActive] = useState(false); // true once Ripple event has occurred — persists until game ends
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -67,12 +68,14 @@ export default function App() {
   const nightKnowledgeRef = useRef(nightKnowledge);
   const gameModeRef = useRef(gameMode);
   const settingsRef = useRef(settings);
+  const rippleActiveRef = useRef(rippleActive);
   screenRef.current = screen;
   roomCodeRef.current = roomCode;
   playersRef.current = players;
   nightKnowledgeRef.current = nightKnowledge;
   gameModeRef.current = gameMode;
   settingsRef.current = settings;
+  rippleActiveRef.current = rippleActive;
 
   const audioInitialized = useRef(false);
 
@@ -192,6 +195,7 @@ export default function App() {
       setOracleVisionOpen(false);
       setRippleEvent(null);
       setRippleAction(null);
+      setRippleActive(false);
       setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
       startNightBGM(settingsRef.current?.gameMode || gameModeRef.current);
@@ -247,6 +251,9 @@ export default function App() {
 
     socket.on('ripple_event', ({ action }) => {
       setRippleEvent({ action });
+      setRippleActive(true);
+      sfxRipple();
+      startRippleBGM();
     });
 
     socket.on('ripple_action_request', (data) => {
@@ -491,7 +498,10 @@ export default function App() {
         // Exposer exposed center cards
         if (effectiveRole === 'exposer' && Array.isArray(result.exposed)) {
           const rc = { ...prev.revealedCenter };
-          result.exposed.forEach(e => { rc[e.slot] = e.role; });
+          result.exposed.forEach(e => {
+            if (e.flippedDown) { delete rc[e.slot]; }
+            else { rc[e.slot] = e.role; }
+          });
           next.revealedCenter = rc;
         }
         // Rascal robber → new role
@@ -523,8 +533,10 @@ export default function App() {
       }
       setTokenClaims(tokenPool ? { pool: tokenPool, deductions: {}, conflicts: [] } : null);
       setChatMessages(prev => [...prev, { type: 'phase', text: '☀️ Ban ngày — Thảo luận', time: Date.now() }]);
-      stopBGM();
-      setTimeout(() => startDayBGM(settingsRef.current?.gameMode || gameModeRef.current), 500);
+      if (!rippleActiveRef.current) {
+        stopBGM();
+        setTimeout(() => startDayBGM(settingsRef.current?.gameMode || gameModeRef.current), 500);
+      }
     });
 
     socket.on('voting_phase_start', ({ votingTimerEnd }) => {
@@ -709,7 +721,7 @@ export default function App() {
 
   // Determine scene for day/night background
   const currentScene = (screen === 'role_reveal' || screen === 'night') ? 'night'
-    : screen === 'day' ? 'day'
+    : screen === 'day' ? (rippleActive ? 'ripple' : 'day')
     : null;
 
   const connectionOverlay = connectionLost ? (

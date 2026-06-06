@@ -52,6 +52,8 @@ export default function GameTable({
   hasAlphaWolf = false,
   shieldedPlayer = null,
   voiceSpeaking = {},
+  cardAnimations = [],
+  unvotable = [],
 }) {
   const containerRef = useRef(null);
   const rawSize = useContainerSize(containerRef);
@@ -138,6 +140,154 @@ export default function GameTable({
         );
       })()}
 
+      {/* Card flip/swap animations overlay */}
+      {cardAnimations.length > 0 && cardAnimations.map((anim, ai) => {
+        const isCenter = anim.targetId?.startsWith?.('center');
+        let ax, ay, aw, ah;
+
+        if (isCenter) {
+          const centerSlots = hasAlphaWolf
+            ? ['center0', 'center1', 'center2', 'centerWolf']
+            : ['center0', 'center1', 'center2'];
+          const ci = centerSlots.indexOf(anim.targetId);
+          const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
+          ax = centerX - totalW / 2 + ci * (cardW + 8);
+          ay = centerY - cardH / 2;
+          aw = cardW;
+          ah = cardH;
+        } else {
+          const pi = players.findIndex(p => p.id === anim.targetId);
+          if (pi === -1) return null;
+          const angle = (pi / players.length) * 2 * Math.PI - Math.PI / 2;
+          const halfNode = nodeWidth / 2;
+          ax = centerX + playerRadius * Math.cos(angle) - halfNode;
+          ay = centerY + playerRadius * Math.sin(angle) - halfNode;
+          aw = nodeWidth;
+          ah = nodeWidth;
+        }
+
+        const flipW = Math.max(aw, 52 * scale);
+        const flipH = isCenter ? ah : Math.round(flipW * 1.4);
+
+        return (
+          <div key={`anim-${ai}`} style={{
+            position: 'absolute',
+            left: ax + aw / 2 - flipW / 2,
+            top: ay + (isCenter ? 0 : -flipH * 0.1),
+            width: flipW,
+            height: flipH,
+            zIndex: 50,
+            perspective: '500px',
+            pointerEvents: 'none',
+          }}>
+            {/* Glow effect */}
+            <div style={{
+              position: 'absolute', inset: -8,
+              borderRadius: 12,
+              background: anim.type === 'swap' ? 'rgba(168,85,247,0.2)' : 'rgba(250,204,21,0.15)',
+              filter: 'blur(8px)',
+              animation: 'gtCardGlow 1.5s ease-in-out infinite',
+            }} />
+            <div style={{
+              width: '100%', height: '100%',
+              transformStyle: 'preserve-3d',
+              animation: anim.type === 'flip'
+                ? 'gtCardFlip 2s ease-in-out forwards'
+                : anim.type === 'expose'
+                ? 'gtCardExpose 1.2s ease-out forwards'
+                : anim.type === 'swap'
+                ? 'gtCardSwapPulse 1.2s ease-in-out'
+                : 'gtCardFlip 2s ease-in-out forwards',
+            }}>
+              {/* Back face */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                backfaceVisibility: 'hidden',
+                borderRadius: 8,
+                overflow: 'hidden',
+                border: '2px solid rgba(139,92,246,0.5)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+              }}>
+                <img src={CARD_BACK} alt="back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} draggable={false} />
+              </div>
+              {/* Front face */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+                borderRadius: 8,
+                overflow: 'hidden',
+                border: '2px solid rgba(250,204,21,0.5)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 15px rgba(250,204,21,0.2)',
+              }}>
+                {anim.role && CARD_IMAGES[anim.role] ? (
+                  <img src={CARD_IMAGES[anim.role]} alt={anim.role} style={{ width: '100%', height: '100%', objectFit: 'cover' }} draggable={false} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2d1b69,#4c1d95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e9d5ff', fontSize: 10, fontWeight: 600 }}>
+                    {anim.role || '?'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Swap line connector */}
+      {cardAnimations.length === 2 && cardAnimations[0]?.type === 'swap' && (() => {
+        const getPos = (targetId) => {
+          if (targetId?.startsWith?.('center')) {
+            const centerSlots = hasAlphaWolf ? ['center0','center1','center2','centerWolf'] : ['center0','center1','center2'];
+            const ci = centerSlots.indexOf(targetId);
+            const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
+            return { x: centerX - totalW / 2 + ci * (cardW + 8) + cardW / 2, y: centerY };
+          }
+          const pi = players.findIndex(p => p.id === targetId);
+          if (pi === -1) return null;
+          const angle = (pi / players.length) * 2 * Math.PI - Math.PI / 2;
+          return { x: centerX + playerRadius * Math.cos(angle), y: centerY + playerRadius * Math.sin(angle) };
+        };
+        const p1 = getPos(cardAnimations[0].targetId);
+        const p2 = getPos(cardAnimations[1].targetId);
+        if (!p1 || !p2) return null;
+        return (
+          <svg style={{ position: 'absolute', inset: 0, zIndex: 45, pointerEvents: 'none' }}>
+            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke="rgba(168,85,247,0.5)" strokeWidth={2} strokeDasharray="6 4"
+              style={{ animation: 'gtSwapDash 0.5s linear infinite' }}
+            />
+          </svg>
+        );
+      })()}
+
+      <style>{`
+        @keyframes gtCardFlip {
+          0% { transform: rotateY(0deg) scale(1); }
+          20% { transform: rotateY(180deg) scale(1.15); }
+          70% { transform: rotateY(180deg) scale(1.15); }
+          90% { transform: rotateY(360deg) scale(1); }
+          100% { transform: rotateY(360deg) scale(1); opacity: 0; }
+        }
+        @keyframes gtCardExpose {
+          0% { transform: rotateY(0deg) scale(1); }
+          50% { transform: rotateY(180deg) scale(1.15); }
+          100% { transform: rotateY(180deg) scale(1.1); }
+        }
+        @keyframes gtCardSwapPulse {
+          0% { transform: scale(1); opacity: 1; }
+          30% { transform: scale(1.2); }
+          70% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 0; }
+        }
+        @keyframes gtCardGlow {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+        @keyframes gtSwapDash {
+          to { stroke-dashoffset: -10; }
+        }
+      `}</style>
+
       {/* Players in circle */}
       {players.map((p, i) => {
         const angle = (i / players.length) * 2 * Math.PI - Math.PI / 2;
@@ -151,7 +301,8 @@ export default function GameTable({
         const isMason = knownMasons.includes(p.id);
         const isAlien = knownAliens.includes(p.id);
         const isSelected = selected.includes(p.id);
-        const isClickable = (selectable === 'player' || selectable === 'both') && p.id !== myId;
+        const isUnvotable = unvotable.includes(p.id);
+        const isClickable = (selectable === 'player' || selectable === 'both') && p.id !== myId && !isUnvotable;
         const isEliminated = eliminated.includes(p.id);
         const isWinner = winners.includes(p.id);
         const voteCount = voteCounts[p.id] || 0;
@@ -245,6 +396,14 @@ export default function GameTable({
                 {/* Swap indicator */}
                 {wasSwapped && (
                   <span className="absolute -bottom-1 -right-1 text-xs">🔄</span>
+                )}
+
+                {/* Face-away (unvotable) indicator */}
+                {isUnvotable && (
+                  <span className="absolute inset-0 flex items-center justify-center rounded-full" style={{
+                    background: 'rgba(0,0,0,0.5)',
+                    fontSize: avatarSize * 0.5,
+                  }}>🙈</span>
                 )}
 
                 {/* Vote count badge */}

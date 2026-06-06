@@ -14,7 +14,7 @@ function clampPos(x, y, w, h) {
   };
 }
 
-export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
+export default function ChatPanel({ roomCode, myId, players, messages = [], isSilenced = false }) {
   const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [stickerOpen, setStickerOpen] = useState(false);
@@ -324,18 +324,19 @@ export default function ChatPanel({ roomCode, myId, players, messages = [] }) {
                 <input
                   ref={inputRef}
                   type="text"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  value={isSilenced ? '' : input}
+                  onChange={e => !isSilenced && setInput(e.target.value)}
+                  onKeyDown={isSilenced ? undefined : handleKeyDown}
                   onFocus={() => setStickerOpen(false)}
-                  placeholder="Nhập tin nhắn..."
+                  placeholder={isSilenced ? '🤐 Bạn bị cấm nói!' : 'Nhập tin nhắn...'}
                   maxLength={200}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-moon-400/50 min-w-0"
+                  disabled={isSilenced}
+                  className={`flex-1 rounded-xl px-3 py-1.5 text-sm focus:outline-none min-w-0 ${isSilenced ? 'bg-red-900/20 border border-red-500/30 text-red-300/50 cursor-not-allowed placeholder-red-400/50' : 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:border-moon-400/50'}`}
                   style={{ userSelect: 'text' }}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!input.trim()}
+                  disabled={isSilenced || !input.trim()}
                   className="w-8 h-8 rounded-full bg-moon-400/20 text-moon-400 flex items-center justify-center disabled:opacity-30 hover:bg-moon-400/30 transition-colors flex-shrink-0"
                 >
                   <Icon name="send" size={16} />

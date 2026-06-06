@@ -103,7 +103,7 @@ function generateOracleQuestion(room) {
       id: 'even_odd',
       group: 'info',
       type: 'choice',
-      question: 'Số ghế của bạn là CHẴN hay LẺ?',
+      question: 'Số ghế của ngươi là CHẴN hay LẺ?',
       options: ['Chẵn', 'Lẻ'],
       publicAnnounce: 'Oracle, số ghế của ngươi là chẵn hay lẻ?',
     };
@@ -115,7 +115,7 @@ function generateOracleQuestion(room) {
       id: 'exchange',
       group: 'action',
       type: 'choice',
-      question: 'Bạn có muốn đổi bài của mình với 1 bài giữa không? (Không xem bài mới)',
+      question: 'Ngươi có muốn đổi bài của mình với 1 bài giữa không? (Không xem bài mới)',
       options: ['Có, đổi bài', 'Không'],
       publicAnnounce: 'Oracle, ngươi có muốn đánh đổi vận mệnh với 1 lá ở giữa không?',
     };
@@ -127,7 +127,7 @@ function generateOracleQuestion(room) {
       id: 'center',
       group: 'action',
       type: 'choice',
-      question: 'Bạn có muốn xem 3 lá bài ở giữa không?',
+      question: 'Ngươi có muốn xem 3 lá bài ở giữa không?',
       options: ['Có, xem 3 lá', 'Không'],
       publicAnnounce: 'Oracle, ngươi có muốn xem 3 lá bài ở giữa không?',
     };
@@ -139,7 +139,7 @@ function generateOracleQuestion(room) {
       id: 'player_number',
       group: 'action',
       type: 'pick_number',
-      question: `Bạn muốn xem bài của người chơi số mấy? (1-${playerCount})`,
+      question: `Ngươi muốn xem bài của người chơi số mấy? (1-${playerCount})`,
       min: 1, max: playerCount,
       publicAnnounce: 'Oracle, ngươi muốn xem bài của người chơi số mấy?',
     };
@@ -176,7 +176,7 @@ function generateOracleQuestion(room) {
     id: 'change_team',
     group: 'switch',
     type: 'choice',
-    question: 'Bạn có muốn gia nhập phe ALIEN không? Bài Oracle sẽ trở thành Alien — bạn thức cùng phe Alien. Dù bị giết, phe của bạn vẫn thắng.',
+    question: 'Ngươi có muốn gia nhập phe ALIEN không? Bài Oracle sẽ trở thành Alien — ngươi thức cùng phe Alien. Dù bị giết, phe của ngươi vẫn thắng.',
     options: ['Có, gia nhập Alien', 'Không'],
     targetTeam: 'alien',
     publicAnnounce: 'Oracle, ngươi có muốn gia nhập phe Alien không?',
@@ -222,7 +222,7 @@ function processOracleAnswer(room, playerId, question, answer) {
         return {
           questionId: question.id, answer,
           knownAliens: aliens,
-          appReply: 'Bạn đã gia nhập phe ALIEN. Bạn vẫn giữ bài Oracle nhưng thắng cùng Alien. Cow không tap bạn, Mortician không thấy bạn là Alien. Dù bị giết, phe Alien vẫn thắng.',
+          appReply: 'Ngươi đã gia nhập phe ALIEN. Ngươi vẫn giữ bài Oracle nhưng thắng cùng Alien. Cow không tap ngươi, Mortician không thấy ngươi là Alien. Dù bị giết, phe Alien vẫn thắng.',
           publicAnnounce: 'Oracle đã PHẢN BỘI — gia nhập phe Alien!',
         };
       }
@@ -266,9 +266,17 @@ function processOracleAnswer(room, playerId, question, answer) {
     // ── CENTER (Oracle asks to view 3, App teases by giving fewer) ──
     case 'center': {
       if (!answer.includes('Có')) {
+        const declineReplies = [
+          'GÌ cơ? Ngươi không muốn xem bài giữa, ngươi thật là một Oracle vô trách nhiệm.',
+          'Không xem? Ngươi có chắc mình là Oracle không? Thật đáng thất vọng!',
+          'Hmm, một Oracle mà không dám xem bài giữa... Ngươi làm ta xấu hổ.',
+          'Ngươi từ chối xem bài giữa ư? Ta ban cho ngươi cơ hội mà ngươi lại phí hoài!',
+          'Thật lãng phí! Ngươi được ban cho thị kiến mà lại chẳng thèm dùng.',
+        ];
+        const reply = pick(declineReplies);
         return {
           questionId: question.id, answer,
-          appReply: 'Không muốn xem? Cũng được.',
+          appReply: reply,
           publicAnnounce: 'Oracle không xem bài giữa.',
         };
       }
@@ -574,7 +582,7 @@ function generateAlienInstruction(room) {
   if (room.alienAppState?.oracleForceSwap) {
     return {
       type: 'swap_cards',
-      announce: 'Alien, hãy hoán đổi bài của các bạn với nhau.',
+      announce: 'Alien, hãy hoán đổi bài của các ngươi với nhau.',
       publicAnnounce: 'Alien, hãy hoán đổi bài với nhau (Oracle kích hoạt).',
     };
   }
@@ -630,7 +638,7 @@ function generateAlienInstruction(room) {
   if (roll < 85) {
     return {
       type: 'rotate_left',
-      announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN TRÁI. Bạn sẽ nhận bài từ Alien gần nhất bên phải.',
+      announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN TRÁI. Ngươi sẽ nhận bài từ Alien gần nhất bên phải.',
       publicAnnounce: 'Tất cả Alien chuyền bài cho Alien gần nhất bên TRÁI.',
     };
   }
@@ -639,7 +647,7 @@ function generateAlienInstruction(room) {
   if (roll < 90) {
     return {
       type: 'rotate_right',
-      announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN PHẢI. Bạn sẽ nhận bài từ Alien gần nhất bên trái.',
+      announce: 'Mỗi Alien, hãy đưa bài của mình cho Alien gần nhất BÊN PHẢI. Ngươi sẽ nhận bài từ Alien gần nhất bên trái.',
       publicAnnounce: 'Tất cả Alien chuyền bài cho Alien gần nhất bên PHẢI.',
     };
   }
@@ -683,26 +691,26 @@ function generateRascalInstruction(room) {
 
   const labels = {
     troublemaker: `hoán đổi bài của 2 người chơi khác`,
-    robber: `đổi bài của bạn với 1 người khác (xem bài mới)`,
-    drunk: `đổi bài của bạn với 1 bài giữa (không xem)`,
+    robber: `đổi bài của ngươi với 1 người khác (xem bài mới)`,
+    drunk: `đổi bài của ngươi với 1 bài giữa (không xem)`,
     village_idiot: `xoay bài tất cả người khác sang trái hoặc phải`,
   };
 
-  chosen.announce = `Quỷ Nhỏ, bạn ${verb} ${labels[chosen.type]}.`;
-  chosen.publicAnnounce = `Rascal, bạn ${verb} ${labels[chosen.type]}.`;
+  chosen.announce = `Quỷ Nhỏ, ngươi ${verb} ${labels[chosen.type]}.`;
+  chosen.publicAnnounce = `Rascal, ngươi ${verb} ${labels[chosen.type]}.`;
 
   return chosen;
 }
 
 // ── Exposer Instruction Generator ──────────────────────────────────────────
 function generateExposerInstruction() {
-  const count = pick([1, 1, 1, 2, 2, 3]); // weighted toward 1
+  const count = pick([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3]); // 65% / 25% / 10%
   const label = count === 1 ? '1 bài' : `${count} bài`;
   return {
     type: 'expose',
     count,
-    announce: `Kẻ Phơi Bày, bạn CÓ THỂ lật ${label} ở giữa (hoặc không lật gì).`,
-    publicAnnounce: `Exposer, bạn CÓ THỂ lật ${label} ở giữa.`,
+    announce: `Kẻ Phơi Bày, ngươi CÓ THỂ lật ${label} ở giữa (hoặc không lật gì).`,
+    publicAnnounce: `Exposer, ngươi CÓ THỂ lật ${label} ở giữa.`,
   };
 }
 
@@ -747,13 +755,13 @@ function generateMorticianInstruction() {
   if (viewCount === 0) {
     return {
       type: 'mortician_view', viewCount: 0,
-      announce: 'Nhà Quàn, đêm nay bạn không được xem bài ai.',
-      publicAnnounce: 'Mortician, đêm nay bạn không được xem bài ai.',
+      announce: 'Nhà Quàn, đêm nay ngươi không được xem bài ai.',
+      publicAnnounce: 'Mortician, đêm nay ngươi không được xem bài ai.',
     };
   }
   if (viewCount === 1) {
     const side = pick(['left', 'right', 'choice']);
-    const sideLabel = side === 'left' ? 'bên trái' : side === 'right' ? 'bên phải' : 'bạn chọn';
+    const sideLabel = side === 'left' ? 'bên trái' : side === 'right' ? 'bên phải' : 'ngươi chọn';
     return {
       type: 'mortician_view', viewCount: 1, side,
       announce: `Nhà Quàn, hãy xem bài hàng xóm ${sideLabel}.`,
@@ -815,11 +823,11 @@ function generateBlobInstruction(room, playerId) {
   if (otherCount === 0) {
     directionLabel = 'Blob, hãy xem ai thuộc Blob.';
   } else if (direction === 'both') {
-    directionLabel = `Blob, ${otherCount / 2} người bên trái và ${otherCount / 2} người bên phải của bạn thuộc Blob.`;
+    directionLabel = `Blob, ${otherCount / 2} người bên trái và ${otherCount / 2} người bên phải của ngươi thuộc Blob.`;
   } else if (direction === 'left') {
-    directionLabel = `Blob, ${otherCount} người bên trái của bạn thuộc Blob.`;
+    directionLabel = `Blob, ${otherCount} người bên trái của ngươi thuộc Blob.`;
   } else {
-    directionLabel = `Blob, ${otherCount} người bên phải của bạn thuộc Blob.`;
+    directionLabel = `Blob, ${otherCount} người bên phải của ngươi thuộc Blob.`;
   }
 
   // Build member names for public announce
@@ -834,7 +842,7 @@ function generateBlobInstruction(room, playerId) {
     direction: otherCount > 0 ? direction : null,
     otherCount,
     memberNames: blobMemberNames,
-    announce: 'Blob, hãy xem ai thuộc Blob của bạn.',
+    announce: 'Blob, hãy xem ai thuộc Blob của ngươi.',
     publicAnnounce: directionLabel,
   };
 }
@@ -1213,8 +1221,17 @@ function processAlienNightAction(room, playerId, phase, action) {
       if (!slots.every(s => VALID_CENTER_SLOTS.includes(s))) return { invalid: true };
 
       room.exposedCenter = room.exposedCenter || {};
-      slots.forEach(s => { room.exposedCenter[s] = currentCards[s]; });
-      return { exposed: slots.map(s => ({ slot: s, role: currentCards[s] })) };
+      const results = [];
+      slots.forEach(s => {
+        if (room.exposedCenter[s] !== undefined) {
+          delete room.exposedCenter[s];
+          results.push({ slot: s, role: null, flippedDown: true });
+        } else {
+          room.exposedCenter[s] = currentCards[s];
+          results.push({ slot: s, role: currentCards[s], flippedDown: false });
+        }
+      });
+      return { exposed: results };
     }
 
     case 'psychic': {

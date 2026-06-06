@@ -46,11 +46,59 @@ export default function RippleEvent({ action, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 fade-in"
       style={{ animation: 'eventFadeIn 0.6s ease-out' }}>
-      {/* Background pulse */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.1) 0%, transparent 60%)',
-        animation: 'oraclePulse 3s ease-in-out infinite',
+
+      {/* ── Space vortex layers ── */}
+      {/* Outer slow ring */}
+      <div className="absolute pointer-events-none" style={{
+        width: '140vmax', height: '140vmax',
+        left: '50%', top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'conic-gradient(from 0deg, transparent 0%, rgba(139,92,246,0.06) 10%, transparent 20%, rgba(88,28,135,0.08) 35%, transparent 45%, rgba(168,85,247,0.05) 60%, transparent 70%, rgba(139,92,246,0.07) 85%, transparent 100%)',
+        borderRadius: '50%',
+        animation: 'vortexSpin 12s linear infinite',
+        filter: 'blur(30px)',
       }} />
+      {/* Middle ring */}
+      <div className="absolute pointer-events-none" style={{
+        width: '100vmax', height: '100vmax',
+        left: '50%', top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'conic-gradient(from 120deg, transparent 0%, rgba(168,85,247,0.1) 8%, transparent 16%, rgba(139,92,246,0.12) 30%, transparent 40%, rgba(192,132,252,0.08) 55%, transparent 65%, rgba(139,92,246,0.1) 80%, transparent 90%)',
+        borderRadius: '50%',
+        animation: 'vortexSpin 8s linear infinite reverse',
+        filter: 'blur(18px)',
+      }} />
+      {/* Inner fast ring */}
+      <div className="absolute pointer-events-none" style={{
+        width: '60vmax', height: '60vmax',
+        left: '50%', top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'conic-gradient(from 240deg, transparent 0%, rgba(192,132,252,0.15) 12%, transparent 24%, rgba(139,92,246,0.18) 40%, transparent 52%, rgba(168,85,247,0.12) 68%, transparent 80%, rgba(192,132,252,0.14) 92%, transparent 100%)',
+        borderRadius: '50%',
+        animation: 'vortexSpin 5s linear infinite',
+        filter: 'blur(8px)',
+      }} />
+      {/* Center glow pulse */}
+      <div className="absolute pointer-events-none" style={{
+        width: '50vh', height: '50vh',
+        left: '50%', top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.2) 0%, rgba(88,28,135,0.08) 40%, transparent 70%)',
+        animation: 'vortexPulse 3s ease-in-out infinite',
+      }} />
+      {/* Particle dots */}
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="absolute pointer-events-none rounded-full" style={{
+          width: `${2 + Math.random() * 3}px`,
+          height: `${2 + Math.random() * 3}px`,
+          background: `rgba(${168 + Math.random() * 40}, ${85 + Math.random() * 60}, 247, ${0.4 + Math.random() * 0.4})`,
+          left: '50%', top: '50%',
+          boxShadow: `0 0 ${4 + Math.random() * 6}px rgba(168,85,247,0.6)`,
+          animation: `vortexParticle ${3 + Math.random() * 4}s linear ${Math.random() * 3}s infinite`,
+          '--orbit-radius': `${15 + Math.random() * 25}vmin`,
+          '--start-angle': `${i * 45}deg`,
+        }} />
+      ))}
 
       <div className="relative max-w-2xl w-full px-4 flex flex-col items-center">
         {/* Ripple image */}
@@ -125,6 +173,20 @@ export default function RippleEvent({ action, onClose }) {
         @keyframes oracleDot {
           0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
           40% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes vortexSpin {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to   { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes vortexPulse {
+          0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+          50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
+        }
+        @keyframes vortexParticle {
+          0%   { transform: translate(-50%, -50%) rotate(var(--start-angle, 0deg)) translateX(var(--orbit-radius, 20vmin)) scale(0); opacity: 0; }
+          15%  { scale: 1; opacity: 1; }
+          85%  { opacity: 0.8; }
+          100% { transform: translate(-50%, -50%) rotate(calc(var(--start-angle, 0deg) + 360deg)) translateX(var(--orbit-radius, 20vmin)) scale(0); opacity: 0; }
         }
       `}</style>
     </div>

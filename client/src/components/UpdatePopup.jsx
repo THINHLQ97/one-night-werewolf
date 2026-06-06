@@ -1,66 +1,36 @@
 import { useState, useEffect } from 'react';
-import RoleIcon from './RoleIcon';
 import Icon from './Icon';
 
 // Version key — bump this when adding a new update popup
-const UPDATE_VERSION = 'v3_alien_invasion';
+const UPDATE_VERSION = 'v4_the_ripple';
 const STORAGE_KEY = `onw_seen_update_${UPDATE_VERSION}`;
 
-// Highlighted roles for the Alien Invasion preview
-const HIGHLIGHT_ROLES = [
+const RIPPLE_FEATURES = [
   {
-    id: 'alien', name: 'Alien', nameVi: 'Người Ngoài Hành Tinh', emoji: '👽',
-    teamColor: 'alien',
-    short: 'Phe kẻ xâm lăng',
-    desc: 'Mở mắt cùng đồng bọn. Mỗi đêm nhận chỉ thị ngẫu nhiên từ Tiếng vọng từ không gian (xem bài, swap, hoặc chuyền tay nhau).',
+    emoji: '⚡', title: 'The Ripple — Vết Nứt Thời Không',
+    desc: 'Sau đêm, có 20% cơ hội (hoặc Oracle kích hoạt) để The Ripple xảy ra — một sự kiện bất ngờ thay đổi cục diện trận đấu.',
   },
   {
-    id: 'oracle', name: 'Oracle', nameVi: 'Nhà Tiên Tri', emoji: '🔮',
-    teamColor: 'village',
-    short: 'Người đối thoại với vũ trụ',
-    desc: 'Thức dậy đầu tiên. Tiếng vọng đặt ra câu hỏi ngẫu nhiên. Có 5% cơ hội đối mặt với THÁCH THỨC TỐI THƯỢNG — đoán số 1-10!',
+    emoji: '🔄', title: 'Vòng Lặp Thời Gian',
+    desc: 'Đêm diễn ra lần nữa! Tất cả vai (trừ Oracle) thực hiện hành động mới với chỉ thị mới từ Echo.',
   },
   {
-    id: 'cow', name: 'Cow', nameVi: 'Bò', emoji: '🐄',
-    teamColor: 'village',
-    short: 'Cảm biến Alien',
-    desc: 'Giơ nắm đấm trong lượt Alien. Nếu Alien ngồi cạnh bạn — họ phải tap. Biết được Alien ở bên TRÁI hay PHẢI bạn.',
+    emoji: '⏱️', title: 'Thời Gian Co Lại',
+    desc: 'Thời gian thảo luận chỉ còn 1 phút — mọi thứ phải nhanh hơn!',
   },
   {
-    id: 'leader', name: 'Leader', nameVi: 'Thủ Lĩnh', emoji: '👑',
-    teamColor: 'village',
-    short: 'Người biết tất cả Alien',
-    desc: 'Mở mắt, thấy chính xác vị trí mọi Alien. Nhưng nếu TẤT CẢ Alien chỉ vào bạn — Alien thắng ngay lập tức!',
+    emoji: '🤐', title: 'Lời Nguyền Câm Lặng',
+    desc: 'Một số người chơi bị CẤM NÓI và không thể chat cho đến khi bỏ phiếu.',
   },
   {
-    id: 'blob', name: 'Blob', nameVi: 'Blob', emoji: '🟢',
-    teamColor: 'blob',
-    short: 'Phe riêng — hấp thụ hàng xóm',
-    desc: 'Tiếng vọng cho biết ai thuộc Blob của bạn (1-4 người tùy game size). Bạn THẮNG nếu tất cả Blob sống sót.',
+    emoji: '🙈', title: 'Quay Mặt Đi',
+    desc: 'Một số người chơi phải quay mặt — không thể bị vote trong lượt bỏ phiếu.',
   },
   {
-    id: 'mortician', name: 'Mortician', nameVi: 'Nhà Quàn', emoji: '⚰️',
-    teamColor: 'mortician',
-    short: 'Phe riêng — kẻ ưa cái chết',
-    desc: 'Xem bài 0-2 hàng xóm. THẮNG nếu ít nhất 1 hàng xóm bị giết và bạn sống sót.',
+    emoji: '🔀', title: 'Hành Động Bổ Sung',
+    desc: 'Hoán đổi, cướp bài, xem bài, lật bài, vote 2 phiếu... và nhiều hơn nữa — tổng cộng 15 sự kiện ngẫu nhiên!',
   },
 ];
-
-const TEAM_BG = {
-  village: 'bg-village-400/10 border-village-400/30',
-  werewolf: 'bg-wolf-500/10 border-wolf-500/30',
-  alien: 'bg-emerald-500/10 border-emerald-500/30',
-  blob: 'bg-lime-500/10 border-lime-500/30',
-  mortician: 'bg-amber-500/10 border-amber-500/30',
-};
-
-const TEAM_TEXT = {
-  village: 'text-village-400',
-  werewolf: 'text-wolf-400',
-  alien: 'text-emerald-400',
-  blob: 'text-lime-400',
-  mortician: 'text-amber-400',
-};
 
 export default function UpdatePopup({ onClose }) {
   const [visible, setVisible] = useState(false);
@@ -83,15 +53,15 @@ export default function UpdatePopup({ onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4 fade-in"
-      style={{ background: 'rgba(5, 15, 5, 0.92)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(10, 5, 20, 0.92)', backdropFilter: 'blur(8px)' }}
       onClick={handleClose}
     >
       <div
         className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border shadow-2xl"
         style={{
-          background: 'linear-gradient(135deg, rgba(15, 40, 25, 0.96), rgba(10, 20, 15, 0.96))',
-          borderColor: 'rgba(74, 222, 128, 0.35)',
-          boxShadow: '0 10px 50px rgba(74, 222, 128, 0.35), 0 0 0 1px rgba(74, 222, 128, 0.2)',
+          background: 'linear-gradient(135deg, rgba(25, 15, 50, 0.96), rgba(15, 10, 30, 0.96))',
+          borderColor: 'rgba(139, 92, 246, 0.35)',
+          boxShadow: '0 10px 50px rgba(139, 92, 246, 0.35), 0 0 0 1px rgba(139, 92, 246, 0.2)',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -103,32 +73,32 @@ export default function UpdatePopup({ onClose }) {
           ✕
         </button>
 
-        {/* Header with alien logo */}
-        <div className="px-5 pt-6 pb-4 text-center border-b border-emerald-400/15 relative overflow-hidden">
-          {/* Star background effect */}
+        {/* Header */}
+        <div className="px-5 pt-6 pb-4 text-center border-b border-purple-400/15 relative overflow-hidden">
+          {/* Vortex background */}
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse at top, rgba(74,222,128,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at top, rgba(139,92,246,0.15) 0%, transparent 70%)',
           }} />
 
           <div className="relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold mb-3">
-              <span className="animate-pulse">👽</span> CHẾ ĐỘ CHƠI MỚI
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-xs font-bold mb-3">
+              <span className="animate-pulse">⚡</span> CẬP NHẬT MỚI
             </div>
 
             <img
-              src="/images/logo-game-alien.png"
-              alt="One Night Ultimate Alien"
-              className="w-24 h-24 mx-auto mb-2 drop-shadow-[0_0_24px_rgba(74,222,128,0.5)]"
+              src="/images/oracle special event/the-ripple-event.webp"
+              alt="The Ripple"
+              className="w-28 h-28 mx-auto mb-2 object-contain drop-shadow-[0_0_24px_rgba(139,92,246,0.5)]"
               draggable={false}
             />
 
-            <h2 className="text-2xl font-bold text-emerald-300 mb-1" style={{
-              textShadow: '0 0 12px rgba(74,222,128,0.5)',
+            <h2 className="text-2xl font-bold text-purple-300 mb-1" style={{
+              textShadow: '0 0 12px rgba(139,92,246,0.5)',
             }}>
-              ALIEN INVASION
+              THE RIPPLE
             </h2>
-            <p className="text-emerald-400/70 text-xs italic">
-              "Tiếng vọng từ không gian đã đến..."
+            <p className="text-purple-400/70 text-xs italic">
+              "Không gian rung chuyển... vết nứt thời không xuất hiện giữa đêm khuya."
             </p>
           </div>
         </div>
@@ -136,61 +106,55 @@ export default function UpdatePopup({ onClose }) {
         {/* Feature highlights */}
         <div className="px-4 py-4 space-y-2.5">
           <div className="text-center mb-3">
-            <p className="text-white/80 text-sm font-semibold">12 vai mới · 5 phe khác nhau</p>
-            <p className="text-white/40 text-xs italic mt-0.5">Phong cách chơi hoàn toàn mới — App điều khiển toàn bộ đêm</p>
+            <p className="text-white/80 text-sm font-semibold">15 sự kiện ngẫu nhiên · Thay đổi mọi trận đấu</p>
+            <p className="text-white/40 text-xs italic mt-0.5">Chế độ Alien — Bật "The Ripple" trong cài đặt phòng</p>
           </div>
 
-          {HIGHLIGHT_ROLES.map(role => (
+          {RIPPLE_FEATURES.map((f, i) => (
             <div
-              key={role.id}
-              className={`flex gap-3 p-2.5 rounded-xl border ${TEAM_BG[role.teamColor]}`}
+              key={i}
+              className="flex gap-3 p-2.5 rounded-xl border bg-purple-500/5 border-purple-500/20"
             >
-              <div className="flex-shrink-0">
-                <RoleIcon roleId={role.id} size={48} className="!rounded-lg" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/15 flex items-center justify-center text-xl">
+                {f.emoji}
               </div>
-
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-sm">{role.emoji}</span>
-                  <h3 className="font-bold text-white text-sm">{role.nameVi}</h3>
-                  <span className="text-white/30 text-[10px]">{role.name}</span>
-                </div>
-                <p className={`${TEAM_TEXT[role.teamColor]} text-[11px] font-semibold mb-0.5`}>{role.short}</p>
-                <p className="text-white/55 text-[11px] leading-relaxed">{role.desc}</p>
+                <h3 className="font-bold text-purple-300 text-sm mb-0.5">{f.title}</h3>
+                <p className="text-white/55 text-[11px] leading-relaxed">{f.desc}</p>
               </div>
             </div>
           ))}
 
-          {/* Tip box */}
-          <div className="mt-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-            <p className="text-emerald-300/90 text-xs font-semibold mb-1 flex items-center gap-1.5">
-              <span>🎮</span> Cách chơi mới
+          {/* Additional features box */}
+          <div className="mt-3 p-3 rounded-xl bg-purple-500/5 border border-purple-500/15">
+            <p className="text-purple-300/90 text-xs font-semibold mb-1 flex items-center gap-1.5">
+              <span>✨</span> Cải tiến khác
             </p>
             <ul className="text-white/55 text-[11px] space-y-0.5 leading-relaxed">
-              <li>• <strong className="text-emerald-300">Tiếng vọng từ không gian</strong> (App) ra chỉ thị ngẫu nhiên mỗi đêm</li>
-              <li>• Tất cả mọi người nghe được câu hỏi từ Tiếng vọng</li>
-              <li>• Mỗi đêm là một trải nghiệm khác biệt — không có 2 ván giống nhau</li>
-              <li>• Còn 6 vai khác đang chờ bạn khám phá!</li>
+              <li>• <strong className="text-purple-300">Hiệu ứng lật bài</strong> — animation 3D khi xem/đổi/cướp bài</li>
+              <li>• <strong className="text-purple-300">Background & BGM</strong> riêng khi The Ripple diễn ra</li>
+              <li>• <strong className="text-purple-300">Echo nâng cấp</strong> — giọng điệu mới, cửa sổ lớn hơn</li>
+              <li>• <strong className="text-purple-300">Oracle mỉa mai</strong> — câu thoại mới khi Oracle từ chối xem bài</li>
             </ul>
           </div>
         </div>
 
         {/* Footer */}
         <div className="px-5 pb-5 pt-2 space-y-2">
-          <p className="text-emerald-300/50 text-[10px] text-center italic">
-            Chuyển sang tab "Alien" trên trang chủ để bắt đầu
+          <p className="text-purple-300/50 text-[10px] text-center italic">
+            Bật "The Ripple" trong phòng Alien để trải nghiệm
           </p>
           <button
             onClick={handleClose}
             className="btn-primary w-full text-sm flex items-center justify-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #4ade80, #22c55e)',
-              color: '#0a1a0a',
+              background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+              color: '#fff',
               fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(74,222,128,0.4)',
+              boxShadow: '0 4px 16px rgba(139,92,246,0.4)',
             }}
           >
-            <Icon name="sparkle" size={16} /> Bắt đầu cuộc xâm lăng!
+            <Icon name="sparkle" size={16} /> Khám phá ngay!
           </button>
         </div>
       </div>

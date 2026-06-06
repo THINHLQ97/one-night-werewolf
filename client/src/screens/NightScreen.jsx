@@ -38,6 +38,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [echoTyping, setEchoTyping] = useState(false);
+  const [cardAnimations, setCardAnimations] = useState([]);
 
   const step = actionData?.step || 1;
   // For doppelganger step 2+, effectiveRole = the copied role
@@ -53,7 +54,20 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     setSelected([]);
     setActionMode(null);
     setActionStep('choose');
+    setCardAnimations([]);
   }
+
+  // Trigger card animations when result arrives
+  useEffect(() => {
+    if (!submitted || !result) return;
+    const anims = buildCardAnimations(effectiveRole, currentRole, result, selected, step);
+    if (anims.length > 0) {
+      setCardAnimations(anims);
+      const duration = anims.some(a => a.type === 'swap') ? 1500 : anims.some(a => a.type === 'expose') ? 1500 : 2200;
+      const timer = setTimeout(() => setCardAnimations([]), duration);
+      return () => clearTimeout(timer);
+    }
+  }, [submitted, result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isMyTurn || submitted) return;
@@ -409,6 +423,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         hasAlphaWolf={hasAlphaWolf}
         shieldedPlayer={shieldedPlayer}
         voiceSpeaking={voiceSpeaking || {}}
+        cardAnimations={cardAnimations}
       />
 
       {/* Action Panel */}
@@ -1230,7 +1245,7 @@ function ActionResultInline({ role, result, step }) {
   }
   if (displayRole === 'exposer') {
     if (result.exposed?.length > 0) {
-      return (<div className="text-white/70 text-sm mt-1">{result.exposed.map((e, i) => (<p key={i}>{cLabel(e.slot)}: <strong className="text-moon-300">{ROLE_SHORT[e.role] || e.role}</strong></p>))}</div>);
+      return (<div className="text-white/70 text-sm mt-1">{result.exposed.map((e, i) => (<p key={i}>{cLabel(e.slot)}: {e.flippedDown ? <strong className="text-orange-300">úp xuống</strong> : <strong className="text-moon-300">{ROLE_SHORT[e.role] || e.role}</strong>}</p>))}</div>);
     }
     if (result.skipped) return <p className="text-white/50 text-sm mt-1">Đã bỏ qua</p>;
   }
@@ -1246,6 +1261,125 @@ function ActionResultInline({ role, result, step }) {
     if (result.seen) return <p className="text-white/70 text-sm mt-1">Bài hàng xóm: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role] || result.seen.role}</strong></p>;
   }
   return null;
+}
+
+function buildCardAnimations(effectiveRole, currentRole, result, selected, step) {
+  if (!result) return [];
+  const displayRole = (currentRole === 'doppelganger' && result.copiedRole) ? result.copiedRole : effectiveRole;
+
+  // Seer — view player or center
+  if (displayRole === 'seer' && result.seen) {
+    if (result.seen.type === 'player') {
+      return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+    }
+    if (result.seen.slots) {
+      return result.seen.slots.map(s => ({ targetId: s.slot, role: s.role, type: 'flip' }));
+    }
+  }
+
+  // Robber — flip target then swap
+  if (displayRole === 'robber' && result.newRole && selected?.[0]) {
+    return [{ targetId: selected[0], role: result.newRole, type: 'flip' }];
+  }
+
+  // Troublemaker — swap two players
+  if (displayRole === 'troublemaker' && result.swapped && selected?.length === 2) {
+    return [
+      { targetId: selected[0], type: 'swap' },
+      { targetId: selected[1], type: 'swap' },
+    ];
+  }
+
+  // Drunk — swap with center
+  if (displayRole === 'drunk' && result.swapped && selected?.[0]) {
+    return [
+      { targetId: selected[0], type: 'swap' },
+    ];
+  }
+
+  // Werewolf solo peek
+  if (displayRole === 'werewolf' && result.peeked) {
+    return [{ targetId: result.peeked.slot, role: result.peeked.role, type: 'flip' }];
+  }
+
+  // Mystic Wolf — view player
+  if (displayRole === 'mysticwolf' && result.seen) {
+    return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Apprentice Seer — view center
+  if (displayRole === 'apprenticeseer' && result.seen?.slots) {
+    return result.seen.slots.map(s => ({ targetId: s.slot, role: s.role, type: 'flip' }));
+  }
+
+  // P.I. — view player
+  if (displayRole === 'paranormalinvestigator' && result.seen) {
+    return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Witch step 1 — view center card
+  if (displayRole === 'witch' && result.seen && result.step === 1) {
+    return [{ targetId: result.seen.slot, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Witch step 2 — swap center with player
+  if (displayRole === 'witch' && result.swapped && selected?.[0]) {
+    return [{ targetId: selected[0], type: 'swap' }];
+  }
+
+  // Revealer — expose player card
+  if (displayRole === 'revealer' && result.revealed && result.targetPlayer) {
+    return [{ targetId: result.targetPlayer, role: result.role, type: 'expose' }];
+  }
+
+  // Insomniac — view own card (use myId from the selected context — not available here, skip)
+
+  // Doppelganger step 1 — view player card
+  if (currentRole === 'doppelganger' && result.copiedRole && selected?.[0]) {
+    return [{ targetId: selected[0], role: result.copiedRole, type: 'flip' }];
+  }
+
+  // ── Alien roles ──
+
+  // Aliens — view card
+  if (displayRole === 'aliens' && result.seen) {
+    return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Rascal — steal (robber-like)
+  if (displayRole === 'rascal' && result.newRole && selected?.[0]) {
+    return [{ targetId: selected[0], role: result.newRole, type: 'flip' }];
+  }
+
+  // Rascal — swap (troublemaker-like)
+  if (displayRole === 'rascal' && result.action === 'troublemaker' && selected?.length === 2) {
+    return [
+      { targetId: selected[0], type: 'swap' },
+      { targetId: selected[1], type: 'swap' },
+    ];
+  }
+
+  // Exposer — flip center cards
+  if (displayRole === 'exposer' && result.exposed?.length > 0) {
+    return result.exposed.filter(e => !e.flippedDown).map(e => ({ targetId: e.slot, role: e.role, type: 'expose' }));
+  }
+
+  // Psychic — view player(s)
+  if (displayRole === 'psychic') {
+    if (Array.isArray(result.seen)) {
+      return result.seen.map(s => ({ targetId: s.id, role: s.role, type: 'flip' }));
+    }
+    if (result.seen?.id) {
+      return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+    }
+  }
+
+  // Mortician — view neighbor
+  if (displayRole === 'mortician' && result.seen?.id) {
+    return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+  }
+
+  return [];
 }
 
 function KnowledgeSummary({ knowledge, players }) {

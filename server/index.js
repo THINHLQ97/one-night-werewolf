@@ -672,7 +672,7 @@ async function runAlienNightPhase(room) {
       // Always present (phantom generated if Blob in center — same format)
       publicAnnounce = appInst.blobInstruction.publicAnnounce;
     } else if (phase === 'cow') {
-      publicAnnounce = 'Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
+      publicAnnounce = 'Cow, hãy mở mắt. Ngươi sẽ biết ngay có Alien nào ngồi cạnh ngươi hay không.';
     } else if (phase === 'leader') {
       // Phantom Echo — câu cố định, KHÔNG tiết lộ G/Z có/không trong trận.
       // Leader tự suy điều kiện thắng từ những gì thấy (ngón cái + phân biệt vai).
@@ -807,10 +807,11 @@ async function runAlienNightPhase(room) {
         const q = appInst.oracleQuestion;
         let phantomResponse;
         if (q.id === 'change_team') {
-          // Randomly pretend Oracle joined or not — so players can't deduce Oracle is absent
-          phantomResponse = Math.random() < 0.3
-            ? 'Oracle đã PHẢN BỘI — gia nhập phe Alien!'
-            : 'Oracle đã đưa ra lựa chọn của mình.';
+          if (Math.random() < 0.3) {
+            phantomResponse = 'Oracle đã PHẢN BỘI — gia nhập phe Alien!';
+          } else {
+            phantomResponse = 'Oracle đã đưa ra lựa chọn của mình.';
+          }
         } else if (q.id === 'exchange') {
           phantomResponse = Math.random() < 0.5
             ? 'Oracle đã đổi bài với 1 lá ở giữa (mù).'
@@ -826,14 +827,11 @@ async function runAlienNightPhase(room) {
           phantomResponse = `Oracle đã trả lời: số ${Math.random() < 0.5 ? 'Chẵn' : 'Lẻ'}.`;
         } else if (q.id === 'player_number') {
           const num = Math.floor(Math.random() * players.length) + 1;
-          const pName = players[num - 1]?.name || `số ${num}`;
           phantomResponse = Math.random() < 0.35
             ? `Ngươi muốn xem số ${num} ư? Không đâu, ngươi chỉ được xem số ${((num % players.length) + 1)} thôi!`
             : `Được rồi, hãy xem người chơi số ${num} là gì nào.`;
         } else if (q.id === 'ripple_trigger') {
-          phantomResponse = Math.random() < 0.4
-            ? 'Oracle đã kích hoạt The Ripple — vết nứt thời không sẽ mở ra cuối game.'
-            : 'Oracle đã đưa ra lựa chọn của mình.';
+          phantomResponse = 'Oracle đã đưa ra lựa chọn của mình.';
         } else {
           phantomResponse = 'Oracle đã trả lời.';
         }
@@ -1201,7 +1199,7 @@ async function runAlienNightPhase(room) {
         } else if (phase === 'blob' && appState.blobInstruction) {
           publicAnnounce = appState.blobInstruction.publicAnnounce;
         } else if (phase === 'cow') {
-          publicAnnounce = 'Cow, hãy mở mắt. Bạn sẽ biết ngay có Alien nào ngồi cạnh bạn hay không.';
+          publicAnnounce = 'Cow, hãy mở mắt. Ngươi sẽ biết ngay có Alien nào ngồi cạnh ngươi hay không.';
         } else if (phase === 'leader') {
           publicAnnounce = 'Leader, mở mắt và thấy các Alien.';
         }
@@ -2212,6 +2210,8 @@ io.on('connection', socket => {
     if (!room.dayPhase.votingPhase) return; // Block votes during discussion
     if (!room.players.some(p => p.id === targetId)) return;
     if (socket.id === targetId) return;
+    // Face-away players cannot be voted for
+    if (room.dayPhase.facingAway?.includes(targetId)) return;
 
     room.dayPhase.votes[socket.id] = targetId;
 
@@ -2421,6 +2421,8 @@ io.on('connection', socket => {
     if (!room) return;
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
+    // Silenced players (Ripple may_not_speak) cannot send chat during day
+    if (room.state === 'day' && room.dayPhase?.silencedPlayers?.includes(socket.id)) return;
     const msg = {
       id: socket.id,
       name: player.name,
@@ -2439,6 +2441,7 @@ io.on('connection', socket => {
     if (!room) return;
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
+    if (room.state === 'day' && room.dayPhase?.silencedPlayers?.includes(socket.id)) return;
     const msg = {
       id: socket.id,
       name: player.name,
