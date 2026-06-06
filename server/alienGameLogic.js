@@ -424,8 +424,8 @@ function shouldRippleOccur(room) {
   if (room.alienAppState?.oracleStaysAwake || room.alienAppState?.oracleHuntMode) return false;
   // Oracle triggered Ripple → 100%
   if (room.alienAppState?.oracleTriggeredRipple) return true;
-  // Random 20% chance
-  return Math.random() < 0.20;
+  // Random 25% chance
+  return Math.random() < 0.25;
 }
 
 function generateRippleAction(room) {

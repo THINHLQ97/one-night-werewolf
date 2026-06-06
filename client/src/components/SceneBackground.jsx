@@ -73,31 +73,30 @@ export default function SceneBackground({ scene, gameMode = 'werewolf' }) {
           style={{
             backgroundImage: loaded.ripple ? `url('${paths.ripple}')` : 'none',
             opacity: isRipple ? 1 : 0,
+            zIndex: 1,
           }}
         />
       )}
 
-      {/* Dark overlay to keep UI readable */}
+      {/* Dark overlay */}
       <div
         className="absolute inset-0 transition-colors duration-[1500ms] ease-in-out"
         style={{
           backgroundColor: isRipple ? 'rgba(0, 0, 0, 0.25)' : isDay ? 'rgba(0, 0, 0, 0.30)' : 'rgba(0, 0, 0, 0.35)',
+          zIndex: 2,
         }}
       />
 
       {/* Ripple glitch/static overlay */}
       {isRipple && (
-        <>
-          {/* Scanline effect */}
+        <div style={{ zIndex: 3 }}>
           <div className="absolute inset-0 pointer-events-none" style={{
             background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(139,92,246,0.03) 3px, rgba(139,92,246,0.03) 4px)',
             animation: 'rippleGlitchScan 8s linear infinite',
           }} />
-          {/* Horizontal glitch bars */}
           <div className="absolute inset-0 pointer-events-none" style={{
             animation: 'rippleGlitchBars 4s step-end infinite',
           }} />
-          {/* Purple vignette pulse */}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: 'radial-gradient(ellipse at center, transparent 40%, rgba(139,92,246,0.08) 100%)',
             animation: 'rippleVignettePulse 3s ease-in-out infinite',
@@ -117,7 +116,7 @@ export default function SceneBackground({ scene, gameMode = 'werewolf' }) {
               50% { opacity: 1; }
             }
           `}</style>
-        </>
+        </div>
       )}
     </div>
   );
