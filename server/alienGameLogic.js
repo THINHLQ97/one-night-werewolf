@@ -85,8 +85,8 @@ function getNeighborIds(room, playerId) {
 //   Center               — 10%
 //   Player Number        — 10%
 //   Number Guess         — 10%
-//   Ripple Trigger       — 35%
-//   Change Team          — 10%
+//   Ripple Trigger       — 10%
+//   Change Team          — 35%
 function generateOracleQuestion(room) {
   const playerCount = room.players.length;
   const oracleInCenter = !room.players.some(p => room.originalCards[p.id] === 'oracle');
@@ -159,8 +159,8 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 55-90: Ripple Trigger (35%)
-  if (roll < 90) {
+  // 55-65: Ripple Trigger (10%)
+  if (roll < 65) {
     return {
       id: 'ripple_trigger',
       group: 'action',
@@ -171,7 +171,7 @@ function generateOracleQuestion(room) {
     };
   }
 
-  // 90-100: Change Team (10%)
+  // 65-100: Change Team (35%)
   return {
     id: 'change_team',
     group: 'switch',
@@ -424,8 +424,8 @@ function shouldRippleOccur(room) {
   if (room.alienAppState?.oracleStaysAwake || room.alienAppState?.oracleHuntMode) return false;
   // Oracle triggered Ripple → 100%
   if (room.alienAppState?.oracleTriggeredRipple) return true;
-  // Random 25% chance
-  return Math.random() < 0.25;
+  // Random 35% chance
+  return Math.random() < 0.35;
 }
 
 function generateRippleAction(room) {
