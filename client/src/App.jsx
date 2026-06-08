@@ -720,8 +720,9 @@ export default function App() {
   const isHost = socket.id === hostId;
 
   // Determine scene for day/night background
-  const currentScene = (screen === 'role_reveal' || screen === 'night') ? 'night'
-    : screen === 'day' ? (rippleActive ? 'ripple' : 'day')
+  const currentScene = rippleActive ? 'ripple'
+    : (screen === 'role_reveal' || screen === 'night') ? 'night'
+    : screen === 'day' ? 'day'
     : null;
 
   const connectionOverlay = connectionLost ? (

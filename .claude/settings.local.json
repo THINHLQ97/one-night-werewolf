@@ -70,7 +70,8 @@
       "Bash(ping -n 4 127.0.0.1)",
       "PowerShell(Get-Process -Name \"node\" -ErrorAction Stop | ForEach-Object { $_.Id })",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\")",
-      "Bash(node -e \"require\\('./server/alienGameLogic.js'\\); console.log\\('OK'\\)\")"
+      "Bash(node -e \"require\\('./server/alienGameLogic.js'\\); console.log\\('OK'\\)\")",
+      "Bash(node -e \"require\\('./server/index.js'\\)\")"
     ]
   }
 }
