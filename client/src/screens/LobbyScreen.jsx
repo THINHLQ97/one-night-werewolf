@@ -456,7 +456,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
               />
               <div>
                 <span className="text-purple-300 text-xs font-semibold">⚡ The Ripple (Vết Nứt)</span>
-                <p className="text-white/40 text-[10px]">20% xảy ra sau đêm — thay đổi luật chơi bất ngờ</p>
+                <p className="text-white/40 text-[10px]">35% xảy ra sau đêm — thay đổi luật chơi bất ngờ</p>
               </div>
             </label>
           </div>

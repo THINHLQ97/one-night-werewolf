@@ -8,7 +8,7 @@ const STORAGE_KEY = `onw_seen_update_${UPDATE_VERSION}`;
 const RIPPLE_FEATURES = [
   {
     emoji: '⚡', title: 'The Ripple — Vết Nứt Thời Không',
-    desc: 'Sau đêm, có 20% cơ hội (hoặc Oracle kích hoạt) để The Ripple xảy ra — một sự kiện bất ngờ thay đổi cục diện trận đấu.',
+    desc: 'Sau đêm, có 35% cơ hội (hoặc Oracle kích hoạt) để The Ripple xảy ra — một sự kiện bất ngờ thay đổi cục diện trận đấu.',
   },
   {
     emoji: '🔄', title: 'Vòng Lặp Thời Gian',
