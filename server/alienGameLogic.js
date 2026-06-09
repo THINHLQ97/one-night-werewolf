@@ -1064,13 +1064,18 @@ function processAlienNightAction(room, playerId, phase, action) {
 
       if (instruction.type === 'swap_cards') {
         // Only REAL aliens swap (Oracle who joined as Minion-style doesn't physically swap)
-        const alienIds = room.players
-          .filter(p => isAlienAffiliation(room.originalCards[p.id]))
-          .map(p => p.id);
-        if (alienIds.length >= 2) {
-          const cards = alienIds.map(id => currentCards[id]);
-          cards.unshift(cards.pop());
-          alienIds.forEach((id, i) => { currentCards[id] = cards[i]; });
+        // Apply ONCE across all alien calls in this phase — otherwise N callers = N rotations
+        // (which cancels out: e.g. 2 aliens swapping twice returns to the original state).
+        if (!room.alienAppState.swapCardsApplied) {
+          const alienIds = room.players
+            .filter(p => isAlienAffiliation(room.originalCards[p.id]))
+            .map(p => p.id);
+          if (alienIds.length >= 2) {
+            const cards = alienIds.map(id => currentCards[id]);
+            cards.unshift(cards.pop());
+            alienIds.forEach((id, i) => { currentCards[id] = cards[i]; });
+          }
+          room.alienAppState.swapCardsApplied = true;
         }
         return { swapped: true };
       }
@@ -1094,35 +1099,43 @@ function processAlienNightAction(room, playerId, phase, action) {
       }
 
       // ── ROTATE LEFT/RIGHT — cards rotate among real aliens (nearest alien neighbor) ──
+      // Same one-shot guard as swap_cards — N aliens calling rotate N times cycles back
+      // to the original state. Cache transfers + apply currentCards mutation only once.
       if (instruction.type === 'rotate_left' || instruction.type === 'rotate_right') {
         const realAliens = room.players
           .map((p, i) => ({ id: p.id, name: p.name, seat: i }))
           .filter(p => isAlienAffiliation(room.originalCards[p.id]));
 
-        // Build transfer map before swapping
-        const transfers = {};
-        if (realAliens.length >= 2) {
+        if (!room.alienAppState.rotationApplied && realAliens.length >= 2) {
+          const transfers = {};
           const oldCards = realAliens.map(p => currentCards[p.id]);
           if (instruction.type === 'rotate_left') {
-            // Each alien gives card to the nearest alien on their LEFT
+            // Each alien gives their card to the nearest alien on their LEFT.
+            // Receiver at index (i-1) gets card from giver at index i, so newCards[i] = oldCards[(i+1)%N].
+            // That's a LEFT shift of the array: shift() + push().
             for (let i = 0; i < realAliens.length; i++) {
               const receiver = realAliens[(i - 1 + realAliens.length) % realAliens.length];
               transfers[receiver.id] = { fromId: realAliens[i].id, fromName: realAliens[i].name };
             }
-            const last = oldCards.pop();
-            oldCards.unshift(last);
+            const first = oldCards.shift();
+            oldCards.push(first);
           } else {
-            // Each alien gives card to the nearest alien on their RIGHT
+            // Each alien gives their card to the nearest alien on their RIGHT.
+            // Receiver at index (i+1) gets card from giver at index i, so newCards[i] = oldCards[(i-1+N)%N].
+            // That's a RIGHT shift of the array: pop() + unshift().
             for (let i = 0; i < realAliens.length; i++) {
               const receiver = realAliens[(i + 1) % realAliens.length];
               transfers[receiver.id] = { fromId: realAliens[i].id, fromName: realAliens[i].name };
             }
-            const first = oldCards.shift();
-            oldCards.push(first);
+            const last = oldCards.pop();
+            oldCards.unshift(last);
           }
           realAliens.forEach((p, i) => { currentCards[p.id] = oldCards[i]; });
+          room.alienAppState.rotationApplied = true;
+          room.alienAppState.rotationTransfers = transfers;
         }
 
+        const transfers = room.alienAppState.rotationTransfers || {};
         const myTransfer = transfers[playerId];
         return {
           rotated: instruction.type,
