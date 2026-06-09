@@ -398,7 +398,7 @@ function processOracleAnswer(room, playerId, question, answer) {
 // ── The Ripple Generator ──────────────────────────────────────────────────
 // The Ripple (Vết Nứt) — post-game event. Triggers:
 //   1. Oracle chose ripple_trigger → 100%
-//   2. Random 20% chance (unless number_guess occurred)
+//   2. Random 35% chance (unless number_guess correct or Oracle Hunt mode)
 const RIPPLE_ACTIONS = [
   { id: '1_minute', weight: 10, label: '1 Minute', description: 'Thời gian thảo luận chỉ còn 1 phút.' },
   { id: 'repeat', weight: 5, label: 'Repeat', description: 'Vòng lặp thời gian! Đêm diễn ra lần nữa, nhưng một số vai sẽ không được gọi.' },
