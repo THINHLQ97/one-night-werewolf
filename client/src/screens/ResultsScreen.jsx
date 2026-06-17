@@ -846,22 +846,40 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           <h3 className="text-moon-400 font-semibold mb-3 flex items-center gap-1.5">
             <Icon name="vote" size={16} /> Kết quả vote
           </h3>
-          <div className="space-y-2">
-            {players
-              .sort((a, b) => (tally[b.id] || 0) - (tally[a.id] || 0))
-              .map(p => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <span className="text-sm text-white/70 w-24 truncate">{p.name}</span>
-                  <div className="flex-1 bg-white/10 rounded-full h-2">
-                    <div
-                      className="bg-wolf-400 h-2 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, ((tally[p.id] || 0) / players.length) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-wolf-400 w-6 text-right">{tally[p.id] || 0}</span>
-                </div>
-              ))}
-          </div>
+          {(() => {
+            const votersByTarget = {};
+            Object.entries(results.votes || {}).forEach(([voterId, targetId]) => {
+              if (!targetId) return;
+              if (!votersByTarget[targetId]) votersByTarget[targetId] = [];
+              votersByTarget[targetId].push(playerMap[voterId] || '?');
+            });
+            return (
+              <div className="space-y-2">
+                {players
+                  .sort((a, b) => (tally[b.id] || 0) - (tally[a.id] || 0))
+                  .map(p => {
+                    const voters = votersByTarget[p.id] || [];
+                    return (
+                      <div key={p.id}>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-white/70 w-24 truncate">{p.name}</span>
+                          <div className="flex-1 bg-white/10 rounded-full h-2">
+                            <div
+                              className="bg-wolf-400 h-2 rounded-full transition-all"
+                              style={{ width: `${Math.min(100, ((tally[p.id] || 0) / players.length) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-bold text-wolf-400 w-6 text-right">{tally[p.id] || 0}</span>
+                        </div>
+                        {voters.length > 0 && (
+                          <p className="text-[11px] text-white/40 ml-[6.5rem] mt-0.5">↳ {voters.join(', ')}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            );
+          })()}
         </div>
 
         {isHost ? (

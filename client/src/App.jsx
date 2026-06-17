@@ -175,6 +175,10 @@ export default function App() {
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setTokenClaims(null);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, auraTouched: [], auraSeen: false });
+      // Reset Ripple state from previous game so its background/BGM don't bleed into the new round
+      setRippleActive(false);
+      setRippleEvent(null);
+      setRippleAction(null);
     });
 
     socket.on('role_assigned', ({ roleId, role }) => {
@@ -353,6 +357,13 @@ export default function App() {
           ...prev,
           knownAliens: actionData.alienPlayers.map(a => a.id),
           knownAlienRoles: roleMap,
+        }));
+      }
+      // Mortician's auto-resolved viewableCards (viewCount=2 or fixed side) — persist to revealedPlayers
+      if (reqEffective === 'mortician' && actionData.viewableCards && Object.keys(actionData.viewableCards).length > 0) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          revealedPlayers: { ...(prev.revealedPlayers || {}), ...actionData.viewableCards },
         }));
       }
       // Cow's own tap result — store so day log can recall it
