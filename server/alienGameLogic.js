@@ -404,7 +404,7 @@ const RIPPLE_ACTIONS = [
   { id: 'repeat', weight: 5, label: 'Repeat', description: 'Vòng lặp thời gian! Đêm diễn ra lần nữa, nhưng một số vai sẽ không được gọi.' },
   { id: 'insomniac', weight: 5, label: 'Insomniac', description: 'Một số người chơi được xem lại bài của mình.' },
   { id: 'may_not_speak', weight: 5, label: 'May Not Speak', description: 'Một số người chơi không được nói cho đến khi vote.' },
-  { id: 'face_away', weight: 5, label: 'Face Away', description: 'Một số người chơi phải quay mặt đi cho đến khi vote xong.' },
+  { id: 'face_away', weight: 5, label: 'Face Away', description: 'Một số người chơi phải quay mặt đi — họ KHÔNG được bỏ phiếu lượt này.' },
   { id: 'troublemaker', weight: 5, label: 'Trouble Maker', description: 'Một người chơi được hoán đổi bài của 2 người khác.' },
   { id: 'steal', weight: 5, label: 'Steal', description: 'Một người chơi được cướp bài của người khác (xem bài mới).' },
   { id: 'witch', weight: 5, label: 'Witch', description: 'Một người chơi được thực hiện hành động Phù Thủy.' },

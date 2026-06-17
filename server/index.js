@@ -1533,6 +1533,8 @@ function startVotingPhase(room) {
       if (room.state !== 'day') return;
       if (!room.dayPhase.votingPhase) return;
       if (room.dayPhase.votes[bot.id]) return;
+      // Face-away bots can't vote — skip and let checkAllVoted account for them
+      if (room.dayPhase.facingAway?.includes(bot.id)) { checkAllVoted(room); return; }
 
       const currentRole = room.currentCards[bot.id];
       if (currentRole === 'bodyguard') {
@@ -1576,7 +1578,9 @@ function sanitizeTokenClaims(tc, room) {
 function checkAllVoted(room) {
   const voted = Object.keys(room.dayPhase.votes).length;
   const hasBodyguard = room.dayPhase.bodyguardProtect ? 1 : 0;
-  if (voted + hasBodyguard >= room.players.length) {
+  // Face-away players don't cast votes — they don't count toward the required total
+  const faceAwayCount = room.dayPhase.facingAway?.length || 0;
+  if (voted + hasBodyguard + faceAwayCount >= room.players.length) {
     endGame(room);
   }
 }
@@ -2210,8 +2214,8 @@ io.on('connection', socket => {
     if (!room.dayPhase.votingPhase) return; // Block votes during discussion
     if (!room.players.some(p => p.id === targetId)) return;
     if (socket.id === targetId) return;
-    // Face-away players cannot be voted for
-    if (room.dayPhase.facingAway?.includes(targetId)) return;
+    // Face-away players cannot CAST a vote (their eyes are closed)
+    if (room.dayPhase.facingAway?.includes(socket.id)) return;
 
     room.dayPhase.votes[socket.id] = targetId;
 

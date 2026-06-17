@@ -17,7 +17,7 @@ const RIPPLE_NARRATIONS = {
   'repeat':         { title: '🔄 Vòng Lặp Thời Gian',     narration: 'Thời gian gập lại chính nó — đêm diễn ra LẦN NỮA. Nhưng Oracle sẽ không thức dậy trong vòng lặp.' },
   'insomniac':      { title: '👁️ Mất Ngủ',                narration: 'Vết nứt khiến một số người chợt tỉnh giấc — họ nhìn thấy bài hiện tại của mình.' },
   'may_not_speak':  { title: '🤐 Lời Nguyền Câm Lặng',    narration: 'Vết nứt nuốt chửng giọng nói — một số người chơi bị CẤM NÓI cho đến khi bỏ phiếu.' },
-  'face_away':      { title: '🙈 Quay Mặt Đi',            narration: 'Vết nứt che mờ tầm nhìn — một số người chơi phải QUAY MẶT ĐI cho đến khi vote xong.' },
+  'face_away':      { title: '🙈 Quay Mặt Đi',            narration: 'Vết nứt che mờ tầm nhìn — một số người chơi phải QUAY MẶT ĐI và KHÔNG được bỏ phiếu lượt này.' },
   'troublemaker':   { title: '🔀 Kẻ Gây Rối',             narration: 'Vết nứt trao quyền cho một kẻ — người đó được HOÁN ĐỔI bài của 2 người khác.' },
   'steal':          { title: '🫳 Cướp Đoạt',               narration: 'Vết nứt mở ra cơ hội — một người được CƯỚP BÀI của người khác và xem bài mới.' },
   'witch':          { title: '🧙 Phù Thủy',               narration: 'Vết nứt triệu hồi ma thuật — một người được thực hiện hành động PHÙ THỦY.' },

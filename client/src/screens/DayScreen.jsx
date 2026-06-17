@@ -141,7 +141,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
           {facingAway.includes(myId) && (
             <div className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/25 text-center">
               <p className="text-purple-300 text-xs font-bold">🙈 THE RIPPLE — QUAY MẶT ĐI</p>
-              <p className="text-purple-200/60 text-[10px]">Bạn phải quay mặt đi cho đến khi vote xong.</p>
+              <p className="text-purple-200/60 text-[10px]">Bạn phải quay mặt đi — KHÔNG được bỏ phiếu lượt này.</p>
             </div>
           )}
           {twoHandVoters.includes(myId) && (
@@ -188,15 +188,14 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         knownAliens={roleHidden ? [] : knownAliens}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
-        selectable={votingPhase ? 'player' : 'none'}
+        selectable={votingPhase && !facingAway.includes(myId) ? 'player' : 'none'}
         selected={isBodyguard ? (myProtect ? [myProtect] : []) : (myVote ? [myVote] : [])}
-        onSelect={votingPhase ? (isBodyguard ? onBodyguardProtect : onVote) : () => {}}
+        onSelect={votingPhase && !facingAway.includes(myId) ? (isBodyguard ? onBodyguardProtect : onVote) : () => {}}
         votes={votes}
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
         shieldedPlayer={shieldedPlayer}
         voiceSpeaking={voiceSpeaking || {}}
-        unvotable={facingAway}
       />
 
       {/* Token Claim Board */}
