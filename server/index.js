@@ -1501,10 +1501,11 @@ function startDayPhase(room) {
     twoHandVoters: room.dayPhase.twoHandVoters,
   });
 
-  // After discussion ends → start voting phase
+  // After discussion ends → start voting phase. Use actual discussionTime so
+  // Ripple "1 Minute" (60s discussion) also transitions correctly.
   room.dayPhase.autoEndTimer = setTimeout(() => {
     if (room.state === 'day') startVotingPhase(room);
-  }, 5 * 60 * 1000);
+  }, discussionTime);
 }
 
 function startVotingPhase(room) {

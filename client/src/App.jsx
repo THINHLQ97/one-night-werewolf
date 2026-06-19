@@ -789,7 +789,7 @@ export default function App() {
     </>);
   }
   if (screen === 'role_reveal') {
-    return <><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} chatMessages={chatMessages} /></>;
+    return <><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}<RoleRevealScreen myRole={myRole} roomCode={roomCode} isHost={isHost} players={players} voiceSpeaking={voiceSpeaking} chatMessages={chatMessages} gameMode={settings.gameMode || gameMode} /></>;
   }
   if (screen === 'night') {
     return (<><SceneBackground scene={currentScene} gameMode={settings.gameMode || gameMode} />{connectionOverlay}

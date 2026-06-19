@@ -75,7 +75,10 @@ export default function AlienTerminal({ messages = [], maxLines = 5, collapsed: 
 
   if (messages.length === 0) return null;
 
-  const visibleMessages = displayedMessages.slice(-(maxLines * 2));
+  // Render every message — the body has overflowY: auto so the user can
+  // scroll back through the full Echo log (essential after Ripple "Repeat"
+  // where one night produces 2x the announcements).
+  const visibleMessages = displayedMessages;
 
   return (
     <div className="alien-terminal mb-3 relative">

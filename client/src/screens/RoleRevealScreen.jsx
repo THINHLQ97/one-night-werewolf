@@ -16,6 +16,19 @@ const NIGHT_QUOTES = [
   'Ở đây, sự thật không thắng nhờ được nói ra — mà nhờ có người còn sống để nghe nó.',
 ];
 
+const ALIEN_QUOTES = [
+  'Vũ trụ không thì thầm với mọi linh hồn — chỉ với kẻ dám lắng nghe bóng tối.',
+  'Trong ngôi làng này, một ngón cái giơ lên có thể là cái chết — hoặc là cứu rỗi.',
+  'Alien không cần tàu vũ trụ. Chúng chỉ cần một gương mặt ngươi đã quen.',
+  'Đêm trên hành tinh này không có vì sao — chỉ có những đôi mắt đang nhìn ngươi.',
+  'Tiếng vọng từ không gian không nói dối. Nhưng nó cũng chẳng nói hết sự thật.',
+  'Kẻ đứng cạnh ngươi sáng nay có thể là kẻ đã đổi vận mệnh với ngươi đêm qua.',
+  'Một lá phiếu có thể vạch trần Alien — hoặc đẩy cả làng vào tay chúng.',
+  'Khi Vết Nứt mở ra, luật chơi không còn là của ngươi nữa.',
+  'Groob và Zerb không phải đồng minh. Chúng là hai mặt của cùng một định mệnh.',
+  'Synthetic Alien chỉ thắng khi chết. Hãy nghĩ xem ngươi đang chọc giận ai khi đoàn kết.',
+];
+
 const TEAM_STYLE = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Phe Sói', glow: 'shadow-[0_0_30px_rgba(231,76,60,0.3)]' },
   village:  { bg: 'bg-village-500/20 border-village-500/40', text: 'text-village-400', label: 'Phe Dân', glow: 'shadow-[0_0_30px_rgba(39,174,96,0.3)]' },
@@ -26,11 +39,14 @@ const TEAM_STYLE = {
   mortician: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-400', label: 'Phe Nhà Quàn', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.3)]' },
 };
 
-export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking, chatMessages }) {
+export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking, chatMessages, gameMode }) {
   const [revealed, setRevealed] = useState(false);
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
-  const nightQuote = useMemo(() => NIGHT_QUOTES[Math.floor(Math.random() * NIGHT_QUOTES.length)], []);
+  const nightQuote = useMemo(() => {
+    const pool = gameMode === 'alien' ? ALIEN_QUOTES : NIGHT_QUOTES;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }, [gameMode]);
 
   if (!myRole) {
     return (
