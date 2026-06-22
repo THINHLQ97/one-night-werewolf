@@ -931,6 +931,7 @@ export default function App() {
         gameMode={settings.gameMode || gameMode}
         hasOracleVision={!!oracleVision}
         onReopenVision={() => setOracleVisionOpen(true)}
+        snakeTeamLog={snakeTeamLog}
       />
       {oracleVisionOpen && oracleVision && (
         <OracleVision vision={oracleVision} onClose={() => setOracleVisionOpen(false)} />

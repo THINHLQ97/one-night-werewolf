@@ -7,6 +7,7 @@ import { sfxCardFlip, sfxReveal } from '../audio';
 import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
 import AlienTerminal from '../components/AlienTerminal';
+import SnakeTeamLogPanel, { useIsSnakeTeammate } from '../components/SnakeTeamLogPanel';
 
 const ROLE_NAMES = {
   doppelganger: 'Doppelgänger',
@@ -44,8 +45,6 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [echoTyping, setEchoTyping] = useState(false);
   const [cardAnimations, setCardAnimations] = useState([]);
-  const [snakeLogOpen, setSnakeLogOpen] = useState(false);
-  const [snakeLogSeen, setSnakeLogSeen] = useState(0);
 
   const step = actionData?.step || 1;
   // For doppelganger or outsourcing step 2+, effectiveRole = the copied role
@@ -443,25 +442,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null, shieldedPlayer = null, knownAliens = [], knownGroobZerb = [], knownCow = null } = nightKnowledge || {};
 
-  const isOfficeMode = gameMode === 'office';
-  const isSnakeTeammate = isOfficeMode && (
-    OFFICE_SNAKE_SET.includes(myRole?.roleId)
-    || (myRole?.roleId === 'outsourcing' && OFFICE_SNAKE_SET.includes(outsourcingCopied))
-  );
-  const showSnakePanel = isSnakeTeammate && snakeTeamLog.length > 0;
-  const unseenSnakeCount = Math.max(0, snakeTeamLog.length - snakeLogSeen);
-
-  // Auto-open the panel on the first event each night so the player notices.
-  useEffect(() => {
-    if (!isSnakeTeammate) return;
-    if (snakeTeamLog.length === 1 && !snakeLogOpen) {
-      setSnakeLogOpen(true);
-    }
-  }, [snakeTeamLog.length, isSnakeTeammate]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (snakeLogOpen) setSnakeLogSeen(snakeTeamLog.length);
-  }, [snakeLogOpen, snakeTeamLog.length]);
+  const isSnakeTeammate = useIsSnakeTeammate(gameMode, myRole, outsourcingCopied);
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
@@ -499,61 +480,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           `}</style>
         </div>
       )}
-      {/* Snake team shared log — visible to all Toxic / Snake players */}
-      {isSnakeTeammate && (
-        <div className="fixed top-16 right-2 sm:right-4 z-40 select-none">
-          {!snakeLogOpen ? (
-            <button
-              onClick={() => setSnakeLogOpen(true)}
-              className="relative px-3 py-2 rounded-xl bg-rose-900/80 hover:bg-rose-800/90 border border-rose-400/40 text-rose-100 text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1.5 transition-colors"
-              title="Sổ tay phe Rắn"
-            >
-              <span className="text-base leading-none">🐍</span>
-              <span>Phe Rắn ({snakeTeamLog.length})</span>
-              {unseenSnakeCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-rose-950 text-[10px] font-bold flex items-center justify-center shadow">
-                  {unseenSnakeCount}
-                </span>
-              )}
-            </button>
-          ) : (
-            <div className="w-[260px] sm:w-[300px] max-h-[60vh] rounded-2xl bg-rose-950/85 border border-rose-400/40 shadow-2xl backdrop-blur-md flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 bg-rose-900/70 border-b border-rose-400/30">
-                <div className="flex items-center gap-1.5 text-rose-100 text-xs font-bold">
-                  <span className="text-base leading-none">🐍</span>
-                  <span>Sổ tay phe Rắn</span>
-                </div>
-                <button
-                  onClick={() => setSnakeLogOpen(false)}
-                  className="w-6 h-6 rounded-lg hover:bg-white/10 flex items-center justify-center text-rose-200 text-sm"
-                  title="Ẩn"
-                >×</button>
-              </div>
-              <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
-                {snakeTeamLog.length === 0 ? (
-                  <p className="text-rose-300/60 text-xs italic text-center py-3">Chưa có hành động nào.</p>
-                ) : (
-                  snakeTeamLog.map((entry, i) => (
-                    <div
-                      key={`${entry.timestamp}-${i}`}
-                      className={`px-2 py-1.5 rounded-lg text-[11px] leading-snug border ${
-                        entry.viaOutsourcing
-                          ? 'bg-amber-500/10 border-amber-400/30 text-amber-100'
-                          : 'bg-rose-500/10 border-rose-400/30 text-rose-100'
-                      }`}
-                    >
-                      {entry.description}
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="px-3 py-1.5 bg-rose-900/50 border-t border-rose-400/20 text-[10px] text-rose-300/70 italic text-center">
-                Chỉ phe Rắn thấy log này.
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <SnakeTeamLogPanel snakeTeamLog={snakeTeamLog} visible={isSnakeTeammate} />
       {/* Header */}
       <div className="text-center pt-2 pb-3">
         <div className="flex items-center justify-center gap-2 mb-1.5">

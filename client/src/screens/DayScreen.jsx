@@ -7,6 +7,7 @@ import TokenClaimBoard from '../components/TokenClaimBoard';
 import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
 import AlienTerminal from '../components/AlienTerminal';
+import SnakeTeamLogPanel, { useIsSnakeTeammate } from '../components/SnakeTeamLogPanel';
 
 function useCountdown(timerEnd, paused, pausedRemaining) {
   const [remaining, setRemaining] = useState(0);
@@ -42,7 +43,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hasToxicManager = false, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hasToxicManager = false, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, snakeTeamLog = [] }) {
   const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd, silencedPlayers = [], facingAway = [], twoHandVoters = [] } = dayState;
   // Use voting timer when in voting phase, otherwise discussion timer
   const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
@@ -58,10 +59,13 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
 
   const votedCount = Object.keys(votes).length + (bodyguardProtect ? 1 : 0);
 
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, knownAliens = [], knownGroobZerb = [], knownCow = null } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, knownAliens = [], knownGroobZerb = [], knownCow = null, outsourcingCopiedRole = null } = nightKnowledge || {};
+
+  const isSnakeTeammate = useIsSnakeTeammate(gameMode, myRole, outsourcingCopiedRole);
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
+      <SnakeTeamLogPanel snakeTeamLog={snakeTeamLog} visible={isSnakeTeammate} autoOpenOnFirst={false} />
       {/* Header */}
       <div className="text-center pt-2 pb-2">
         <div className="flex items-center justify-center gap-3 mb-1">
