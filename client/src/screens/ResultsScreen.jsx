@@ -91,6 +91,40 @@ const OFFICE_ENDSCENE = {
   multi_vote:           '/images/endscene-office/vote-more-than-1.webp',
 };
 
+const OFFICE_END_SCENE_NARRATIONS = {
+  multi_vote: 'Cuộc họp sa thải trở thành cuộc tàn sát: nhiều nhân viên bị đẩy ra cửa cùng lúc. HR ngồi thở dài giữa đống đơn nghỉ việc — không ai dám nhìn ai trên đường về.',
+  vote_snake: 'Một con Rắn lộ mình giữa văn phòng — quy trình sa thải lần này đã bắt đúng người. Phe Nhân Viên thở phào sau email cuối cùng: "Effective immediately."',
+  vote_toxic_manager: 'Trưởng Phòng Toxic bị đẩy ra cửa. Quy trình HR cuối cùng cũng làm được điều đúng — văn phòng đứng dậy vỗ tay khi thẻ ra vào bị vô hiệu.',
+  vote_stalker: 'Kẻ Rình Rập bị tống cổ — không còn ánh mắt lén lút phía sau bàn làm việc nữa. Camera an ninh được nhẹ một việc.',
+  vote_snoop: 'Kẻ Nhòm Ngó bị bốc ghế — những bí mật trong ngăn kéo cuối cùng cũng được yên. Khoá phòng họp tối được thay khoá mới.',
+  vote_ishikoi: 'Đây không phải vụ sa thải — đây là vụ kiện ra toà về môi trường làm việc độc hại. Ishikoi thắng kiện, được nhận bồi thường ngất ngưởng. Họ rời đi cùng một cuốn séc dày — và một nụ cười không ai bắt chước được.',
+  vote_netizen: 'Cộng đồng mạng bị công ty block — bài đăng tố cáo Ishikoi của họ chìm vào im lặng. Netizen bị xoá tài khoản trên mọi nền tảng. Phe Rắn cười khẩy bên ly cà phê — văn phòng vẫn yên bình giả tạo.',
+  vote_netizen_no_ishikoi: 'Không có Ishikoi để bênh vực — nhưng Netizen đã viral. Bài đăng "tôi đã bị công ty đối xử như thế nào" lên trend toàn quốc trong 6 giờ. Cộng đồng mạng chiến thắng nhờ ánh đèn flash và 10 triệu lượt share. Cô ấy giờ là biểu tượng.',
+  vote_tracker: 'Máy Chấm Công bị tháo điện — không còn ai biết ai đi muộn nữa. Văn phòng rơi vào hỗn loạn giờ giấc, nhưng ít ra Rắn không còn bị canh chừng.',
+  vote_ceo: 'CEO bị chính nhân viên của mình "đảo chính". Một cuộc binh biến văn phòng êm dịu — nhưng phòng họp ngày mai sẽ không bao giờ giống như trước. Cổ phiếu công ty rơi tự do trong giờ mở cửa.',
+  vote_poacher: 'Kẻ Trộm KPI bị tóm tay tại trận — đám đông không thương tiếc đẩy hắn ra cửa cùng cái laptop công ty. Những KPI đã đánh cắp giờ trả lại cho chủ.',
+  vote_hr: 'Chuyên Viên Nhân Sự bị sa thải bởi chính quy trình họ tạo ra. Định nghĩa của "oan ức" chưa bao giờ rõ ràng đến thế — không ai bênh vực, không ai phản đối.',
+  vote_dumper: 'Kẻ Đẩy Việc cuối cùng cũng nhận một việc không thể đẩy đi cho ai: viết đơn nghỉ việc của chính mình.',
+  vote_paranoid: 'Kẻ Lo Âu thoát khỏi văn phòng — nỗi sợ ám ảnh hàng đêm của hắn cuối cùng cũng thành sự thật. Đôi khi hoang tưởng chỉ là tiên tri đến sớm.',
+  vote_legal: 'Chuyên Viên Pháp Chế bị đẩy ra ngoài — nhưng cô ấy bước đi với hồ sơ vụ kiện trong cặp. Công ty sẽ gặp lại cô ở toà — sớm thôi.',
+};
+
+function getOfficeNarration(sceneKey, results, players) {
+  if (!sceneKey) return null;
+  const base = OFFICE_END_SCENE_NARRATIONS[sceneKey];
+  if (!base) return null;
+  // If CEO is in the game but didn't get eliminated, append his fury narration —
+  // unless the vote outcome itself was about the CEO.
+  const finalCards = results.finalCards || {};
+  const eliminated = results.eliminated || [];
+  const ceoInGame = players.some(p => finalCards[p.id] === 'ceo');
+  const ceoEliminated = eliminated.some(id => finalCards[id] === 'ceo');
+  if (ceoInGame && !ceoEliminated && sceneKey !== 'vote_ceo' && sceneKey !== 'multi_vote') {
+    return `${base} CEO không bị sa thải — ông trở về phòng họp, gầm gừ về những "nhân viên vô dụng" đã đẩy nhầm người. Đợt cắt giảm tiếp theo sẽ không khoan nhượng.`;
+  }
+  return base;
+}
+
 function getOfficeEndSceneKey(results, players) {
   const { eliminated = [], initialEliminated = [], finalCards = {} } = results;
   if (eliminated.length === 0) return null;
@@ -681,7 +715,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
     // Office: no team-wide background scene. Endscene banner 2:1 per vote outcome.
     sceneKey = getOfficeEndSceneKey(results, players);
     sceneSrc = sceneKey ? OFFICE_ENDSCENE[sceneKey] : null;
-    narration = null;
+    narration = getOfficeNarration(sceneKey, results, players);
     sceneBg = null; // user said no team-bg for office
 
     const myTeam = getOfficeTeamOf(myId, finalCards);

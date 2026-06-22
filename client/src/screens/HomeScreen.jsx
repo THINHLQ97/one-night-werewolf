@@ -32,11 +32,16 @@ const ALIEN_QUOTES = [
 ];
 
 const OFFICE_QUOTES = [
-  { en: 'The toxic snake hides in every meeting room.', author: 'Office Folklore', vi: 'Con rắn toxic ẩn trong mọi phòng họp.' },
-  { en: "Behind every layoff, there's a story no one tells.", author: 'HR Anonymous', vi: 'Sau mỗi đợt sa thải là một câu chuyện không ai kể.' },
-  { en: 'Trust is a process. Betrayal is a single email.', author: 'Office Folklore', vi: 'Niềm tin là cả một quá trình. Phản bội chỉ cần một cái email.' },
-  { en: 'The KPI you stole today will haunt you tomorrow.', author: 'Office Folklore', vi: 'KPI bạn cướp hôm nay sẽ ám bạn ngày mai.' },
-  { en: "If you can't find the snake, you might be sitting next to it.", author: 'Office Folklore', vi: 'Nếu chưa thấy con rắn, có lẽ bạn đang ngồi cạnh nó.' },
+  { en: 'In this office, KPIs matter more than friendships — and everyone has a knife behind a polite email.', author: 'Office Folklore', vi: 'Trong văn phòng này, KPI quan trọng hơn tình bạn — và ai cũng giấu một con dao sau email lịch sự.' },
+  { en: 'The one smiling brightest in the group chat is usually the one most ready to dump work on you.', author: 'Office Folklore', vi: 'Người tươi cười nhất trong group chat thường là kẻ sẵn sàng đẩy việc cho bạn nhất.' },
+  { en: 'A wrong Reply-All can end a career.', author: 'HR Anonymous', vi: 'Một cú Reply All sai người có thể chấm dứt cả sự nghiệp.' },
+  { en: "Toxic doesn't yell. It hides inside 'as per my last email.'", author: 'Office Folklore', vi: "Toxic không cần hét. Nó nằm trong câu 'as per my last email'." },
+  { en: 'In the layoff race, leaving early may not be losing — and staying is no guarantee of winning.', author: 'Office Folklore', vi: 'Trong cuộc đua sa thải, đi sớm chưa chắc thua — ở lại chưa chắc thắng.' },
+  { en: "Ishikoi don't fear being fired. They fear missing the deadline to file suit.", author: 'Legal Department', vi: 'Ishikoi không sợ bị đuổi việc. Họ sợ chưa kịp ký đơn kiện.' },
+  { en: 'The internet remembers everything — including the message you just deleted from Slack.', author: 'Netizen Proverb', vi: 'Cộng đồng mạng nhớ mọi thứ — kể cả tin nhắn bạn vừa xoá khỏi Slack.' },
+  { en: 'In that meeting, the silent ones are not the innocent ones.', author: 'Office Folklore', vi: 'Trong cuộc họp ấy, người im lặng không phải là người vô tội.' },
+  { en: "Each card in the middle is a resignation letter, waiting for the right person to sign.", author: 'Office Folklore', vi: 'Mỗi lá bài giữa bàn là một lá đơn nghỉ việc, đợi đúng người ký.' },
+  { en: "Snakes don't slither on the floor. Snakes sit next to you and call you 'darling'.", author: 'Office Folklore', vi: "Rắn không bò trên sàn. Rắn ngồi cạnh bạn, gọi bạn là 'em yêu'." },
 ];
 
 function generateName() {

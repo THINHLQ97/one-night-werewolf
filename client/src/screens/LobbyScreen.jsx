@@ -262,6 +262,82 @@ const ROLE_DETAILS = {
     winCondition: 'Thắng nếu bạn VÀ 2 người ngồi cạnh đều KHÔNG bị loại.',
     tips: 'Bảo vệ hàng xóm của bạn. Đổ lỗi cho người ở xa bạn!',
   },
+  // ─── Office expansion ──────────────────────────────────────────────────
+  outsourcing: {
+    nightAction: 'Thức ĐẦU TIÊN. Bắt buộc xem 1 bài giữa và biến thành vai đó. Nếu vai mới có hành động đêm, thực hiện ngay.',
+    winCondition: 'Thắng theo phe của vai vừa copy. Copy Rắn → phe Rắn. Copy Ishikoi → phe Ishikoi. Còn lại → phe Nhân Viên.',
+    tips: 'Vai rất linh hoạt — bạn sẽ ăn theo vai copy. Nhớ rằng "công ty" thực tế lại nghĩ bạn là Outsourcing.',
+  },
+  snake: {
+    nightAction: 'Mở mắt cùng đàn Rắn và biết mặt đồng bọn. Không có hành động riêng.',
+    winCondition: 'Thắng nếu không có lá Rắn nào bị sa thải.',
+    tips: 'Phối hợp với đàn Rắn để gây nhiễu. Đổ lỗi cho phe Nhân Viên.',
+  },
+  toxic_manager: {
+    nightAction: 'Thức cùng Rắn. Chọn 1 người KHÔNG phải Rắn để "đẩy lá Rắn dự bị" lên — người đó âm thầm trở thành phe Rắn (bài cũ vào giữa).',
+    winCondition: 'Thắng cùng phe Rắn.',
+    tips: 'Mở rộng quân số bằng cách hô biến 1 nhân viên thành Rắn. Người bị đẩy có thể vẫn tự nhận là Nhân Viên — đó là vũ khí của bạn.',
+  },
+  stalker: {
+    nightAction: 'Thức cùng Rắn. Xem bài của 1 người khác để nắm thóp.',
+    winCondition: 'Thắng cùng phe Rắn.',
+    tips: 'Dùng thông tin để bắt nạt đối thủ trong lúc thảo luận — nhưng đừng lộ rằng bạn đã nhìn lén.',
+  },
+  snoop: {
+    nightAction: 'Thức cùng Rắn. Xem bí mật 1 trong 3 lá bài ở giữa.',
+    winCondition: 'Thắng cùng phe Rắn.',
+    tips: 'Biết được lá giữa thì biết được vai nào KHÔNG có trong phòng — dùng để dập bài giả.',
+  },
+  ishikoi: {
+    nightAction: 'Không thức ban đêm.',
+    winCondition: 'Thắng nếu Ishikoi (bạn) bị vote sa thải. Một mình kéo công ty ra toà.',
+    tips: 'Khiến cả phòng tin rằng bạn đáng bị sa thải nhất. Nhưng đừng lộ là Ishikoi — sẽ bị nhường vote.',
+  },
+  netizen: {
+    nightAction: 'Mở mắt — app sẽ chỉ rõ ai là Ishikoi.',
+    winCondition: 'Nếu có Ishikoi: thắng khi Ishikoi bị sa thải. Nếu KHÔNG có Ishikoi: bạn tự gánh vai Ishikoi — bạn phải bị vote.',
+    tips: 'Lái dư luận để đẩy phiếu về Ishikoi. Không có Ishikoi thì bạn tự "viral" để bị chú ý.',
+  },
+  tracker: {
+    nightAction: 'Mở mắt — biết có 0/1/2 lá Rắn đang ngồi sát cạnh bạn (không biết hướng).',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Khoanh vùng Rắn quanh chỗ ngồi của bạn. 2 = chắc chắn quanh bạn có ổ; 0 = bạn an toàn cục bộ.',
+  },
+  spammer: {
+    nightAction: 'Mở mắt và chọn 1 trong 2 hàng xóm để "ping". Người đó nhận thông báo có Spammer ở bên trái/phải.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Tín hiệu Spammer giúp xác định ai là Nhân Viên thật — dùng để bảo chứng bạn.',
+  },
+  ceo: {
+    nightAction: 'Mở mắt. Xem bài của 1 người HOẶC 2 trong 3 lá giữa.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Vai "Seer" của Office — cực nhiều thông tin. Cảnh giác khi tiết lộ, dễ bị Rắn tấn công ngược.',
+  },
+  poacher: {
+    nightAction: 'Hoán đổi bài bạn với 1 người khác và xem bài mới. Bạn chuyển sang phe của vai vừa nhận.',
+    winCondition: 'Thắng theo phe của vai HIỆN TẠI sau khi đổi (tương tự Robber).',
+    tips: 'Đổi qua được Rắn thì khai dối; đổi qua được Ishikoi thì… chúc may mắn.',
+  },
+  hr: {
+    nightAction: 'Hoán đổi bài của 2 người khác mà KHÔNG được nhìn nội dung.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Làm rối thông tin của Rắn. Có thể đổi cho mình một suất an toàn nếu khôn khéo.',
+  },
+  dumper: {
+    nightAction: 'Xem 1 lá bài giữa, sau đó BẮT BUỘC tráo lá đó với bài của 1 người (kể cả mình). Lá người đó đẩy ra giữa — bạn không được xem.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Vũ khí "thải việc": ép vai xấu sang người khác, hoặc nhận bài tốt cho mình.',
+  },
+  paranoid: {
+    nightAction: 'Thức cuối cùng nhóm Nhân Viên. Xem bài HIỆN TẠI của chính mình.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Phát hiện được mình đã bị Toxic Manager/HR/Poacher đổi qua phe Rắn. Khai sớm để minh oan hoặc đánh lận.',
+  },
+  legal: {
+    nightAction: 'Lật ngửa 1 bài của người khác. Rắn / Ishikoi → úp xuống bí mật (chỉ bạn biết). Nhân Viên → công khai cho cả phòng.',
+    winCondition: 'Thắng cùng phe Nhân Viên.',
+    tips: 'Hé lộ 1 vai Nhân Viên rõ ràng cho cả phòng — cực mạnh khi tìm được đúng người. Khai luôn nếu thấy Rắn.',
+  },
 };
 
 export default function LobbyScreen({ roomCode, players, hostId, isHost, settings, isSimulation, preferredHostRole, gameMode: gameModeFromProps, onPreferredRoleChange, onSettingsChange, onModeChange, onStartGame, onLeave, voiceSpeaking, chatMessages }) {
@@ -535,6 +611,9 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
                         role.team === 'synthetic' ? 'bg-cyan-500/30 text-cyan-300' :
                         role.team === 'mortician' ? 'bg-amber-500/30 text-amber-300' :
                         role.team === 'blob' ? 'bg-lime-500/30 text-lime-300' :
+                        role.team === 'snake' ? 'bg-rose-500/30 text-rose-300' :
+                        role.team === 'staff' ? 'bg-sky-500/30 text-sky-300' :
+                        role.team === 'ishikoi' ? 'bg-amber-400/30 text-amber-200' :
                         'bg-village-400/30 text-village-300'
                       }`}>{TEAM_LABEL[role.team]}</span>
                       {role.max > 1 && <span className="text-white/30">tối đa {role.max}</span>}

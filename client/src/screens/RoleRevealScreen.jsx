@@ -29,6 +29,19 @@ const ALIEN_QUOTES = [
   'Synthetic Alien chỉ thắng khi chết. Hãy nghĩ xem ngươi đang chọc giận ai khi đoàn kết.',
 ];
 
+const OFFICE_QUOTES = [
+  'Trong văn phòng này, KPI quan trọng hơn tình bạn — và ai cũng giấu một con dao sau email lịch sự.',
+  'Người tươi cười nhất trong group chat thường là kẻ sẵn sàng đẩy việc cho bạn nhất.',
+  'Một cú Reply All sai người có thể chấm dứt cả sự nghiệp.',
+  "Toxic không cần hét. Nó nằm trong câu 'as per my last email'.",
+  'Trong cuộc đua sa thải, đi sớm chưa chắc thua — ở lại chưa chắc thắng.',
+  'Ishikoi không sợ bị đuổi việc. Họ sợ chưa kịp ký đơn kiện.',
+  'Cộng đồng mạng nhớ mọi thứ — kể cả tin nhắn bạn vừa xoá khỏi Slack.',
+  'Trong cuộc họp ấy, người im lặng không phải là người vô tội.',
+  'Mỗi lá bài giữa bàn là một lá đơn nghỉ việc, đợi đúng người ký.',
+  "Rắn không bò trên sàn. Rắn ngồi cạnh bạn, gọi bạn là 'em yêu'.",
+];
+
 const TEAM_STYLE = {
   werewolf: { bg: 'bg-wolf-500/20 border-wolf-500/40', text: 'text-wolf-400', label: 'Phe Sói', glow: 'shadow-[0_0_30px_rgba(231,76,60,0.3)]' },
   village:  { bg: 'bg-village-500/20 border-village-500/40', text: 'text-village-400', label: 'Phe Dân', glow: 'shadow-[0_0_30px_rgba(39,174,96,0.3)]' },
@@ -37,6 +50,9 @@ const TEAM_STYLE = {
   synthetic: { bg: 'bg-cyan-500/20 border-cyan-500/40', text: 'text-cyan-400', label: 'Phe Alien Nhân Tạo', glow: 'shadow-[0_0_30px_rgba(34,211,238,0.3)]' },
   blob:      { bg: 'bg-lime-500/20 border-lime-500/40', text: 'text-lime-400', label: 'Phe Blob', glow: 'shadow-[0_0_30px_rgba(163,230,53,0.3)]' },
   mortician: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-400', label: 'Phe Nhà Quàn', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.3)]' },
+  snake:     { bg: 'bg-rose-500/20 border-rose-500/40', text: 'text-rose-400', label: 'Phe Rắn (Toxic)', glow: 'shadow-[0_0_30px_rgba(244,114,182,0.3)]' },
+  staff:     { bg: 'bg-sky-500/20 border-sky-500/40', text: 'text-sky-400', label: 'Phe Nhân Viên', glow: 'shadow-[0_0_30px_rgba(56,189,248,0.3)]' },
+  ishikoi:   { bg: 'bg-amber-400/20 border-amber-400/40', text: 'text-amber-300', label: 'Phe Ishikoi', glow: 'shadow-[0_0_30px_rgba(252,211,77,0.3)]' },
 };
 
 export default function RoleRevealScreen({ myRole, roomCode, isHost, players, voiceSpeaking, chatMessages, gameMode }) {
@@ -44,7 +60,7 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
   const [roleHidden, setRoleHidden] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const nightQuote = useMemo(() => {
-    const pool = gameMode === 'alien' ? ALIEN_QUOTES : NIGHT_QUOTES;
+    const pool = gameMode === 'alien' ? ALIEN_QUOTES : gameMode === 'office' ? OFFICE_QUOTES : NIGHT_QUOTES;
     return pool[Math.floor(Math.random() * pool.length)];
   }, [gameMode]);
 
