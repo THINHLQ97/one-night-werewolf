@@ -39,6 +39,22 @@ const CARD_IMAGES = {
   exposer: '/images/character card/Exposer-0.webp',
   mortician: '/images/character card/Mortician-0.webp',
   blob: '/images/character card/Blob.webp',
+  // ─── Office ──────────────────────────────────────────────────────────────────
+  outsourcing:   '/images/One-night-office-character-card/outsourcing.webp',
+  snake:         '/images/One-night-office-character-card/snake-1.webp', // variant override via prop
+  toxic_manager: '/images/One-night-office-character-card/toxic-manager.webp',
+  stalker:       '/images/One-night-office-character-card/stalker.webp',
+  snoop:         '/images/One-night-office-character-card/snoop.webp',
+  dumper:        '/images/One-night-office-character-card/dumper.webp',
+  ishikoi:       '/images/One-night-office-character-card/ishikoi.webp',
+  netizen:       '/images/One-night-office-character-card/netizen.webp',
+  tracker:       '/images/One-night-office-character-card/tracker.webp',
+  spammer:       '/images/One-night-office-character-card/spammer.webp',
+  ceo:           '/images/One-night-office-character-card/ceo.webp',
+  poacher:       '/images/One-night-office-character-card/poacher.webp',
+  hr:            '/images/One-night-office-character-card/hr.webp',
+  paranoid:      '/images/One-night-office-character-card/paranoid.webp',
+  legal:         '/images/One-night-office-character-card/legal.webp',
 };
 
 export const CARD_BACK = '/images/Card-Back.webp';
@@ -50,8 +66,11 @@ export { CARD_IMAGES };
  * isDoppel: shows purple ring + 🎭 badge to indicate the original
  *           card was Doppelgänger that copied this role.
  */
-export default function RoleIcon({ roleId, size = 80, circular = false, className = '', isDoppel = false }) {
-  const src = CARD_IMAGES[roleId];
+export default function RoleIcon({ roleId, size = 80, circular = false, className = '', isDoppel = false, snakeArt = null }) {
+  // Office snake variant override
+  const src = roleId === 'snake' && (snakeArt === 'snake-1' || snakeArt === 'snake-2')
+    ? `/images/One-night-office-character-card/${snakeArt}.webp`
+    : CARD_IMAGES[roleId];
 
   // Purple ring shadow + saturated overlay for doppelganger
   const doppelShadow = '0 0 0 2px rgb(168, 85, 247), 0 0 12px rgba(168, 85, 247, 0.6)';

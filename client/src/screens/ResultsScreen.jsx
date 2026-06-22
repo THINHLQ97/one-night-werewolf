@@ -23,6 +23,11 @@ const ROLE_NAMES = {
   psychic: 'Psychic', mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
   // Alien phase names (used in night log)
   aliens: 'Alien', groob_zerb: 'Groob & Zerb',
+  // Office
+  outsourcing: 'Outsourcing', snake: 'Snake', toxic_manager: 'Toxic Manager',
+  stalker: 'Stalker', snoop: 'Snoop', ishikoi: 'Ishikoi', netizen: 'Netizen',
+  tracker: 'Tracker', spammer: 'Spammer', ceo: 'CEO', poacher: 'Poacher',
+  hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
 };
 
 const TEAM_OF = {
@@ -40,6 +45,12 @@ const TEAM_OF = {
   cow: 'village', oracle: 'village', rascal: 'village', exposer: 'village',
   psychic: 'village', leader: 'village',
   mortician: 'mortician', blob: 'blob',
+  // Office
+  snake: 'snake', toxic_manager: 'snake', stalker: 'snake', snoop: 'snake',
+  tracker: 'staff', spammer: 'staff', ceo: 'staff', poacher: 'staff',
+  hr: 'staff', dumper: 'staff', paranoid: 'staff', legal: 'staff',
+  ishikoi: 'ishikoi', netizen: 'ishikoi',
+  outsourcing: 'staff', // initial team — actually morphs based on copied role
 };
 
 const RESULT_SIGNS = {
@@ -50,6 +61,71 @@ const RESULT_SIGNS = {
   tanner_win: '/images/result sign/tanner-win.webp',
   tanner_lose: '/images/result sign/tanner-lose.webp',
 };
+
+// Office result signs: staff=office, snake=toxic, ishikoi=ishikoi
+const OFFICE_RESULT_SIGNS = {
+  staff_win: '/images/result sign-office/office-win.webp',
+  staff_lose: '/images/result sign-office/office-lose.webp',
+  snake_win: '/images/result sign-office/toxic-win.webp',
+  snake_lose: '/images/result sign-office/toxic-lose.webp',
+  ishikoi_win: '/images/result sign-office/ishikoi-win.webp',
+  ishikoi_lose: '/images/result sign-office/ishikoi-lose.webp',
+};
+
+// Office end-scene banner (2:1) per vote outcome
+const OFFICE_ENDSCENE = {
+  vote_snake:           '/images/endscene-office/vote-snake.webp',
+  vote_toxic_manager:   '/images/endscene-office/vote-toxic-manager.webp',
+  vote_stalker:         '/images/endscene-office/vote-stalker.webp',
+  vote_snoop:           '/images/endscene-office/vote-snoop.webp',
+  vote_ishikoi:         '/images/endscene-office/vote-ishikoi.webp',
+  vote_netizen:         '/images/endscene-office/vote-netizen.webp',
+  vote_netizen_no_ishikoi: '/images/endscene-office/vote-netizen-there-is-no-ishikoi.webp',
+  vote_tracker:         '/images/endscene-office/vote-tracker.webp',
+  vote_ceo:             '/images/endscene-office/vote-ceo.webp',
+  vote_poacher:         '/images/endscene-office/vote-poacher.webp',
+  vote_hr:              '/images/endscene-office/vote-HR-staff.webp',
+  vote_dumper:          '/images/endscene-office/vote-dumper.webp',
+  vote_paranoid:        '/images/endscene-office/vote-paranoid.webp',
+  vote_legal:           '/images/endscene-office/vote-legal.webp',
+  multi_vote:           '/images/endscene-office/vote-more-than-1.webp',
+};
+
+function getOfficeEndSceneKey(results, players) {
+  const { eliminated = [], initialEliminated = [], finalCards = {} } = results;
+  if (eliminated.length === 0) return null;
+  if (initialEliminated.length >= 2) return 'multi_vote';
+
+  const primary = initialEliminated[0] ?? eliminated[0];
+  const role = finalCards[primary];
+
+  // Snake group → all use vote-snake unless specific
+  if (role === 'snake') return 'vote_snake';
+  if (role === 'toxic_manager') return 'vote_toxic_manager';
+  if (role === 'stalker') return 'vote_stalker';
+  if (role === 'snoop') return 'vote_snoop';
+  if (role === 'ishikoi') return 'vote_ishikoi';
+  if (role === 'netizen') {
+    // Netizen voted, check if any ishikoi in game
+    const hasIshikoi = players.some(p => finalCards[p.id] === 'ishikoi');
+    return hasIshikoi ? 'vote_netizen' : 'vote_netizen_no_ishikoi';
+  }
+  if (role === 'tracker') return 'vote_tracker';
+  if (role === 'ceo') return 'vote_ceo';
+  if (role === 'poacher') return 'vote_poacher';
+  if (role === 'hr') return 'vote_hr';
+  if (role === 'dumper') return 'vote_dumper';
+  if (role === 'paranoid') return 'vote_paranoid';
+  if (role === 'legal') return 'vote_legal';
+  return null; // spammer / outsourcing — no specific scene
+}
+
+function getOfficeTeamOf(playerId, finalCards) {
+  const role = finalCards[playerId];
+  if (['snake', 'toxic_manager', 'stalker', 'snoop'].includes(role)) return 'snake';
+  if (['ishikoi', 'netizen'].includes(role)) return 'ishikoi';
+  return 'staff'; // staff + outsourcing default
+}
 
 const isWolfRole = r => ['werewolf', 'alphawolf', 'mysticwolf', 'dreamwolf'].includes(r);
 
@@ -584,6 +660,9 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
 
   // Detect alien mode via results.alienAppState
   const isAlienMode = !!results.alienAppState;
+  // Detect office mode by checking finalCards for office-specific roles
+  const OFFICE_ROLE_IDS = ['snake', 'toxic_manager', 'stalker', 'snoop', 'ishikoi', 'netizen', 'tracker', 'spammer', 'ceo', 'poacher', 'hr', 'dumper', 'paranoid', 'legal', 'outsourcing'];
+  const isOfficeMode = !isAlienMode && Object.values(finalCards).some(r => OFFICE_ROLE_IDS.includes(r));
 
   let sceneKey, sceneSrc, narration, sceneBg, signSrc;
 
@@ -598,6 +677,16 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
     const myTeam = getAlienTeamOf(myId, results);
     const suffix = (winners.length > 0 && isWinner) ? 'win' : 'lose';
     signSrc = ALIEN_RESULT_SIGNS[`${myTeam}_${suffix}`] || ALIEN_RESULT_SIGNS[`villager_${suffix}`];
+  } else if (isOfficeMode) {
+    // Office: no team-wide background scene. Endscene banner 2:1 per vote outcome.
+    sceneKey = getOfficeEndSceneKey(results, players);
+    sceneSrc = sceneKey ? OFFICE_ENDSCENE[sceneKey] : null;
+    narration = null;
+    sceneBg = null; // user said no team-bg for office
+
+    const myTeam = getOfficeTeamOf(myId, finalCards);
+    const suffix = (winners.length > 0 && isWinner) ? 'win' : 'lose';
+    signSrc = OFFICE_RESULT_SIGNS[`${myTeam}_${suffix}`];
   } else {
     sceneKey = getEndSceneKey(results, players);
     sceneSrc = sceneKey ? END_SCENE_IMAGES[sceneKey] : null;
@@ -641,6 +730,16 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
               className="mx-auto w-full max-w-[420px] drop-shadow-2xl animate-signBounce"
               draggable={false}
             />
+          ) : isOfficeMode ? (
+            <div className="py-6">
+              {winners.length === 0 ? (
+                <p className="text-2xl font-bold text-white/60">Không ai thắng</p>
+              ) : isWinner ? (
+                <p className="text-3xl font-bold text-rose-300 drop-shadow-lg">🏆 Bạn đã thắng!</p>
+              ) : (
+                <p className="text-3xl font-bold text-white/60">😞 Bạn đã thua</p>
+              )}
+            </div>
           ) : (
             <div className="py-6">
               <p className="text-2xl font-bold text-white/60">Không ai thắng</p>
@@ -1026,6 +1125,51 @@ function describeCopiedAction(copiedRole, action, result, playerMap, targetName,
       return 'nhìn đồng bọn Sói';
     case 'minion': return 'nhìn thấy các Sói';
     case 'mason': return 'nhìn Sinh Đôi';
+    // ── Office copies (when Outsourcing becomes one of these) ──
+    case 'toxic_manager': {
+      const name = targetName || playerMap[action.targetPlayer] || '?';
+      return action.targetPlayer ? `đẩy lá Rắn lên ${name}` : 'không hành động';
+    }
+    case 'stalker':
+      return result.seen ? `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}` : 'quan sát';
+    case 'snoop':
+      if (result.seen?.slots?.length) return `xem giữa: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+      return 'xem bài giữa';
+    case 'ceo':
+      if (result.seen?.type === 'player') return `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+      if (result.seen?.type === 'center') {
+        const slots = result.seen.slots || [];
+        return `xem giữa: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+      }
+      return 'quan sát';
+    case 'poacher': {
+      const name = targetName || playerMap[action.targetPlayer] || '?';
+      return action.targetPlayer ? `cướp bài ${name}${result.newRole ? ` → thành ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'không hành động';
+    }
+    case 'hr': {
+      const n1 = target1Name || playerMap[action.target1] || '?';
+      const n2 = target2Name || playerMap[action.target2] || '?';
+      return (action.target1 && action.target2) ? `hoán đổi ${n1} ↔ ${n2}` : 'không hành động';
+    }
+    case 'dumper':
+      if (result.step === 1 && result.seen) return `xem ${CENTER_LABEL[result.seen.slot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+      if (result.step === 2 && result.swapped) return `tráo bài giữa cho ${playerMap[result.targetPlayer] || targetName || '?'}`;
+      return 'đẩy việc';
+    case 'paranoid':
+      return result.currentRole ? `kiểm tra bài → ${ROLE_NAMES[result.currentRole] || '?'}` : 'kiểm tra bài';
+    case 'legal':
+      if (result.revealed && result.targetPlayer) return `lật bài ${playerMap[result.targetPlayer] || targetName || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
+      if (result.targetPlayer && !result.revealed) return `cố lật bài (Rắn/Ishikoi — ẩn)`;
+      return 'không hành động';
+    case 'spammer': {
+      const name = targetName || playerMap[action.targetPlayer] || '?';
+      return action.targetPlayer ? `ping ${name} (${result.side === 'left' ? 'từ TRÁI' : 'từ PHẢI'})` : 'không hành động';
+    }
+    case 'tracker':
+      return `có ${result.snakeNeighborCount ?? '?'} Rắn ngồi cạnh`;
+    case 'netizen':
+      if (result.ishikois?.length > 0) return `thấy Ishikoi: ${result.ishikois.map(i => i.name).join(', ')}`;
+      return 'không có Ishikoi trong game';
     default: return null;
   }
 }
@@ -1065,6 +1209,57 @@ function NightLogEntry({ entry, playerMap, results }) {
         <div className="flex-1 h-px bg-purple-500/30" />
         <span className="text-purple-400/70 text-[10px] font-semibold whitespace-nowrap">🔄 ĐÊM LẶP LẠI</span>
         <div className="flex-1 h-px bg-purple-500/30" />
+      </div>
+    );
+  }
+
+  // ── Outsourcing: same treatment as Doppelganger (step 1 = copy center, step 2 = act) ──
+  if (role === 'outsourcing') {
+    const copiedRole = result.copiedRole;
+    const isStep1 = result.copiedFromSlot;
+
+    if (copiedRole && isStep1) {
+      const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
+      const fromName = CENTER_LABEL[result.copiedFromSlot] || result.copiedFromSlot;
+      return (
+        <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg border ${autoExecuted ? 'bg-yellow-500/[0.06] border-yellow-500/20' : 'bg-rose-500/[0.06] border-rose-500/15'}`}>
+          <RoleIcon roleId="outsourcing" size={22} circular className="flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <span className="text-white/70 text-xs font-medium">{playerName}</span>
+            <span className="text-rose-400/60 text-xs"> (Outsourcing)</span>
+            {autoBadge}
+            <p className="text-rose-300/80 text-[11px] leading-tight">🤝 hóa thân thành <strong className="text-rose-200">{copiedName}</strong> (copy từ {fromName})</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (copiedRole) {
+      const copiedName = ROLE_NAMES[copiedRole] || copiedRole;
+      const desc = describeCopiedAction(copiedRole, action, result, playerMap, targetName, target1Name, target2Name);
+      if (desc) {
+        return (
+          <div className={`flex items-start gap-2 px-2 py-1.5 rounded-lg ${autoExecuted ? 'bg-yellow-500/[0.05] border border-yellow-500/15' : 'bg-rose-500/[0.04]'}`}>
+            <RoleIcon roleId={copiedRole} size={22} circular className="flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <span className="text-white/70 text-xs font-medium">{playerName}</span>
+              <span className="text-rose-400/50 text-xs"> (🤝→{copiedName})</span>
+              {autoBadge}
+              <p className="text-white/50 text-[11px] leading-tight">{desc}</p>
+            </div>
+          </div>
+        );
+      }
+    }
+    // Fallback for outsourcing
+    return (
+      <div className="flex items-start gap-2 px-2 py-1.5 rounded-lg bg-rose-500/[0.04]">
+        <RoleIcon roleId="outsourcing" size={22} circular className="flex-shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <span className="text-white/70 text-xs font-medium">{playerName}</span>
+          <span className="text-rose-400/60 text-xs"> (Outsourcing)</span>
+          <p className="text-white/50 text-[11px] leading-tight">thức dậy</p>
+        </div>
       </div>
     );
   }
@@ -1240,6 +1435,64 @@ function NightLogEntry({ entry, playerMap, results }) {
         }
         return 'xem thành viên Blob';
       }
+      // ── Office roles ──
+      case 'snake': return 'nhìn thấy đồng bọn Rắn';
+      case 'toxic_manager': {
+        const name = targetName || playerMap[action.targetPlayer] || '?';
+        return action.targetPlayer ? `đẩy lá Rắn lên ${name}` : 'không hành động';
+      }
+      case 'stalker':
+        if (result.seen) return `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        return 'không hành động';
+      case 'snoop':
+        if (result.seen?.slots?.length) return `xem giữa: ${result.seen.slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+        return 'xem bài giữa';
+      case 'netizen':
+        if (result.ishikois?.length > 0) return `thấy Ishikoi: ${result.ishikois.map(i => i.name).join(', ')}`;
+        return 'không có Ishikoi trong game';
+      case 'tracker':
+        return `có ${result.snakeNeighborCount ?? '?'} Rắn ngồi cạnh`;
+      case 'spammer': {
+        const name = targetName || playerMap[action.targetPlayer] || '?';
+        return action.targetPlayer ? `ping ${name} (${result.side === 'left' ? 'từ TRÁI' : 'từ PHẢI'})` : 'không hành động';
+      }
+      case 'ceo':
+        if (result.seen?.type === 'player') return `xem bài ${playerMap[result.seen.id] || targetName || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        if (result.seen?.type === 'center') {
+          const slots = result.seen.slots || [];
+          return `xem giữa: ${slots.map(s => `${CENTER_LABEL[s.slot] || s.slot} = ${ROLE_NAMES[s.role] || '?'}`).join(', ')}`;
+        }
+        return 'quan sát';
+      case 'poacher': {
+        const name = targetName || playerMap[action.targetPlayer] || '?';
+        return action.targetPlayer ? `cướp bài ${name}${result.newRole ? ` → thành ${ROLE_NAMES[result.newRole] || '?'}` : ''}` : 'không hành động';
+      }
+      case 'hr': {
+        const n1 = target1Name || playerMap[action.target1] || '?';
+        const n2 = target2Name || playerMap[action.target2] || '?';
+        return (action.target1 && action.target2) ? `hoán đổi ${n1} ↔ ${n2}` : 'không hành động';
+      }
+      case 'dumper': {
+        if (result.step === 1 && result.seen) {
+          return `xem ${CENTER_LABEL[result.seen.slot] || '?'} → ${ROLE_NAMES[result.seen.role] || '?'}`;
+        }
+        if (result.step === 2 && result.swapped) {
+          const tname = playerMap[result.targetPlayer] || targetName || '?';
+          return `tráo bài giữa cho ${tname}`;
+        }
+        return 'đẩy việc';
+      }
+      case 'paranoid':
+        return result.currentRole ? `bài hiện tại: ${ROLE_NAMES[result.currentRole] || '?'}` : 'kiểm tra bài';
+      case 'legal':
+        if (result.revealed && result.targetPlayer) return `lật bài ${playerMap[result.targetPlayer] || targetName || '?'} → ${ROLE_NAMES[result.role] || '?'}`;
+        if (result.targetPlayer && !result.revealed) return `cố lật bài (Rắn/Ishikoi — ẩn)`;
+        return 'không hành động';
+      case 'outsourcing':
+        if (result.copiedRole && result.copiedFromSlot) {
+          return `copy từ ${CENTER_LABEL[result.copiedFromSlot] || result.copiedFromSlot} → ${ROLE_NAMES[result.copiedRole] || '?'}`;
+        }
+        return 'chọn vai từ bài giữa';
       default: return 'thức dậy';
     }
   }

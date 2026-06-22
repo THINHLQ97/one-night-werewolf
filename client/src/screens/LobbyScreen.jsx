@@ -51,11 +51,29 @@ const ALIEN_ROLES = [
   { id: 'blob',     name: 'Blob',     emoji: '🟢', team: 'blob',      max: 1, expansion: 'alien' },
 ];
 
-const ALL_ROLES = [...WEREWOLF_ROLES, ...ALIEN_ROLES];
+const OFFICE_ROLES = [
+  { id: 'outsourcing',   name: 'Outsourcing',    emoji: '🤝', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'snake',         name: 'Snake',          emoji: '🐍', team: 'snake',   max: 2, expansion: 'office' },
+  { id: 'toxic_manager', name: 'Toxic Manager',  emoji: '😤', team: 'snake',   max: 1, expansion: 'office' },
+  { id: 'stalker',       name: 'Stalker',        emoji: '👀', team: 'snake',   max: 1, expansion: 'office' },
+  { id: 'snoop',         name: 'Snoop',          emoji: '🔍', team: 'snake',   max: 1, expansion: 'office' },
+  { id: 'ishikoi',       name: 'Ishikoi',        emoji: '🐟', team: 'ishikoi', max: 1, expansion: 'office' },
+  { id: 'netizen',       name: 'Netizen',        emoji: '📣', team: 'ishikoi', max: 1, expansion: 'office' },
+  { id: 'tracker',       name: 'Tracker',        emoji: '🕒', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'spammer',       name: 'Spammer',        emoji: '📨', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'ceo',           name: 'CEO',            emoji: '👔', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'poacher',       name: 'Poacher',        emoji: '💼', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'hr',            name: 'HR',             emoji: '📋', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'dumper',        name: 'Dumper',         emoji: '📦', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'paranoid',      name: 'Paranoid',       emoji: '😰', team: 'staff',   max: 1, expansion: 'office' },
+  { id: 'legal',         name: 'Legal',          emoji: '⚖️', team: 'staff',   max: 1, expansion: 'office' },
+];
 
-const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400', alien: 'text-emerald-400', synthetic: 'text-cyan-400', mortician: 'text-amber-400', blob: 'text-lime-400' };
-const TEAM_LABEL = { werewolf: 'Phe Sói', village: 'Phe Dân', tanner: 'Phe Riêng', alien: 'Phe Alien', synthetic: 'Phe Riêng', mortician: 'Phe Riêng', blob: 'Phe Blob' };
-const TEAM_BG = { werewolf: 'bg-wolf-500/10 border-wolf-500/30', village: 'bg-village-400/10 border-village-400/30', tanner: 'bg-purple-500/10 border-purple-500/30', alien: 'bg-emerald-500/10 border-emerald-500/30', synthetic: 'bg-cyan-500/10 border-cyan-500/30', mortician: 'bg-amber-500/10 border-amber-500/30', blob: 'bg-lime-500/10 border-lime-500/30' };
+const ALL_ROLES = [...WEREWOLF_ROLES, ...ALIEN_ROLES, ...OFFICE_ROLES];
+
+const TEAM_COLOR = { werewolf: 'text-wolf-400', village: 'text-village-400', tanner: 'text-purple-400', alien: 'text-emerald-400', synthetic: 'text-cyan-400', mortician: 'text-amber-400', blob: 'text-lime-400', snake: 'text-rose-400', staff: 'text-sky-400', ishikoi: 'text-amber-300' };
+const TEAM_LABEL = { werewolf: 'Phe Sói', village: 'Phe Dân', tanner: 'Phe Riêng', alien: 'Phe Alien', synthetic: 'Phe Riêng', mortician: 'Phe Riêng', blob: 'Phe Blob', snake: 'Phe Rắn', staff: 'Phe Nhân Viên', ishikoi: 'Phe Ishikoi' };
+const TEAM_BG = { werewolf: 'bg-wolf-500/10 border-wolf-500/30', village: 'bg-village-400/10 border-village-400/30', tanner: 'bg-purple-500/10 border-purple-500/30', alien: 'bg-emerald-500/10 border-emerald-500/30', synthetic: 'bg-cyan-500/10 border-cyan-500/30', mortician: 'bg-amber-500/10 border-amber-500/30', blob: 'bg-lime-500/10 border-lime-500/30', snake: 'bg-rose-500/10 border-rose-500/30', staff: 'bg-sky-500/10 border-sky-500/30', ishikoi: 'bg-amber-400/10 border-amber-400/30' };
 
 const ROLE_DETAILS = {
   doppelganger: {
@@ -254,12 +272,15 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
   const [newName, setNewName] = useState('');
 
   const isAlienMode = gameModeFromProps === 'alien' || settings.gameMode === 'alien';
-  const gameMode = isAlienMode ? 'alien' : (settings.gameMode || 'base');
+  const isOfficeMode = gameModeFromProps === 'office' || settings.gameMode === 'office';
+  const gameMode = isAlienMode ? 'alien' : isOfficeMode ? 'office' : (settings.gameMode || 'base');
   const selected = settings.selectedRoles || [];
   const needed = players.length + 3;
   const filteredRoles = isAlienMode
     ? ALIEN_ROLES
-    : WEREWOLF_ROLES.filter(r => gameMode === 'combined' || r.expansion === gameMode);
+    : isOfficeMode
+      ? OFFICE_ROLES
+      : WEREWOLF_ROLES.filter(r => gameMode === 'combined' || r.expansion === gameMode);
 
   function countRole(id) {
     return selected.filter(r => r === id).length;
@@ -414,8 +435,8 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
           </span>
         </div>
 
-        {/* Mode selector — hidden in alien mode (alien has no sub-modes) */}
-        {!isAlienMode && (
+        {/* Mode selector — hidden in alien/office mode (they have no sub-modes) */}
+        {!isAlienMode && !isOfficeMode && (
           <div className="flex gap-2 mb-3">
             {[
               { mode: 'base', label: '🎯 Cơ bản' },

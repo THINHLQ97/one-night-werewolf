@@ -377,6 +377,127 @@ const ROLES = [
     nightScript: 'Tiếng vọng: "Blob, mở mắt. Những người sau thuộc Blob: [danh sách]." Blob ghi nhớ. "Nhắm mắt."',
     howToPlay: 'Ban đêm: Tiếng vọng thông báo ai thuộc Blob (bạn + 1-2 người ngồi cạnh, ngẫu nhiên).\n\n📋 ĐIỀU KIỆN THẮNG:\n• TẤT CẢ thành viên Blob (bao gồm bạn) phải SỐNG SÓT\n• Thắng ĐỘC LẬP với các phe khác\n• Nếu bất kỳ ai trong Blob bị giết → bạn thua\n\nBan ngày: Bảo vệ thành viên Blob.\n💡 Mọi người biết Tiếng vọng nói "Blob, xem ai thuộc Blob" → họ biết Blob tồn tại nhưng không biết ai.',
   },
+  // ─── OFFICE EXPANSION ────────────────────────────────────────────────────
+  {
+    id: 'outsourcing', name: 'Outsourcing', nameVi: 'Nhân Viên Thời Vụ', emoji: '🤝',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 0, expansion: 'office',
+    lore: 'Freelancer ngắn hạn, giao việc gì làm việc nấy, không có chính kiến cố định nhưng biết cách nương theo thời cuộc để sinh tồn.',
+    nightAction: 'Thức dậy ĐẦU TIÊN. Bắt buộc xem 1 bài giữa và trở thành vai đó. Thực hiện hành động của vai mới (nếu có) ngay.',
+    winCondition: 'Thắng theo phe của vai đã copy. Vai mới quyết định tất cả.',
+    tips: 'Vai linh hoạt nhất! Nhớ kỹ vai mình copy — vì cả game bạn sẽ chơi như vai đó.',
+  },
+  {
+    id: 'snake', name: 'Snake', nameVi: 'Rắn Văn Phòng', emoji: '🐍',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1, expansion: 'office',
+    lore: 'Hội "bà tám" chuyên hùa theo sếp toxic, đi làm chỉ để lan truyền năng lượng tiêu cực và chia rẽ nội bộ.',
+    nightAction: 'Thức dậy cùng dàn Rắn để biết mặt đồng bọn. Không có hành động đặc biệt.',
+    winCondition: 'Thắng nếu không có Rắn nào bị sa thải (và Ishikoi không bị vote).',
+    tips: 'Phối hợp với đồng đội. Đổ lỗi cho Nhân Viên, nghi vấn lẫn nhau để tạo nhiễu.',
+  },
+  {
+    id: 'toxic_manager', name: 'Toxic Manager', nameVi: 'Trưởng Phòng Toxic', emoji: '😤',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.1, expansion: 'office',
+    lore: 'Kẻ chuyên "gài bẫy" dắt mũi cấp dưới, biến người vô tội thành tấm khiên đỡ đạn cho sai phạm của mình.',
+    nightAction: 'Thức dậy cùng Rắn. Đặt lá Rắn bổ sung lên 1 người không phải Rắn (đẩy bài cũ vào giữa). Người đó biến thành Phe Rắn.',
+    winCondition: 'Thắng cùng Phe Rắn.',
+    tips: 'Biến mục tiêu khó nghi ngờ thành Rắn để gây nhiễu, hoặc đẩy bài Rắn lên người tin cậy để gài bẫy.',
+  },
+  {
+    id: 'stalker', name: 'Stalker', nameVi: 'Kẻ Rình Rập', emoji: '👀',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.2, expansion: 'office',
+    lore: 'Thánh hóng hớt, chuyên đi ngang liếc màn hình chat Slack/Zalo của đồng nghiệp để đi mách lẻo với sếp.',
+    nightAction: 'Thức dậy cùng Rắn. Xem bài của 1 người khác.',
+    winCondition: 'Thắng cùng Phe Rắn.',
+    tips: 'Dùng thông tin để gài bẫy hoặc dẫn dắt nghi ngờ sang người khác.',
+  },
+  {
+    id: 'snoop', name: 'Snoop', nameVi: 'Kẻ Nhòm Ngó', emoji: '🔍',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.3, expansion: 'office',
+    lore: 'Kẻ chuyên đi lục lọi các thư mục nháp, dự án lưu trữ hoặc tài liệu chưa công bố trên Driver của công ty để xem ban lãnh đạo đang bỏ trống vị trí nào, từ đó biết đường phối hợp với phe Rắn để thao túng thông tin.',
+    nightAction: 'Thức dậy cùng Rắn. Xem bí mật 1 trong 3 lá bài ở giữa bàn.',
+    winCondition: 'Thắng cùng Phe Rắn.',
+    tips: 'Biết vai trong giữa giúp bạn loại trừ — và có thể fake claim vai đó nếu bị nghi.',
+  },
+  {
+    id: 'ishikoi', name: 'Ishikoi', nameVi: 'Ishikoi.vn', emoji: '🐟',
+    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: null, expansion: 'office',
+    lore: 'Case đòi bồi thường chấn động! Cố tình gom bằng chứng sai luật của công ty để ôm trọn gói đền bù béo bở.',
+    nightAction: 'Không thức dậy ban đêm. Chỉ ngồi yên chờ "tai nạn" xảy ra.',
+    winCondition: 'Thắng nếu bạn bị vote sa thải.\n• Không có Rắn bị sa thải → Thắng ĐỘC QUYỀN (Rắn & Nhân Viên đều thua).\n• Có Rắn bị sa thải → Thắng cùng Netizen (Nhân Viên thua).',
+    tips: 'Hành xử đáng ngờ để được vote, nhưng đừng lộ liễu. Netizen sẽ phối hợp đẩy nghi vấn sang bạn.',
+  },
+  {
+    id: 'netizen', name: 'Netizen', nameVi: 'Cộng Đồng Mạng', emoji: '📣',
+    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: 2, expansion: 'office',
+    lore: 'Thế lực hậu thuẫn, sẵn sàng tràn vào fanpage thả phẫn nộ, viết bài bóc phốt để tạo áp lực truyền thông giúp Ishikoi đòi tiền.',
+    nightAction: 'Mở mắt — App sẽ chỉ rõ ai là Ishikoi.',
+    winCondition: 'Thắng nếu Ishikoi bị vote sa thải.\nNếu KHÔNG có Ishikoi trong game → Netizen tự gánh điều kiện thắng y hệt Ishikoi (bị vote = thắng).',
+    tips: 'Phối hợp dồn vote vào Ishikoi. Đừng để bản thân bị vote nếu Ishikoi vẫn còn sống — Rắn sẽ thắng.',
+  },
+  {
+    id: 'tracker', name: 'Tracker', nameVi: 'Máy Chấm Công', emoji: '🕒',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 3, expansion: 'office',
+    lore: 'Cỗ máy "thao túng tâm lý" tối cao, nỗi ám ảnh kinh hoàng của những kẻ chuyên đi muộn về sớm.',
+    nightAction: 'Thức dậy và biết có 0, 1, hay 2 Rắn đang ngồi cạnh bạn (không biết hướng cụ thể).',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Đếm số Rắn ngồi cạnh giúp khoanh vùng. Nhưng cẩn thận: bài có thể bị tráo trong đêm.',
+  },
+  {
+    id: 'spammer', name: 'Spammer', nameVi: 'Đồng Nghiệp Kém Duyên', emoji: '📨',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 4, expansion: 'office',
+    lore: 'Nhân tố chuyên spam tin nhắn hoặc sang tận bàn "Ping" liên tục bắt trả lời, bất kể người khác đang bận.',
+    nightAction: 'Chọn 1 trong 2 hàng xóm để "làm phiền". Người đó biết có Spammer ở bên trái/phải mình (nhưng không thấy lá bài).',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Có thể "ping" 1 người đáng ngờ để vạch trần — hoặc bảo vệ đồng đội bằng cách ping người trung lập.',
+  },
+  {
+    id: 'ceo', name: 'CEO', nameVi: 'CEO Duy Ca', emoji: '👔',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 5, expansion: 'office',
+    lore: 'Vị sếp tối cao của công ty, "vi hành" xuyên màn đêm để đánh giá chính xác các mối quan hệ ngầm của nhân sự.',
+    nightAction: 'Xem bài 1 người HOẶC 2 trong 3 lá bài ở giữa.',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Chia sẻ thông tin cẩn thận. Rắn có thể fake claim CEO để gây nhiễu.',
+  },
+  {
+    id: 'poacher', name: 'Poacher', nameVi: 'Kẻ Trộm KPI', emoji: '💼',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 6, expansion: 'office',
+    lore: 'Chiến thần nhảy việc, chuyên lựa lúc dự án sắp thành công để nhảy vào cướp công rồi chuồn lẹ sang bộ phận khác.',
+    nightAction: 'Hoán đổi bài của bạn với 1 người khác và xem bài mới. Bạn chuyển ngay sang phe của bài đó.',
+    winCondition: 'Thắng theo phe của bài MỚI. Lấy được Rắn → bạn là Rắn.',
+    tips: 'Nếu lấy được Nhân Viên, công khai vai. Nếu lấy Rắn... im lặng và đánh lạc hướng.',
+  },
+  {
+    id: 'hr', name: 'HR', nameVi: 'Chuyên Viên Nhân Sự', emoji: '📋',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 7, expansion: 'office',
+    lore: 'Người nắm giữ sơ đồ tổ chức, thích thuyên chuyển, xáo trộn vị trí các phòng ban theo "chỉ thị của vũ trụ".',
+    nightAction: 'Hoán đổi bài của 2 người khác (không xem nội dung).',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Khai báo bạn đã đổi ai. Điều này giúp xác định ai đang nắm bài gì.',
+  },
+  {
+    id: 'dumper', name: 'Dumper', nameVi: 'Kẻ Đẩy Việc', emoji: '📦',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 7.5, expansion: 'office',
+    lore: 'Chuyên gia né việc cấp cao. Chuyên lén lút lục lọi đống hồ sơ tồn đọng, rút ra một cái rồi âm thầm "bàn giao đột xuất" (úp bô) sang cho một đồng nghiệp khác gánh hộ để bản thân rảnh tay ngồi chơi.',
+    nightAction: 'Xem 1 bài ở giữa, rồi BẮT BUỘC tráo lá đó với bài của 1 người bất kỳ (kể cả mình). Lá người đó đẩy vào giữa — Dumper không xem được.',
+    winCondition: 'Thuộc Phe Nhân Viên (mặc định). Nếu tự đổi bài chính mình ra giữa → Dumper ăn điểm theo phe của lá bài mới (vai mới mình đang giữ).',
+    tips: 'Nếu thấy bài giữa là Rắn/Ishikoi → "úp bô" cho người đáng ngờ. Nếu thấy bài tốt → có thể dump lên chính mình để chuyển phe lén lút.',
+  },
+  {
+    id: 'paranoid', name: 'Paranoid', nameVi: 'Kẻ Lo Âu', emoji: '😰',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 8, expansion: 'office',
+    lore: 'Nhân viên bị khủng hoảng hiện sinh, cả ngày đi làm chỉ sợ mình bị điều chuyển hoặc bị cho "bay màu" bất ngờ.',
+    nightAction: 'Thức dậy gần cuối. Xem bài hiện tại của chính mình.',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Nếu bài bạn bị đổi, ai đó đã lấy vai cũ của bạn — hãy tìm ra ai.',
+  },
+  {
+    id: 'legal', name: 'Legal', nameVi: 'Chuyên Viên Pháp Chế', emoji: '⚖️',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 9, expansion: 'office',
+    lore: 'Thanh tra nội bộ, luôn thượng tôn pháp luật, sẵn sàng lật tẩy mọi hành vi gian lận ngầm của các nhóm lợi ích.',
+    nightAction: 'Lật ngửa 1 bài người khác. Nếu là Rắn hoặc Ishikoi → úp lại (chỉ bạn biết). Nếu là Nhân Viên → công khai cho cả phòng thấy.',
+    winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
+    tips: 'Vai mạnh ở cuối đêm — nhưng bị lộ vì khi lật được công khai thì cả phòng biết bạn là Legal.',
+  },
 ];
 
 const TEAM_COLOR = {
@@ -387,6 +508,9 @@ const TEAM_COLOR = {
   synthetic: { bg: 'bg-cyan-500/20 border-cyan-500/40', text: 'text-cyan-400', badge: 'bg-cyan-500/30 text-cyan-300' },
   mortician: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-400', badge: 'bg-amber-500/30 text-amber-300' },
   blob: { bg: 'bg-lime-500/20 border-lime-500/40', text: 'text-lime-400', badge: 'bg-lime-500/30 text-lime-300' },
+  snake: { bg: 'bg-rose-500/20 border-rose-500/40', text: 'text-rose-400', badge: 'bg-rose-500/30 text-rose-300' },
+  staff: { bg: 'bg-sky-500/20 border-sky-500/40', text: 'text-sky-400', badge: 'bg-sky-500/30 text-sky-300' },
+  ishikoi: { bg: 'bg-amber-400/20 border-amber-400/40', text: 'text-amber-300', badge: 'bg-amber-400/30 text-amber-200' },
 };
 
 export default function RoleLibrary({ isOpen, onClose, highlightRole = null, gameMode = null }) {
@@ -397,20 +521,23 @@ export default function RoleLibrary({ isOpen, onClose, highlightRole = null, gam
   // Filter roles by game mode
   const filteredRoles = gameMode === 'alien'
     ? ROLES.filter(r => r.expansion === 'alien')
-    : gameMode === 'werewolf' || gameMode === 'base' || gameMode === 'daybreak' || gameMode === 'combined'
-      ? ROLES.filter(r => r.expansion === 'base' || r.expansion === 'daybreak')
-      : ROLES; // no filter — show all
+    : gameMode === 'office'
+      ? ROLES.filter(r => r.expansion === 'office')
+      : gameMode === 'werewolf' || gameMode === 'base' || gameMode === 'daybreak' || gameMode === 'combined'
+        ? ROLES.filter(r => r.expansion === 'base' || r.expansion === 'daybreak')
+        : ROLES; // no filter — show all
 
   const role = filteredRoles.find(r => r.id === selectedRole) || ROLES.find(r => r.id === selectedRole);
 
   const isAlien = gameMode === 'alien';
+  const isOffice = gameMode === 'office';
 
   return (
     <div className="fixed inset-0 bg-black/90 z-40 flex flex-col fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className={`${isAlien ? 'text-emerald-300' : 'text-moon-300'} font-bold text-lg flex items-center gap-2`}>
-          <Icon name="book" size={20} /> {isAlien ? 'Thư viện nhân vật Alien' : 'Thư viện nhân vật'}
+        <h2 className={`${isAlien ? 'text-emerald-300' : isOffice ? 'text-rose-300' : 'text-moon-300'} font-bold text-lg flex items-center gap-2`}>
+          <Icon name="book" size={20} /> {isAlien ? 'Thư viện nhân vật Alien' : isOffice ? 'Thư viện nhân vật Office' : 'Thư viện nhân vật'}
         </h2>
         <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20">
           ✕
@@ -435,6 +562,9 @@ function RoleList({ roles, onSelect, isAlienMode = false }) {
     { key: 'synthetic', label: '🤖 Phe Riêng (Synthetic)' },
     { key: 'mortician', label: '⚰️ Phe Riêng (Nhà Quàn)' },
     { key: 'blob', label: '🟢 Phe Blob' },
+    { key: 'snake', label: '🐍 Phe Rắn (Toxic)' },
+    { key: 'staff', label: '💼 Phe Nhân Viên' },
+    { key: 'ishikoi', label: '🐟 Phe Ishikoi' },
   ];
   // Only show teams that have roles in the list
   const teams = allTeams.filter(t => roles.some(r => r.team === t.key));
@@ -565,27 +695,42 @@ function RoleDetail({ role, onBack }) {
         </div>
       )}
 
-      {/* Night script */}
-      <Section icon="🌙" title="Kịch bản ban đêm" color="text-moon-400">
-        <p className="text-white/60 text-sm italic leading-relaxed">{role.nightScript}</p>
-      </Section>
+      {/* Night action (always shown) */}
+      {role.nightAction && (
+        <Section icon="🌙" title="Hành động ban đêm" color="text-moon-400">
+          <p className="text-white/60 text-sm leading-relaxed">{role.nightAction}</p>
+        </Section>
+      )}
 
-      {/* How to play */}
-      <Section icon="🎮" title="Cách chơi chi tiết" color="text-village-400">
-        {role.howToPlay.split('\n').map((line, i) => (
-          <p key={i} className={`text-sm leading-relaxed ${line.startsWith('⚠️') ? 'text-wolf-400 font-semibold' : 'text-white/60'}`}>{line}</p>
-        ))}
-      </Section>
+      {/* Night script (Werewolf/Alien only) */}
+      {role.nightScript && (
+        <Section icon="🎬" title="Kịch bản ban đêm" color="text-moon-400">
+          <p className="text-white/60 text-sm italic leading-relaxed">{role.nightScript}</p>
+        </Section>
+      )}
+
+      {/* How to play (Werewolf/Alien only) */}
+      {role.howToPlay && (
+        <Section icon="🎮" title="Cách chơi chi tiết" color="text-village-400">
+          {role.howToPlay.split('\n').map((line, i) => (
+            <p key={i} className={`text-sm leading-relaxed ${line.startsWith('⚠️') ? 'text-wolf-400 font-semibold' : 'text-white/60'}`}>{line}</p>
+          ))}
+        </Section>
+      )}
 
       {/* Win condition */}
-      <Section icon="🏆" title="Điều kiện thắng" color="text-yellow-400">
-        <p className="text-white/70 text-sm font-medium">{role.winCondition}</p>
-      </Section>
+      {role.winCondition && (
+        <Section icon="🏆" title="Điều kiện thắng" color="text-yellow-400">
+          <p className="text-white/70 text-sm font-medium leading-relaxed whitespace-pre-line">{role.winCondition}</p>
+        </Section>
+      )}
 
       {/* Tips */}
-      <Section icon="💡" title="Mẹo chơi" color="text-purple-400">
-        <p className="text-white/60 text-sm leading-relaxed">{role.tips}</p>
-      </Section>
+      {role.tips && (
+        <Section icon="💡" title="Mẹo chơi" color="text-purple-400">
+          <p className="text-white/60 text-sm leading-relaxed">{role.tips}</p>
+        </Section>
+      )}
     </div>
   );
 }

@@ -31,6 +31,14 @@ const ALIEN_QUOTES = [
   { en: 'In space, no one can hear you scream.', author: 'Alien (1979)', vi: 'Ngoài không gian, không ai nghe thấy tiếng bạn la hét.' },
 ];
 
+const OFFICE_QUOTES = [
+  { en: 'The toxic snake hides in every meeting room.', author: 'Office Folklore', vi: 'Con rắn toxic ẩn trong mọi phòng họp.' },
+  { en: "Behind every layoff, there's a story no one tells.", author: 'HR Anonymous', vi: 'Sau mỗi đợt sa thải là một câu chuyện không ai kể.' },
+  { en: 'Trust is a process. Betrayal is a single email.', author: 'Office Folklore', vi: 'Niềm tin là cả một quá trình. Phản bội chỉ cần một cái email.' },
+  { en: 'The KPI you stole today will haunt you tomorrow.', author: 'Office Folklore', vi: 'KPI bạn cướp hôm nay sẽ ám bạn ngày mai.' },
+  { en: "If you can't find the snake, you might be sitting next to it.", author: 'Office Folklore', vi: 'Nếu chưa thấy con rắn, có lẽ bạn đang ngồi cạnh nó.' },
+];
+
 function generateName() {
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
@@ -66,7 +74,7 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
   }, [mode, isLoggedIn]);
 
   const displayName = isLoggedIn ? user.displayName : name.trim();
-  const quotes = gameMode === 'alien' ? ALIEN_QUOTES : WEREWOLF_QUOTES;
+  const quotes = gameMode === 'alien' ? ALIEN_QUOTES : gameMode === 'office' ? OFFICE_QUOTES : WEREWOLF_QUOTES;
   const quote = useMemo(() => quotes[Math.floor(Math.random() * quotes.length)], [gameMode]);
 
   function handleCreate(e) {
@@ -117,8 +125,9 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
     setLoading(true);
     try {
       await loginAsGuest(name.trim());
-    } catch {
-      setError('Không thể đăng nhập');
+    } catch (err) {
+      console.error('[guest-login]', err);
+      setError(`Không thể đăng nhập: ${err?.message || err}`);
     }
     setLoading(false);
   }
@@ -143,11 +152,11 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
       <TabWarpTransition gameMode={gameMode} />
 
       {/* Game mode tabs */}
-      <div className="flex items-center justify-center gap-3 mb-4 relative z-10">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 relative z-10">
         <button
           onClick={() => gameMode !== 'werewolf' && onGameModeChange?.('werewolf')}
-          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
-            gameMode !== 'alien'
+          className={`px-4 sm:px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
+            gameMode === 'werewolf' || (gameMode !== 'alien' && gameMode !== 'office')
               ? 'bg-moon-400/20 border-moon-400/50 text-moon-300 shadow-[0_0_12px_rgba(196,168,107,0.2)]'
               : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:scale-105'
           }`}
@@ -156,13 +165,23 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
         </button>
         <button
           onClick={() => gameMode !== 'alien' && onGameModeChange?.('alien')}
-          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
+          className={`px-4 sm:px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
             gameMode === 'alien'
               ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
               : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:scale-105'
           }`}
         >
           Alien
+        </button>
+        <button
+          onClick={() => gameMode !== 'office' && onGameModeChange?.('office')}
+          className={`px-4 sm:px-5 py-2 rounded-xl text-sm font-semibold transition-all border active:scale-95 ${
+            gameMode === 'office'
+              ? 'bg-rose-500/20 border-rose-400/50 text-rose-300 shadow-[0_0_12px_rgba(244,114,182,0.2)]'
+              : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:scale-105'
+          }`}
+        >
+          Office
         </button>
       </div>
 
@@ -173,19 +192,21 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
         style={{ animation: 'modeContentFadeIn 0.9s ease-out' }}
       >
         <img
-          src={gameMode === 'alien' ? '/images/logo-game-alien.png' : '/images/logo-game.png'}
-          alt={gameMode === 'alien' ? 'One Night Ultimate Alien' : 'One Night Ultimate Werewolf'}
+          src={gameMode === 'alien' ? '/images/logo-game-alien.png' : gameMode === 'office' ? '/images/logo-one-night-office.png' : '/images/logo-game.png'}
+          alt={gameMode === 'alien' ? 'One Night Ultimate Alien' : gameMode === 'office' ? 'One Night Office' : 'One Night Ultimate Werewolf'}
           className={`w-36 h-36 sm:w-44 sm:h-44 mx-auto mb-3 ${
             gameMode === 'alien'
               ? 'drop-shadow-[0_0_24px_rgba(52,211,153,0.4)]'
-              : 'drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]'
+              : gameMode === 'office'
+                ? 'drop-shadow-[0_0_24px_rgba(244,114,182,0.4)]'
+                : 'drop-shadow-[0_0_24px_rgba(196,168,107,0.3)]'
           }`}
           style={{ animation: 'modeLogoFloat 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
           draggable={false}
         />
         <div className="max-w-xs mx-auto">
           <p className="text-white/30 text-xs italic leading-relaxed">"{quote.en}"</p>
-          <p className={`${gameMode === 'alien' ? 'text-emerald-400/50' : 'text-moon-400/50'} text-[11px] italic mt-0.5`}>{quote.vi}</p>
+          <p className={`${gameMode === 'alien' ? 'text-emerald-400/50' : gameMode === 'office' ? 'text-rose-400/50' : 'text-moon-400/50'} text-[11px] italic mt-0.5`}>{quote.vi}</p>
           <p className="text-white/20 text-[10px] mt-1">— {quote.author}</p>
         </div>
       </div>

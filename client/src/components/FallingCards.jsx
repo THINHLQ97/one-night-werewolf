@@ -14,6 +14,13 @@ const ALIEN_CARD_ROLES = [
   'leader', 'blob',
 ];
 
+const OFFICE_CARD_ROLES = [
+  'toxic_manager', 'snake', 'stalker', 'snoop',
+  'ishikoi', 'netizen', 'outsourcing',
+  'tracker', 'spammer', 'ceo', 'poacher', 'hr',
+  'dumper', 'paranoid', 'legal',
+];
+
 function seededRandom(seed) {
   let s = seed;
   return () => {
@@ -23,10 +30,15 @@ function seededRandom(seed) {
 }
 
 export default function FallingCards({ count = 12, gameMode = 'werewolf' }) {
-  const CARD_ROLES = gameMode === 'alien' ? ALIEN_CARD_ROLES : WEREWOLF_ROLES;
+  const CARD_ROLES = gameMode === 'alien'
+    ? ALIEN_CARD_ROLES
+    : gameMode === 'office'
+      ? OFFICE_CARD_ROLES
+      : WEREWOLF_ROLES;
 
   const cards = useMemo(() => {
-    const rand = seededRandom(gameMode === 'alien' ? 77 : 42);
+    const seed = gameMode === 'alien' ? 77 : gameMode === 'office' ? 113 : 42;
+    const rand = seededRandom(seed);
     return Array.from({ length: count }, (_, i) => {
       const role = CARD_ROLES[i % CARD_ROLES.length];
       return {

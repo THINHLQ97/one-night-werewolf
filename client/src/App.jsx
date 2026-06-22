@@ -47,6 +47,7 @@ export default function App() {
     myCurrentRole: null,
     shieldedPlayer: null,
     doppelgangerCopiedRole: null,
+    outsourcingCopiedRole: null,
     auraTouched: [],
     auraSeen: false,
   });
@@ -61,6 +62,8 @@ export default function App() {
   const [rippleEvent, setRippleEvent] = useState(null); // { action } from ripple_event
   const [rippleAction, setRippleAction] = useState(null); // { actionId, otherPlayers, result } interactive ripple
   const [rippleActive, setRippleActive] = useState(false); // true once Ripple event has occurred — persists until game ends
+  const [spammedSide, setSpammedSide] = useState(null); // 'left' | 'right' | null — Spammer effect on me
+  const [snakeTeamLog, setSnakeTeamLog] = useState([]); // [{actorName, role, description, timestamp, viaOutsourcing}]
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -174,9 +177,11 @@ export default function App() {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, auraTouched: [], auraSeen: false });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
       // Reset Ripple state from previous game so its background/BGM don't bleed into the new round
       setRippleActive(false);
+      setSpammedSide(null);
+      setSnakeTeamLog([]);
       setRippleEvent(null);
       setRippleAction(null);
     });
@@ -200,6 +205,8 @@ export default function App() {
       setRippleEvent(null);
       setRippleAction(null);
       setRippleActive(false);
+      setSpammedSide(null);
+      setSnakeTeamLog([]);
       setChatMessages(prev => [...prev, { type: 'phase', text: '🌙 Ban đêm bắt đầu', time: Date.now() }]);
       ensureAudio();
       startNightBGM(settingsRef.current?.gameMode || gameModeRef.current);
@@ -221,6 +228,22 @@ export default function App() {
     socket.on('oracle_vision', (data) => {
       setOracleVision(data);
       setOracleVisionOpen(true); // auto-open when first received
+    });
+
+    socket.on('spammer_pinged', ({ side }) => {
+      setSpammedSide(side);
+    });
+
+    socket.on('office_snake_action', (payload) => {
+      setSnakeTeamLog(prev => {
+        // StrictMode may register this listener twice in dev — guard against
+        // back-to-back identical payloads from the same server emit.
+        const last = prev[prev.length - 1];
+        if (last && last.timestamp === payload.timestamp && last.actorId === payload.actorId && last.role === payload.role) {
+          return prev;
+        }
+        return [...prev, payload];
+      });
     });
 
     socket.on('oracle_identity_revealed', ({ oracleId, oracleName, oracleSeat }) => {
@@ -412,8 +435,8 @@ export default function App() {
     socket.on('night_action_result', ({ role, result }) => {
       setNightState(prev => ({ ...prev, result }));
 
-      // For doppelganger, use the copiedRole to process knowledge
-      const effectiveRole = (role === 'doppelganger' && result.copiedRole) ? result.copiedRole : role;
+      // For doppelganger/outsourcing, use the copiedRole to process knowledge
+      const effectiveRole = ((role === 'doppelganger' || role === 'outsourcing') && result.copiedRole) ? result.copiedRole : role;
 
       setNightKnowledge(prev => {
         const next = { ...prev };
@@ -421,6 +444,43 @@ export default function App() {
         // Track doppelganger's copied role
         if (role === 'doppelganger' && result.copiedRole && !prev.doppelgangerCopiedRole) {
           next.doppelgangerCopiedRole = result.copiedRole;
+        }
+        // Track outsourcing's copied role
+        if (role === 'outsourcing' && result.copiedRole && !prev.outsourcingCopiedRole) {
+          next.outsourcingCopiedRole = result.copiedRole;
+          // Outsourcing copies center → new card is the copied role
+          next.myCurrentRole = result.copiedRole;
+        }
+
+        // Office-specific results
+        if (effectiveRole === 'stalker' && result.seen) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+        }
+        if (effectiveRole === 'snoop' && result.seen && result.seen.slots) {
+          const rc = { ...prev.revealedCenter };
+          result.seen.slots.forEach(s => { rc[s.slot] = s.role; });
+          next.revealedCenter = rc;
+        }
+        if (effectiveRole === 'dumper' && result.seen && result.seen.slot) {
+          next.revealedCenter = { ...prev.revealedCenter, [result.seen.slot]: result.seen.role };
+        }
+        if (effectiveRole === 'ceo' && result.seen) {
+          if (result.seen.type === 'player') {
+            next.revealedPlayers = { ...prev.revealedPlayers, [result.seen.id]: result.seen.role };
+          } else if (result.seen.type === 'center') {
+            const rc = { ...prev.revealedCenter };
+            result.seen.slots.forEach(s => { rc[s.slot] = s.role; });
+            next.revealedCenter = rc;
+          }
+        }
+        if (effectiveRole === 'poacher' && result.newRole) {
+          next.myCurrentRole = result.newRole;
+        }
+        if (effectiveRole === 'paranoid' && result.currentRole) {
+          next.myCurrentRole = result.currentRole;
+        }
+        if (effectiveRole === 'legal' && result.revealed) {
+          next.revealedPlayers = { ...prev.revealedPlayers, [result.targetPlayer]: result.role };
         }
 
         if (effectiveRole === 'seer' && result.seen) {
@@ -623,7 +683,8 @@ export default function App() {
       setMyRole(null);
       setResults(null);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, auraTouched: [], auraSeen: false });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
+      setSnakeTeamLog([]);
       setChatMessages([]);
       setScreen('lobby');
       stopBGM();
@@ -809,6 +870,8 @@ export default function App() {
         gameMode={settings.gameMode || gameMode}
         hasOracleVision={!!oracleVision}
         onReopenVision={() => setOracleVisionOpen(true)}
+        spammedSide={spammedSide}
+        snakeTeamLog={snakeTeamLog}
       />
       {oracleEvent?.active && (
         <OracleSpecialEvent

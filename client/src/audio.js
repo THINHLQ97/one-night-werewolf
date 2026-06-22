@@ -24,6 +24,8 @@ export function initAudio() {
    '/audio/win-effect.mp3', '/audio/lose-effect.mp3',
    // Alien-specific
    '/audio/alien-night-effect.MP3', '/audio/alien-night-bgm.mp3', '/audio/alien-day-bgm.mp3',
+   // Office-specific
+   '/audio/office-night-effect.mp3', '/audio/office-night-bgm.mp3', '/audio/office-day-bgm.mp3',
    // Ripple
    '/audio/the-ripple-bgm.mp3',
   ].forEach(src => getAudio(src));
@@ -104,9 +106,12 @@ function killCurrentBgm() {
 export function startNightBGM(gameMode = 'werewolf') {
   if (!initialized) initAudio();
   killCurrentBgm();
-  // Alien mode uses different night effect + BGM
-  const effectSrc = gameMode === 'alien' ? '/audio/alien-night-effect.MP3' : '/audio/night-effect.mp3';
-  const bgmSrc = gameMode === 'alien' ? '/audio/alien-night-bgm.mp3' : '/audio/night-bgm.mp3';
+  const effectSrc = gameMode === 'alien' ? '/audio/alien-night-effect.MP3'
+                  : gameMode === 'office' ? '/audio/office-night-effect.mp3'
+                  : '/audio/night-effect.mp3';
+  const bgmSrc = gameMode === 'alien' ? '/audio/alien-night-bgm.mp3'
+               : gameMode === 'office' ? '/audio/office-night-bgm.mp3'
+               : '/audio/night-bgm.mp3';
   playEffect(effectSrc, 0.6);
   bgmFadeTimer = setTimeout(() => {
     const bgm = getAudio(bgmSrc);
@@ -120,8 +125,9 @@ export function startNightBGM(gameMode = 'werewolf') {
 export function startDayBGM(gameMode = 'werewolf') {
   if (!initialized) initAudio();
   killCurrentBgm();
-  // Alien mode uses different day BGM (no separate morning effect for alien — keep werewolf morning fx)
-  const bgmSrc = gameMode === 'alien' ? '/audio/alien-day-bgm.mp3' : '/audio/day-bgm.mp3';
+  const bgmSrc = gameMode === 'alien' ? '/audio/alien-day-bgm.mp3'
+               : gameMode === 'office' ? '/audio/office-day-bgm.mp3'
+               : '/audio/day-bgm.mp3';
   playEffect('/audio/morning-effect.mp3', 0.6);
   bgmFadeTimer = setTimeout(() => {
     const bgm = getAudio(bgmSrc);

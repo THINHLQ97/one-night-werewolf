@@ -7,9 +7,11 @@ const cors = require('cors');
 
 const { ROLES, getNightOrder, isWolfRole } = require('./roles');
 const { ALIEN_ROLES, isAlienAffiliation } = require('./alienRoles');
+const { OFFICE_ROLES, isSnakeRole: isOfficeSnakeRole, isIshikoiRole } = require('./officeRoles');
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
 const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults, shouldRippleOccur, generateRippleAction, generateRascalInstruction, generateExposerInstruction, generatePsychicInstruction, generateMorticianInstruction } = require('./alienGameLogic');
+const { startOfficeGame, getOfficeNightActionData, processOfficeNightAction, computeOfficeResults, getNeighborIds: getOfficeNeighborIds } = require('./officeGameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
@@ -579,6 +581,300 @@ async function runNightPhase(room) {
         await new Promise(r => setTimeout(r, 1000));
       }
     }
+  }
+
+  startDayPhase(room);
+}
+
+// ─── Office Night Phase ───────────────────────────────────────────────────
+
+const OFFICE_SNAKE_GROUP = ['snake', 'toxic_manager', 'stalker', 'snoop'];
+const OUTSOURCING_IMMEDIATE_ROLES = ['toxic_manager', 'stalker', 'snoop', 'ceo', 'poacher', 'hr', 'dumper', 'legal', 'spammer', 'tracker', 'paranoid'];
+const OFFICE_AUTO_RESOLVE = ['tracker', 'paranoid', 'netizen'];
+const OFFICE_NO_ACTION = ['snake'];
+
+function decideBotOfficeAction(room, botId, role) {
+  const players = room.players;
+  const others = players.filter(p => p.id !== botId);
+  const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const centers = ['center0', 'center1', 'center2'];
+
+  switch (role) {
+    case 'outsourcing':
+      return { centerSlot: random(centers) };
+    case 'toxic_manager': {
+      const nonSnake = others.filter(p => !isOfficeSnakeRole(room.currentCards[p.id]));
+      const t = random(nonSnake.length ? nonSnake : others);
+      return { targetPlayer: t?.id };
+    }
+    case 'stalker':
+    case 'poacher':
+    case 'legal':
+      return { targetPlayer: random(others)?.id };
+    case 'snoop':
+      return { centerSlot: random(centers) };
+    case 'dumper': {
+      const step = (room.nightPhase?.multiStepState?.[botId]?.dumperStep || 0) + 1;
+      if (step === 1) return { centerSlot: random(centers), step: 1 };
+      const all = room.players;
+      return { targetPlayer: random(all)?.id, step: 2 };
+    }
+    case 'ceo': {
+      if (Math.random() < 0.5) return { targetPlayer: random(others)?.id };
+      const a = random(centers);
+      const b = random(centers.filter(s => s !== a));
+      return { centerSlots: [a, b] };
+    }
+    case 'hr': {
+      const t1 = random(others);
+      const t2 = random(others.filter(o => o.id !== t1?.id));
+      return { target1: t1?.id, target2: t2?.id };
+    }
+    case 'spammer': {
+      const { left, right } = getOfficeNeighborIds(room, botId);
+      return { targetPlayer: random([left, right].filter(Boolean)) };
+    }
+    default:
+      return {};
+  }
+}
+
+function getOfficeActingPlayers(room, role) {
+  const { players } = room;
+  if (role === 'snake') {
+    return players.filter(p => {
+      const r = room.originalCards[p.id];
+      if (OFFICE_SNAKE_GROUP.includes(r)) return true;
+      if (r === 'outsourcing' && room.outsourcingData?.[p.id]) {
+        return OFFICE_SNAKE_GROUP.includes(room.outsourcingData[p.id].copiedRole);
+      }
+      return false;
+    });
+  }
+  // Default: original role + outsourcing copies
+  return players.filter(p => {
+    const r = room.originalCards[p.id];
+    if (r === role) return true;
+    if (r === 'outsourcing' && room.outsourcingData?.[p.id]?.copiedRole === role) return true;
+    return false;
+  });
+}
+
+function buildOfficeActionData(room, role, playerId) {
+  const data = getOfficeNightActionData(room, role);
+  if (data.otherPlayers) {
+    data.otherPlayers = data.otherPlayers.filter(op => op.id !== playerId);
+  }
+  if (role === 'spammer') {
+    const { left, right } = getOfficeNeighborIds(room, playerId);
+    const nameOf = (id) => room.players.find(pp => pp.id === id)?.name;
+    data.neighbors = {
+      left: left ? { id: left, name: nameOf(left) } : null,
+      right: right ? { id: right, name: nameOf(right) } : null,
+    };
+    delete data.needNeighbors;
+  }
+  return data;
+}
+
+// ─── Snake team shared visibility ──────────────────────────────────────────
+// In the physical Office game, every Toxic player stays awake the whole night
+// and watches the sub-roles act. We replicate that by broadcasting every
+// snake sub-role's action to all current Snake-affiliated players.
+
+const OFFICE_SLOT_LABELS = {
+  center0: 'Bài giữa 1',
+  center1: 'Bài giữa 2',
+  center2: 'Bài giữa 3',
+  centerSnake: 'Bài Rắn dự bị',
+};
+
+function getCurrentSnakeTeammates(room) {
+  return room.players.filter(p => {
+    const r = room.originalCards[p.id];
+    if (OFFICE_SNAKE_GROUP.includes(r)) return true;
+    if (r === 'outsourcing' && room.outsourcingData?.[p.id]) {
+      return OFFICE_SNAKE_GROUP.includes(room.outsourcingData[p.id].copiedRole);
+    }
+    return false;
+  });
+}
+
+function describeSnakeTeamEvent(room, actorName, role, action, result, viaOutsourcing) {
+  const nameOf = (id) => room.players.find(p => p.id === id)?.name || OFFICE_SLOT_LABELS[id] || id;
+  const roleLabel = (r) => OFFICE_ROLES[r]?.nameVi || r;
+  const prefix = viaOutsourcing ? '🤝→' : '';
+  switch (role) {
+    case 'snake':
+      return `${prefix}🐍 ${actorName} thức cùng đàn Rắn.`;
+    case 'toxic_manager': {
+      const t = action?.targetPlayer ? nameOf(action.targetPlayer) : '?';
+      return `${prefix}😤 ${actorName} (Toxic Manager) đẩy lá Rắn lên ${t}.`;
+    }
+    case 'stalker': {
+      const t = action?.targetPlayer ? nameOf(action.targetPlayer) : '?';
+      const seen = result?.seen?.role ? ` → ${roleLabel(result.seen.role)}` : '';
+      return `${prefix}👀 ${actorName} (Stalker) xem bài của ${t}${seen}.`;
+    }
+    case 'snoop': {
+      const slot = action?.centerSlot || result?.seen?.slots?.[0]?.slot;
+      const slotLabel = OFFICE_SLOT_LABELS[slot] || slot || '?';
+      const seenRole = result?.seen?.slots?.[0]?.role;
+      const seen = seenRole ? ` → ${roleLabel(seenRole)}` : '';
+      return `${prefix}🔍 ${actorName} (Snoop) xem ${slotLabel}${seen}.`;
+    }
+    default:
+      return `${prefix}${actorName} hành động (${roleLabel(role)}).`;
+  }
+}
+
+function emitSnakeTeamAction(room, actorId, role, action, result, viaOutsourcing = false) {
+  if (!OFFICE_SNAKE_GROUP.includes(role)) return;
+  const teammates = getCurrentSnakeTeammates(room);
+  if (teammates.length === 0) return;
+  const actor = room.players.find(p => p.id === actorId);
+  if (!actor) return;
+  const description = describeSnakeTeamEvent(room, actor.name, role, action, result, viaOutsourcing);
+  const payload = {
+    actorId,
+    actorName: actor.name,
+    role,
+    viaOutsourcing,
+    description,
+    timestamp: Date.now(),
+  };
+  teammates.forEach(p => {
+    if (!p.isBot) io.to(p.id).emit('office_snake_action', payload);
+  });
+}
+
+async function runOfficeNightPhase(room) {
+  const { nightPhase, players } = room;
+  room.state = 'night';
+  room.nightLog = [];
+
+  io.to(room.code).emit('night_start');
+
+  for (let i = 0; i < nightPhase.roleOrder.length; i++) {
+    if (room.state !== 'night') break;
+
+    const role = nightPhase.roleOrder[i];
+    nightPhase.currentRoleIndex = i;
+    const roleData = OFFICE_ROLES[role];
+    if (!roleData) continue;
+
+    io.to(room.code).emit('night_role_called', {
+      role,
+      roleName: roleData.nameVi,
+      instruction: roleData.nightInstruction,
+      closeInstruction: roleData.nightClose,
+    });
+
+    const actingPlayers = getOfficeActingPlayers(room, role);
+
+    if (actingPlayers.length === 0) {
+      await new Promise(r => setTimeout(r, 2500));
+      io.to(room.code).emit('night_role_done', { role });
+      await new Promise(r => setTimeout(r, 800));
+      continue;
+    }
+
+    const realPlayers = actingPlayers.filter(p => !p.isBot);
+    const botPlayers = actingPlayers.filter(p => p.isBot);
+
+    // No-action / auto-resolve roles: emit info, wait, move on
+    if (OFFICE_NO_ACTION.includes(role) || OFFICE_AUTO_RESOLVE.includes(role)) {
+      for (const p of actingPlayers) {
+        const result = processOfficeNightAction(room, p.id, role, {});
+        const actionData = buildOfficeActionData(room, role, p.id);
+        if (!p.isBot) {
+          io.to(p.id).emit('night_action_request', { role, ...actionData, ...result, autoResolved: true });
+        }
+        room.nightLog.push({ role, playerId: p.id, playerName: p.name, action: {}, result: { ...result } });
+        emitSnakeTeamAction(room, p.id, role, {}, result);
+      }
+      await new Promise(r => setTimeout(r, role === 'snake' ? 4000 : 5000));
+      io.to(room.code).emit('night_role_done', { role });
+      await new Promise(r => setTimeout(r, 800));
+      continue;
+    }
+
+    // Active roles requiring input
+    realPlayers.forEach(p => {
+      const actionData = buildOfficeActionData(room, role, p.id);
+      io.to(p.id).emit('night_action_request', { role, ...actionData });
+    });
+
+    await new Promise(resolve => {
+      nightPhase.pendingPlayerIds = actingPlayers.map(p => p.id);
+      nightPhase.pendingActions = [];
+      nightPhase.resolver = resolve;
+      nightPhase.timer = setTimeout(() => {
+        nightPhase.pendingPlayerIds = [];
+        nightPhase.resolver = null;
+        resolve();
+      }, 30000);
+
+      if (botPlayers.length > 0) {
+        setTimeout(() => {
+          botPlayers.forEach(bot => {
+            if (!nightPhase.pendingPlayerIds.includes(bot.id)) return;
+            const action = decideBotOfficeAction(room, bot.id, role);
+            const result = processOfficeNightAction(room, bot.id, role, action);
+            room.nightLog.push({ role, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
+            emitSnakeTeamAction(room, bot.id, role, action, result);
+
+            // Dumper step 2 — must swap after peek
+            if (role === 'dumper' && result.step === 1 && result.mustSwap) {
+              const action2 = decideBotOfficeAction(room, bot.id, 'dumper');
+              const result2 = processOfficeNightAction(room, bot.id, 'dumper', action2);
+              room.nightLog.push({ role: 'dumper', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2 } });
+            }
+
+            // Outsourcing follow-up: if copied role has immediate action, run step 2
+            if (role === 'outsourcing' && result.copiedRole && OUTSOURCING_IMMEDIATE_ROLES.includes(result.copiedRole)) {
+              const action2 = decideBotOfficeAction(room, bot.id, result.copiedRole);
+              const result2 = processOfficeNightAction(room, bot.id, result.copiedRole, action2);
+              room.nightLog.push({ role: 'outsourcing', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2, copiedRole: result.copiedRole } });
+              emitSnakeTeamAction(room, bot.id, result.copiedRole, action2, result2, true);
+              if (result.copiedRole === 'legal' && result2.revealed && result2.targetPlayer) {
+                io.to(room.code).emit('night_public_reveal', { playerId: result2.targetPlayer, role: result2.role });
+              }
+              if (result.copiedRole === 'spammer' && result2.targetPlayer) {
+                io.to(result2.targetPlayer).emit('spammer_pinged', { side: result2.side });
+              }
+              // Outsourcing → Dumper: also do step 2 swap
+              if (result.copiedRole === 'dumper' && result2.step === 1 && result2.mustSwap) {
+                const action3 = decideBotOfficeAction(room, bot.id, 'dumper');
+                const result3 = processOfficeNightAction(room, bot.id, 'dumper', action3);
+                room.nightLog.push({ role: 'outsourcing', playerId: bot.id, playerName: bot.name, action: { ...action3 }, result: { ...result3, copiedRole: 'dumper' } });
+              }
+            }
+
+            if (role === 'legal' && result.revealed && result.targetPlayer) {
+              io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
+            }
+            if (role === 'spammer' && result.targetPlayer) {
+              io.to(result.targetPlayer).emit('spammer_pinged', { side: result.side });
+            }
+
+            const idx2 = nightPhase.pendingPlayerIds.indexOf(bot.id);
+            if (idx2 !== -1) nightPhase.pendingPlayerIds.splice(idx2, 1);
+            nightPhase.pendingActions.push({ playerId: bot.id, role, action });
+          });
+
+          if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+            clearTimeout(nightPhase.timer);
+            const r = nightPhase.resolver;
+            nightPhase.resolver = null;
+            r();
+          }
+        }, 1500);
+      }
+    });
+
+    io.to(room.code).emit('night_role_done', { role });
+    await new Promise(r => setTimeout(r, 1000));
   }
 
   startDayPhase(room);
@@ -1589,8 +1885,8 @@ function checkAllVoted(room) {
 function endGame(room) {
   if (room.dayPhase?.autoEndTimer) clearTimeout(room.dayPhase.autoEndTimer);
 
-  // Alien mode: no hunter phase, go straight to results
-  if (room.settings.gameMode === 'alien') {
+  // Alien / Office modes: no hunter phase, go straight to results
+  if (room.settings.gameMode === 'alien' || room.settings.gameMode === 'office') {
     finishGame(room);
     return;
   }
@@ -1648,7 +1944,9 @@ async function finishGame(room) {
   if (room.dayPhase?.hunterTimer) clearTimeout(room.dayPhase.hunterTimer);
   const results = room.settings.gameMode === 'alien'
     ? computeAlienResults(room)
-    : computeResults(room);
+    : room.settings.gameMode === 'office'
+      ? computeOfficeResults(room)
+      : computeResults(room);
 
   // Sanitize nightLog: resolve player IDs to names in actions
   const nameMap = {};
@@ -1729,6 +2027,9 @@ io.on('connection', socket => {
     if (gameMode === 'alien') {
       room.settings.gameMode = 'alien';
       room.settings.selectedRoles = ['alien', 'alien', 'cow', 'oracle', 'rascal', 'exposer', 'psychic'];
+    } else if (gameMode === 'office') {
+      room.settings.gameMode = 'office';
+      room.settings.selectedRoles = ['snake', 'snake', 'toxic_manager', 'ceo', 'poacher', 'hr', 'tracker'];
     }
     socket.join(room.code);
     socket.roomCode = room.code;
@@ -1761,9 +2062,14 @@ io.on('connection', socket => {
       if (!selectedRoles) {
         room.settings.selectedRoles = ['alien', 'alien', 'cow', 'oracle', 'rascal', 'exposer', 'psychic'];
       }
+    } else if (gameMode === 'office') {
+      room.settings.gameMode = 'office';
+      if (!selectedRoles) {
+        room.settings.selectedRoles = ['snake', 'snake', 'toxic_manager', 'ceo', 'poacher', 'hr', 'tracker'];
+      }
     }
     if (selectedRoles) room.settings.selectedRoles = selectedRoles;
-    if (gameMode && gameMode !== 'alien') room.settings.gameMode = gameMode;
+    if (gameMode && gameMode !== 'alien' && gameMode !== 'office') room.settings.gameMode = gameMode;
 
     cb({
       code: room.code,
@@ -1927,7 +2233,7 @@ io.on('connection', socket => {
       isSimulation: !!room.isSimulation,
       preferredHostRole: room.preferredHostRole || null,
       roleId,
-      role: roleId ? (room.settings.gameMode === 'alien' ? ALIEN_ROLES[roleId] : ROLES[roleId]) : null,
+      role: roleId ? (room.settings.gameMode === 'alien' ? ALIEN_ROLES[roleId] : room.settings.gameMode === 'office' ? OFFICE_ROLES[roleId] : ROLES[roleId]) : null,
       currentRoleId,
       votes: room.dayPhase?.votes || {},
       timerEnd: room.dayPhase?.timerEnd || null,
@@ -1971,11 +2277,14 @@ io.on('connection', socket => {
     if (room.players.length < 3) return cb?.({ error: 'Cần ít nhất 3 người chơi' });
 
     const isAlien = room.settings.gameMode === 'alien';
-    const ROLE_DEFS = isAlien ? ALIEN_ROLES : ROLES;
+    const isOffice = room.settings.gameMode === 'office';
+    const ROLE_DEFS = isAlien ? ALIEN_ROLES : isOffice ? OFFICE_ROLES : ROLES;
 
     try {
       if (isAlien) {
         startAlienGame(room);
+      } else if (isOffice) {
+        startOfficeGame(room);
       } else {
         startGame(room);
       }
@@ -1996,7 +2305,9 @@ io.on('connection', socket => {
       state: 'role_reveal',
       playerCount: room.players.length,
       hasAlphaWolf: room.hasAlphaWolf || false,
-      gameMode: isAlien ? 'alien' : 'werewolf',
+      hasToxicManager: room.hasToxicManager || false,
+      snakeArt: room.snakeArt || null,
+      gameMode: isAlien ? 'alien' : isOffice ? 'office' : 'werewolf',
     });
 
     cb?.({ ok: true });
@@ -2005,6 +2316,8 @@ io.on('connection', socket => {
       if (room.state === 'role_reveal') {
         if (isAlien) {
           runAlienNightPhase(room);
+        } else if (isOffice) {
+          runOfficeNightPhase(room);
         } else {
           runNightPhase(room);
         }
@@ -2059,6 +2372,102 @@ io.on('connection', socket => {
       nightPhase.pendingPlayerIds.splice(idx, 1);
       nightPhase.pendingActions.push({ playerId: socket.id, role: phase, action });
 
+      if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+        clearTimeout(nightPhase.timer);
+        const resolve = nightPhase.resolver;
+        nightPhase.resolver = null;
+        resolve();
+      }
+      return;
+    }
+
+    // ── Office mode: use office game logic ──
+    if (room.settings.gameMode === 'office') {
+      // Outsourcing multi-step (mirror of Doppelganger)
+      if (role === 'outsourcing') {
+        const step = action.step || 1;
+        if (step === 1) {
+          const result = processOfficeNightAction(room, socket.id, 'outsourcing', action);
+          if (!result.copiedRole) return;
+          room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: { ...action }, result: { ...result } });
+          socket.emit('night_action_result', { role: 'outsourcing', result });
+
+          if (OUTSOURCING_IMMEDIATE_ROLES.includes(result.copiedRole)) {
+            const actionData = buildOfficeActionData(room, result.copiedRole, socket.id);
+            // Auto-resolve sub-roles (tracker, paranoid): compute now
+            if (OFFICE_AUTO_RESOLVE.includes(result.copiedRole)) {
+              const subResult = processOfficeNightAction(room, socket.id, result.copiedRole, {});
+              room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: {}, result: { ...subResult, copiedRole: result.copiedRole } });
+              socket.emit('night_action_result', { role: 'outsourcing', result: { ...subResult, copiedRole: result.copiedRole } });
+            } else {
+              socket.emit('night_action_request', { role: 'outsourcing', step: 2, copiedRole: result.copiedRole, ...actionData });
+              return;
+            }
+          }
+        } else {
+          const copiedRole = room.outsourcingData?.[socket.id]?.copiedRole;
+          if (!copiedRole) return;
+          const result = processOfficeNightAction(room, socket.id, copiedRole, action);
+          room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: { ...action }, result: { ...result, copiedRole } });
+          socket.emit('night_action_result', { role: 'outsourcing', result: { ...result, copiedRole } });
+          emitSnakeTeamAction(room, socket.id, copiedRole, action, result, true);
+          if (copiedRole === 'legal' && result.revealed && result.targetPlayer) {
+            io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
+          }
+          if (copiedRole === 'spammer' && result.targetPlayer) {
+            io.to(result.targetPlayer).emit('spammer_pinged', { side: result.side });
+          }
+          // Outsourcing → Dumper: stay pending for step 3 (the swap step within copied dumper)
+          if (copiedRole === 'dumper' && result.step === 1 && result.mustSwap) {
+            socket.emit('night_action_request', {
+              role: 'outsourcing',
+              step: 3,
+              copiedRole: 'dumper',
+              dumperStep: 2,
+              centerSlot: action.centerSlot,
+              centerRole: result.seen.role,
+              allPlayers: room.players.map(p => ({ id: p.id, name: p.name })),
+            });
+            return;
+          }
+        }
+        nightPhase.pendingPlayerIds.splice(idx, 1);
+        nightPhase.pendingActions.push({ playerId: socket.id, role: 'outsourcing', action });
+        if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
+          clearTimeout(nightPhase.timer);
+          const resolve = nightPhase.resolver;
+          nightPhase.resolver = null;
+          resolve();
+        }
+        return;
+      }
+
+      // Regular office role
+      const result = processOfficeNightAction(room, socket.id, role, action);
+      room.nightLog.push({ role, playerId: socket.id, playerName, action: { ...action }, result: { ...result } });
+      if (Object.keys(result).length > 0) {
+        socket.emit('night_action_result', { role, result });
+      }
+      emitSnakeTeamAction(room, socket.id, role, action, result);
+      if (role === 'legal' && result.revealed && result.targetPlayer) {
+        io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
+      }
+      if (role === 'spammer' && result.targetPlayer) {
+        io.to(result.targetPlayer).emit('spammer_pinged', { side: result.side });
+      }
+      // Dumper multistep: stay pending after step 1, request step 2 (swap)
+      if (role === 'dumper' && result.step === 1 && result.mustSwap) {
+        socket.emit('night_action_request', {
+          role,
+          step: 2,
+          centerSlot: action.centerSlot,
+          centerRole: result.seen.role,
+          allPlayers: room.players.map(p => ({ id: p.id, name: p.name })),
+        });
+        return;
+      }
+      nightPhase.pendingPlayerIds.splice(idx, 1);
+      nightPhase.pendingActions.push({ playerId: socket.id, role, action });
       if (nightPhase.pendingPlayerIds.length === 0 && nightPhase.resolver) {
         clearTimeout(nightPhase.timer);
         const resolve = nightPhase.resolver;

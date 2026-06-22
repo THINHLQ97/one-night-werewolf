@@ -26,9 +26,14 @@ const ROLE_NAMES = {
   psychic: 'Psychic', mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
   // Alien phases (used as currentRole in night)
   aliens: 'Alien', groob_zerb: 'Groob & Zerb',
+  // Office roles
+  outsourcing: 'Outsourcing', snake: 'Snake', toxic_manager: 'Toxic Manager',
+  stalker: 'Stalker', snoop: 'Snoop', ishikoi: 'Ishikoi', netizen: 'Netizen',
+  tracker: 'Tracker', spammer: 'Spammer', ceo: 'CEO', poacher: 'Poacher',
+  hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, spammedSide = null, snakeTeamLog = [] }) {
   const { currentRole, isMyTurn, actionData, result, requestSeq = 0 } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -39,12 +44,15 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [echoTyping, setEchoTyping] = useState(false);
   const [cardAnimations, setCardAnimations] = useState([]);
+  const [snakeLogOpen, setSnakeLogOpen] = useState(false);
+  const [snakeLogSeen, setSnakeLogSeen] = useState(0);
 
   const step = actionData?.step || 1;
-  // For doppelganger step 2+, effectiveRole = the copied role
-  const effectiveRole = (currentRole === 'doppelganger' && step >= 2 && actionData?.copiedRole)
+  // For doppelganger or outsourcing step 2+, effectiveRole = the copied role
+  const effectiveRole = ((currentRole === 'doppelganger' || currentRole === 'outsourcing') && step >= 2 && actionData?.copiedRole)
     ? actionData.copiedRole : currentRole;
   const isDoppelAction = currentRole === 'doppelganger' && step >= 2;
+  const isOutsourcingAction = currentRole === 'outsourcing' && step >= 2;
   // Include requestSeq so repeat night requests for same role get a new key
   const actionKey = `${currentRole}-${step}-${requestSeq}`;
 
@@ -75,6 +83,14 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     // Doppelganger step 1: always pick a player
     if (currentRole === 'doppelganger' && step === 1) {
       setActionMode('player');
+      setActionStep('choose');
+      setSelected([]);
+      return;
+    }
+
+    // Outsourcing step 1: always pick a center card
+    if (currentRole === 'outsourcing' && step === 1) {
+      setActionMode('center');
       setActionStep('choose');
       setSelected([]);
       return;
@@ -174,6 +190,41 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'mortician':
         setActionStep(actionData?.instruction?.viewCount === 0 ? 'done' : 'choose');
         break;
+      // ── Office phases ──
+      case 'snake':
+      case 'netizen':
+      case 'tracker':
+      case 'paranoid':
+        // Auto-resolved by server, just display info
+        setActionStep('done');
+        break;
+      case 'toxic_manager':
+      case 'stalker':
+      case 'poacher':
+      case 'legal':
+      case 'spammer':
+        setActionMode('player');
+        setActionStep('choose');
+        break;
+      case 'snoop':
+        setActionMode('center');
+        setActionStep('choose');
+        break;
+      case 'ceo':
+        setActionMode(null);
+        setActionStep('choose');
+        break;
+      case 'hr':
+        setActionMode('player');
+        setActionStep('choose');
+        break;
+      case 'dumper': {
+        // Multi-step: step 1 = pick center; step 2 = pick player to dump on
+        const isStep1 = !actionData?.centerRole;
+        setActionMode(isStep1 ? 'center' : 'player');
+        setActionStep('choose');
+        break;
+      }
       default:
         setActionStep('done');
     }
@@ -182,13 +233,13 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
 
   function handleSelect(id) {
     sfxCardFlip();
-    if (effectiveRole === 'troublemaker' || effectiveRole === 'rascal') {
+    if (effectiveRole === 'troublemaker' || effectiveRole === 'rascal' || effectiveRole === 'hr') {
       setSelected(prev => {
         if (prev.includes(id)) return prev.filter(x => x !== id);
         if (prev.length >= 2) return prev;
         return [...prev, id];
       });
-    } else if ((effectiveRole === 'seer' || effectiveRole === 'oracle') && actionMode === 'center') {
+    } else if ((effectiveRole === 'seer' || effectiveRole === 'oracle' || effectiveRole === 'ceo') && actionMode === 'center') {
       setSelected(prev => {
         if (prev.includes(id)) return prev.filter(x => x !== id);
         if (prev.length >= 2) return prev;
@@ -213,6 +264,17 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
     // For doppelganger step 1: pick a player to copy
     if (currentRole === 'doppelganger' && step === 1) {
       if (selected.length === 1) action = { targetPlayer: selected[0], step: 1 };
+      onAction(currentRole, action);
+      setSubmitted(true);
+      setSubmittedKey(actionKey);
+      setActionStep('done');
+      sfxReveal();
+      return;
+    }
+
+    // For outsourcing step 1: pick a center card to copy
+    if (currentRole === 'outsourcing' && step === 1) {
+      if (selected.length === 1) action = { centerSlot: selected[0], step: 1 };
       onAction(currentRole, action);
       setSubmitted(true);
       setSubmittedKey(actionKey);
@@ -296,6 +358,34 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
       case 'psychic':
         if (selected.length === 1) action = { targetPlayer: selected[0] };
         break;
+      // ── Office roles ──
+      case 'toxic_manager':
+      case 'stalker':
+      case 'poacher':
+      case 'legal':
+      case 'spammer':
+        if (selected.length === 1) action = { targetPlayer: selected[0] };
+        break;
+      case 'snoop':
+        if (selected.length === 1) action = { centerSlot: selected[0] };
+        break;
+      case 'ceo':
+        if (actionMode === 'player' && selected.length === 1) {
+          action = { targetPlayer: selected[0] };
+        } else if (actionMode === 'center' && selected.length === 2) {
+          action = { centerSlots: selected };
+        }
+        break;
+      case 'hr':
+        if (selected.length === 2) action = { target1: selected[0], target2: selected[1] };
+        break;
+      case 'dumper':
+        if (!actionData?.centerRole && selected.length === 1) {
+          action = { centerSlot: selected[0], step: 1 };
+        } else if (actionData?.centerRole && selected.length === 1) {
+          action = { targetPlayer: selected[0], step: 2 };
+        }
+        break;
       default:
         break;
     }
@@ -323,29 +413,147 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
   }
 
   const doppelCopied = nightKnowledge?.doppelgangerCopiedRole;
+  const outsourcingCopied = nightKnowledge?.outsourcingCopiedRole;
   const ALIEN_ROLES_SET = ['alien', 'syntheticalien', 'groob', 'zerb'];
+  const OFFICE_SNAKE_SET = ['snake', 'toxic_manager', 'stalker', 'snoop'];
   const isMyRoleCalled = currentRole === myRole?.roleId
     || (currentRole === 'werewolf' && (myRole?.roleId === 'alphawolf' || myRole?.roleId === 'mysticwolf'))
     // Alien phases: 'aliens' phase includes all alien-affiliated roles
     || (currentRole === 'aliens' && ALIEN_ROLES_SET.includes(myRole?.roleId))
     // Groob/Zerb private phase
     || (currentRole === 'groob_zerb' && (myRole?.roleId === 'groob' || myRole?.roleId === 'zerb'))
+    // Office snake group phase
+    || (currentRole === 'snake' && OFFICE_SNAKE_SET.includes(myRole?.roleId))
     // Doppelganger highlight for join-later phases
     || (myRole?.roleId === 'doppelganger' && doppelCopied && (
       currentRole === doppelCopied
       || (currentRole === 'werewolf' && ['werewolf', 'alphawolf', 'mysticwolf'].includes(doppelCopied))
+    ))
+    // Outsourcing highlight for join-later phases (similar to Doppelganger)
+    || (myRole?.roleId === 'outsourcing' && outsourcingCopied && (
+      currentRole === outsourcingCopied
+      || (currentRole === 'snake' && OFFICE_SNAKE_SET.includes(outsourcingCopied))
     ));
   const canSubmit = (() => {
-    if (effectiveRole === 'troublemaker' || effectiveRole === 'rascal') return selected.length === 2;
-    if ((effectiveRole === 'seer' || effectiveRole === 'oracle') && actionMode === 'center') return selected.length === 2;
+    if (effectiveRole === 'troublemaker' || effectiveRole === 'rascal' || effectiveRole === 'hr') return selected.length === 2;
+    if ((effectiveRole === 'seer' || effectiveRole === 'oracle' || effectiveRole === 'ceo') && actionMode === 'center') return selected.length === 2;
     if (effectiveRole === 'exposer') return selected.length === (actionData?.instruction?.count || 1);
     return selected.length === 1;
   })();
 
   const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole = null, shieldedPlayer = null, knownAliens = [], knownGroobZerb = [], knownCow = null } = nightKnowledge || {};
 
+  const isOfficeMode = gameMode === 'office';
+  const isSnakeTeammate = isOfficeMode && (
+    OFFICE_SNAKE_SET.includes(myRole?.roleId)
+    || (myRole?.roleId === 'outsourcing' && OFFICE_SNAKE_SET.includes(outsourcingCopied))
+  );
+  const showSnakePanel = isSnakeTeammate && snakeTeamLog.length > 0;
+  const unseenSnakeCount = Math.max(0, snakeTeamLog.length - snakeLogSeen);
+
+  // Auto-open the panel on the first event each night so the player notices.
+  useEffect(() => {
+    if (!isSnakeTeammate) return;
+    if (snakeTeamLog.length === 1 && !snakeLogOpen) {
+      setSnakeLogOpen(true);
+    }
+  }, [snakeTeamLog.length, isSnakeTeammate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (snakeLogOpen) setSnakeLogSeen(snakeTeamLog.length);
+  }, [snakeLogOpen, snakeTeamLog.length]);
+
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col px-3 py-3 sm:p-4 max-w-xl mx-auto fade-in relative z-10">
+      {/* Spammer pulse overlay — pulses on the side where the Spammer is */}
+      {spammedSide && (
+        <div className="fixed inset-0 z-30 pointer-events-none">
+          <div
+            className="absolute top-0 bottom-0 w-[120px]"
+            style={{
+              [spammedSide === 'left' ? 'left' : 'right']: 0,
+              background: `linear-gradient(${spammedSide === 'left' ? '90deg' : '270deg'}, rgba(244,114,182,0.35), rgba(244,114,182,0) 100%)`,
+              animation: 'spamPulse 1s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 px-3 py-2 rounded-xl bg-rose-600/85 text-white text-xs font-bold shadow-lg flex items-center gap-1.5"
+            style={{
+              [spammedSide === 'left' ? 'left' : 'right']: 8,
+              animation: 'spamJitter 0.6s ease-in-out infinite',
+            }}
+          >
+            <span className="text-base">📨</span>
+            <span>Spammer "ping"<br/>từ phía {spammedSide === 'left' ? 'TRÁI' : 'PHẢI'}!</span>
+          </div>
+          <style>{`
+            @keyframes spamPulse {
+              0%, 100% { opacity: 0.5; }
+              50% { opacity: 1; }
+            }
+            @keyframes spamJitter {
+              0%, 100% { transform: translateY(-50%) translateX(0); }
+              25% { transform: translateY(-50%) translateX(${spammedSide === 'left' ? '4px' : '-4px'}); }
+              75% { transform: translateY(-50%) translateX(${spammedSide === 'left' ? '-4px' : '4px'}); }
+            }
+          `}</style>
+        </div>
+      )}
+      {/* Snake team shared log — visible to all Toxic / Snake players */}
+      {isSnakeTeammate && (
+        <div className="fixed top-16 right-2 sm:right-4 z-40 select-none">
+          {!snakeLogOpen ? (
+            <button
+              onClick={() => setSnakeLogOpen(true)}
+              className="relative px-3 py-2 rounded-xl bg-rose-900/80 hover:bg-rose-800/90 border border-rose-400/40 text-rose-100 text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1.5 transition-colors"
+              title="Sổ tay phe Rắn"
+            >
+              <span className="text-base leading-none">🐍</span>
+              <span>Phe Rắn ({snakeTeamLog.length})</span>
+              {unseenSnakeCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-rose-950 text-[10px] font-bold flex items-center justify-center shadow">
+                  {unseenSnakeCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <div className="w-[260px] sm:w-[300px] max-h-[60vh] rounded-2xl bg-rose-950/85 border border-rose-400/40 shadow-2xl backdrop-blur-md flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-rose-900/70 border-b border-rose-400/30">
+                <div className="flex items-center gap-1.5 text-rose-100 text-xs font-bold">
+                  <span className="text-base leading-none">🐍</span>
+                  <span>Sổ tay phe Rắn</span>
+                </div>
+                <button
+                  onClick={() => setSnakeLogOpen(false)}
+                  className="w-6 h-6 rounded-lg hover:bg-white/10 flex items-center justify-center text-rose-200 text-sm"
+                  title="Ẩn"
+                >×</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
+                {snakeTeamLog.length === 0 ? (
+                  <p className="text-rose-300/60 text-xs italic text-center py-3">Chưa có hành động nào.</p>
+                ) : (
+                  snakeTeamLog.map((entry, i) => (
+                    <div
+                      key={`${entry.timestamp}-${i}`}
+                      className={`px-2 py-1.5 rounded-lg text-[11px] leading-snug border ${
+                        entry.viaOutsourcing
+                          ? 'bg-amber-500/10 border-amber-400/30 text-amber-100'
+                          : 'bg-rose-500/10 border-rose-400/30 text-rose-100'
+                      }`}
+                    >
+                      {entry.description}
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="px-3 py-1.5 bg-rose-900/50 border-t border-rose-400/20 text-[10px] text-rose-300/70 italic text-center">
+                Chỉ phe Rắn thấy log này.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Header */}
       <div className="text-center pt-2 pb-3">
         <div className="flex items-center justify-center gap-2 mb-1.5">
@@ -1037,6 +1245,195 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
                 </div>
                 <p className="text-white/40 text-xs mb-2">Tất cả thành viên Blob phải sống sót để bạn thắng!</p>
                 <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
+              </div>
+            )}
+
+            {/* ── Office roles ───────────────────────────────────────────── */}
+            {currentRole === 'outsourcing' && step === 1 && (
+              <div className="text-center">
+                <p className="text-rose-300 text-sm font-semibold mb-1">Nhân Viên Thời Vụ</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để biến thành vai đó.</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Chốt vai</button>
+              </div>
+            )}
+            {effectiveRole === 'snake' && actionData?.snakes && (
+              <div className="text-center">
+                <p className="text-rose-400 text-sm font-semibold mb-1">Phe Rắn</p>
+                <p className="text-white/60 text-sm mb-2">{actionData.isSolo ? 'Bạn là Rắn đơn độc.' : 'Đồng bọn của bạn:'}</p>
+                {!actionData.isSolo && (
+                  <div className="flex gap-2 justify-center flex-wrap mb-2">
+                    {actionData.snakes.filter(s => s.id !== myId).map(s => (
+                      <span key={s.id} className="px-2 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-xs">{s.name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {effectiveRole === 'toxic_manager' && (
+              <div className="text-center">
+                <p className="text-rose-300 text-sm font-semibold mb-1">Trưởng Phòng Toxic</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 người không phải Rắn để biến họ thành Rắn.</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đẩy Rắn</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'stalker' && (
+              <div className="text-center">
+                <p className="text-rose-300 text-sm font-semibold mb-1">Kẻ Rình Rập</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 người để xem bài của họ.</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'snoop' && (
+              <div className="text-center">
+                <p className="text-rose-300 text-sm font-semibold mb-1">Kẻ Nhòm Ngó</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem.</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+              </div>
+            )}
+            {effectiveRole === 'netizen' && (
+              <div className="text-center">
+                <p className="text-amber-300 text-sm font-semibold mb-1">Cộng Đồng Mạng</p>
+                {actionData?.ishikois?.length > 0 ? (
+                  <>
+                    <p className="text-white/60 text-sm mb-2">Ishikoi của bạn:</p>
+                    <div className="flex gap-2 justify-center flex-wrap mb-2">
+                      {actionData.ishikois.map(i => (
+                        <span key={i.id} className="px-2 py-1 rounded-lg bg-amber-400/20 text-amber-200 text-xs">{i.name}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-white/40 text-xs italic mb-2">Không có Ishikoi trong game — bạn tự gánh điều kiện thắng.</p>
+                )}
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
+              </div>
+            )}
+            {effectiveRole === 'tracker' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Máy Chấm Công</p>
+                <p className="text-white/60 text-sm mb-2">
+                  Có <span className="text-rose-400 font-bold">{actionData?.snakeNeighborCount ?? '?'}</span> Rắn ngồi cạnh bạn.
+                </p>
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
+              </div>
+            )}
+            {effectiveRole === 'spammer' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Đồng Nghiệp Kém Duyên</p>
+                <p className="text-white/60 text-sm mb-2">Chọn 1 hàng xóm để "ping":</p>
+                <div className="flex gap-2 justify-center mb-2">
+                  {actionData?.neighbors?.left && (
+                    <button
+                      className={`px-3 py-2 rounded-xl text-sm border ${selected[0] === actionData.neighbors.left.id ? 'bg-sky-500/40 border-sky-400/60 text-sky-100' : 'bg-white/5 border-white/10 text-white/70'}`}
+                      onClick={() => setSelected([actionData.neighbors.left.id])}
+                    >← {actionData.neighbors.left.name}</button>
+                  )}
+                  {actionData?.neighbors?.right && (
+                    <button
+                      className={`px-3 py-2 rounded-xl text-sm border ${selected[0] === actionData.neighbors.right.id ? 'bg-sky-500/40 border-sky-400/60 text-sky-100' : 'bg-white/5 border-white/10 text-white/70'}`}
+                      onClick={() => setSelected([actionData.neighbors.right.id])}
+                    >{actionData.neighbors.right.name} →</button>
+                  )}
+                </div>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Ping</button>
+              </div>
+            )}
+            {effectiveRole === 'ceo' && !actionMode && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">CEO Duy Ca</p>
+                <p className="text-white/70 text-sm mb-3">Bạn muốn xem gì?</p>
+                <div className="flex gap-3 justify-center">
+                  <button className="btn-ghost text-sm flex items-center gap-1.5" onClick={() => setActionMode('player')}>
+                    <Icon name="eye" size={16} /> Bài 1 người chơi
+                  </button>
+                  <button className="btn-ghost text-sm flex items-center gap-1.5" onClick={() => setActionMode('center')}>
+                    <Icon name="cards" size={16} /> 2 bài ở giữa
+                  </button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'ceo' && actionMode === 'player' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">Chạm vào người chơi để xem bài</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => { setActionMode(null); setSelected([]); }}>
+                    <Icon name="arrowLeft" size={14} className="inline mr-1" />Đổi ý
+                  </button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'ceo' && actionMode === 'center' && (
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-2">Chạm 2 bài ở giữa ({selected.length}/2)</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => { setActionMode(null); setSelected([]); }}>
+                    <Icon name="arrowLeft" size={14} className="inline mr-1" />Đổi ý
+                  </button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'poacher' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Kẻ Trộm KPI</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 người để đổi bài và xem bài mới.</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đổi bài</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'hr' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Chuyên Viên Nhân Sự</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 2 người để hoán đổi bài ({selected.length}/2)</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Hoán đổi</button>
+                </div>
+              </div>
+            )}
+            {effectiveRole === 'dumper' && !actionData?.centerRole && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Kẻ Đẩy Việc</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 bài ở giữa để xem (bắt buộc tráo sau đó).</p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Xem bài</button>
+              </div>
+            )}
+            {effectiveRole === 'dumper' && actionData?.centerRole && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Kẻ Đẩy Việc</p>
+                <p className="text-white/60 text-sm mb-2">
+                  Bài giữa là <span className="text-moon-300 font-semibold">{ROLE_NAMES[actionData.centerRole] || '?'}</span>.
+                  Tráo cho 1 người (kể cả bạn) — bài họ đẩy vào giữa.
+                </p>
+                <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Đẩy việc</button>
+              </div>
+            )}
+            {effectiveRole === 'paranoid' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Kẻ Lo Âu</p>
+                <p className="text-white/60 text-sm mb-2">
+                  Bài hiện tại: <span className="text-moon-300 font-bold">{ROLE_NAMES[actionData?.currentRole] || '?'}</span>
+                </p>
+                <button className="btn-primary text-sm" onClick={() => handleAutoSubmit()}>Xong</button>
+              </div>
+            )}
+            {effectiveRole === 'legal' && (
+              <div className="text-center">
+                <p className="text-sky-300 text-sm font-semibold mb-1">Chuyên Viên Pháp Chế</p>
+                <p className="text-white/60 text-sm mb-2">Chạm 1 người để lật bài (Rắn/Ishikoi sẽ úp lại).</p>
+                <div className="flex gap-2 justify-center">
+                  <button className="btn-ghost text-xs" onClick={() => handleAutoSubmit()}>Bỏ qua</button>
+                  <button className="btn-primary text-sm" disabled={!canSubmit} onClick={handleSubmitAction}>Lật bài</button>
+                </div>
               </div>
             )}
 

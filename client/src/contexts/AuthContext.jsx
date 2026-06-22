@@ -43,12 +43,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginAsGuest = useCallback(async (name) => {
-    const res = await fetch(`${API_BASE}/api/auth/guest`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    if (!res.ok) throw new Error('Guest login failed');
+    let res;
+    try {
+      res = await fetch(`${API_BASE}/api/auth/guest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+    } catch (e) {
+      throw new Error('Không kết nối được server. Hãy chạy server (port 3001).');
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Server trả lỗi ${res.status}`);
+    }
     const data = await res.json();
     localStorage.setItem('onw_auth_token', data.token);
     setAuthToken(data.token);

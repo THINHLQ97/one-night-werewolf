@@ -10,6 +10,10 @@ const SCENE_PATHS = {
     day: '/images/scene-alien/Alien-Day-Scene.png',
     ripple: '/images/scene-alien/Alien-The-Ripple-Scene.webp',
   },
+  office: {
+    night: '/images/office-night.png',
+    day: '/images/office-day.png',
+  },
 };
 
 /**
