@@ -42,7 +42,7 @@ function centerName(slot) {
   return CENTER[idx] || slot;
 }
 
-export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
+export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardProtect, onEndDay, onTimerPause, onTimerResume, onTimerAdjust, nightKnowledge, myRole, hasAlphaWolf, hasToxicManager = false, hunterPhase, onHunterShoot, tokenClaims, onDeductionSet, onDeductionClear, roomCode, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision }) {
   const { timerEnd, votes, bodyguardProtect, players, paused, pausedRemaining, shieldedPlayer, votingPhase, votingTimerEnd, silencedPlayers = [], facingAway = [], twoHandVoters = [] } = dayState;
   // Use voting timer when in voting phase, otherwise discussion timer
   const activeTimerEnd = votingPhase ? votingTimerEnd : timerEnd;
@@ -194,6 +194,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         votes={votes}
         isNight={false}
         hasAlphaWolf={hasAlphaWolf}
+        hasToxicManager={hasToxicManager}
         shieldedPlayer={shieldedPlayer}
         voiceSpeaking={voiceSpeaking || {}}
       />

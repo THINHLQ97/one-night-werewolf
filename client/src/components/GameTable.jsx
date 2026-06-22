@@ -50,11 +50,16 @@ export default function GameTable({
   winners = [],
   isNight = false,
   hasAlphaWolf = false,
+  hasToxicManager = false,
   shieldedPlayer = null,
   voiceSpeaking = {},
   cardAnimations = [],
   unvotable = [],
 }) {
+  const extraCenterSlot = hasAlphaWolf ? 'centerWolf' : hasToxicManager ? 'centerSnake' : null;
+  const computedCenterSlots = extraCenterSlot
+    ? ['center0', 'center1', 'center2', extraCenterSlot]
+    : ['center0', 'center1', 'center2'];
   const containerRef = useRef(null);
   const rawSize = useContainerSize(containerRef);
   const tableSize = rawSize;
@@ -87,9 +92,7 @@ export default function GameTable({
 
       {/* Center cards */}
       {(() => {
-        const centerSlots = hasAlphaWolf
-          ? ['center0', 'center1', 'center2', 'centerWolf']
-          : ['center0', 'center1', 'center2'];
+        const centerSlots = computedCenterSlots;
         const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
         return (
           <div className="flex gap-2 items-center justify-center" style={{
@@ -100,6 +103,8 @@ export default function GameTable({
           }}>
             {centerSlots.map((slot, i) => {
               const isWolf = slot === 'centerWolf';
+              const isSnake = slot === 'centerSnake';
+              const isExtra = isWolf || isSnake;
               const isRevealed = revealedCenter[slot];
               const isSelected = selected.includes(slot);
               const isClickable = selectable === 'center' || selectable === 'both';
@@ -116,9 +121,11 @@ export default function GameTable({
                   }`}
                   style={isWolf
                     ? { width: cardW, height: cardH, border: '1px solid rgba(239,68,68,0.4)' }
-                    : { width: cardW, height: cardH }
+                    : isSnake
+                      ? { width: cardW, height: cardH, border: '1px solid rgba(244,114,182,0.5)' }
+                      : { width: cardW, height: cardH }
                   }
-                  title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : (isWolf ? '🐺 Alpha' : `Giữa ${i + 1}`)}
+                  title={isRevealed ? `${ROLE_EMOJI[isRevealed]} ${ROLE_NAME_SHORT[isRevealed]}` : (isWolf ? '🐺 Alpha' : isSnake ? '🐍 Bài Rắn dự bị' : `Giữa ${i + 1}`)}
                 >
                   {isRevealed ? (
                     <div className="relative w-full h-full overflow-hidden rounded-[6px]">
@@ -130,6 +137,9 @@ export default function GameTable({
                       <img src={CARD_BACK} alt="card back" className="absolute inset-0 w-full h-full object-cover" />
                       {isWolf && (
                         <span className="relative z-10 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" style={{ fontSize: Math.round(cardW * 0.45) }}>🐺</span>
+                      )}
+                      {isSnake && (
+                        <span className="relative z-10 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" style={{ fontSize: Math.round(cardW * 0.45) }}>🐍</span>
                       )}
                     </div>
                   )}
@@ -146,9 +156,7 @@ export default function GameTable({
         let ax, ay, aw, ah;
 
         if (isCenter) {
-          const centerSlots = hasAlphaWolf
-            ? ['center0', 'center1', 'center2', 'centerWolf']
-            : ['center0', 'center1', 'center2'];
+          const centerSlots = computedCenterSlots;
           const ci = centerSlots.indexOf(anim.targetId);
           const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
           ax = centerX - totalW / 2 + ci * (cardW + 8);
@@ -237,7 +245,7 @@ export default function GameTable({
       {cardAnimations.length === 2 && cardAnimations[0]?.type === 'swap' && (() => {
         const getPos = (targetId) => {
           if (targetId?.startsWith?.('center')) {
-            const centerSlots = hasAlphaWolf ? ['center0','center1','center2','centerWolf'] : ['center0','center1','center2'];
+            const centerSlots = computedCenterSlots;
             const ci = centerSlots.indexOf(targetId);
             const totalW = cardW * centerSlots.length + 8 * (centerSlots.length - 1);
             return { x: centerX - totalW / 2 + ci * (cardW + 8) + cardW / 2, y: centerY };

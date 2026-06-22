@@ -30,6 +30,7 @@ export default function App() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [hasAlphaWolf, setHasAlphaWolf] = useState(false);
+  const [hasToxicManager, setHasToxicManager] = useState(false);
   const [hunterPhase, setHunterPhase] = useState(null);
   const [tokenClaims, setTokenClaims] = useState(null);
   const [rankUpData, setRankUpData] = useState(null);
@@ -134,6 +135,7 @@ export default function App() {
               setIsSimulation(!!res.isSimulation);
               setPreferredHostRole(res.preferredHostRole || null);
               setHasAlphaWolf(res.hasAlphaWolf || false);
+              setHasToxicManager(res.hasToxicManager || false);
               if (res.roleId) {
                 setMyRole({ roleId: res.roleId, ...res.role });
               }
@@ -176,6 +178,7 @@ export default function App() {
     socket.on('game_started', (data) => {
       setScreen('role_reveal');
       setHasAlphaWolf(data?.hasAlphaWolf || false);
+      setHasToxicManager(data?.hasToxicManager || false);
       setTokenClaims(null);
       setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
       // Reset Ripple state from previous game so its background/BGM don't bleed into the new round
@@ -707,6 +710,7 @@ export default function App() {
     localStorage.setItem('onw_room', code);
 
     if (extraData?.hasAlphaWolf) setHasAlphaWolf(true);
+    if (extraData?.hasToxicManager) setHasToxicManager(true);
 
     if (state === 'day' && extraData) {
       setDayState({ timerEnd: extraData.timerEnd, votes: extraData.votes || {}, players: ps });
@@ -862,6 +866,7 @@ export default function App() {
         onAction={handleNightAction}
         nightKnowledge={nightKnowledge}
         hasAlphaWolf={hasAlphaWolf}
+        hasToxicManager={hasToxicManager}
         roomCode={roomCode}
         isHost={isHost}
         voiceSpeaking={voiceSpeaking}
@@ -913,6 +918,7 @@ export default function App() {
         nightKnowledge={nightKnowledge}
         myRole={myRole}
         hasAlphaWolf={hasAlphaWolf}
+        hasToxicManager={hasToxicManager}
         hunterPhase={hunterPhase}
         onHunterShoot={targetId => socket.emit('hunter_shoot', { targetId })}
         tokenClaims={tokenClaims}

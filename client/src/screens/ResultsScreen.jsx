@@ -882,6 +882,12 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
                   </span>
                 );
               })()}
+              {finalCards['centerSnake'] && (
+                <span className="text-xs px-2 py-1 bg-rose-500/20 rounded-lg text-rose-200 border border-rose-400/40 flex items-center gap-1.5">
+                  <RoleIcon roleId={finalCards['centerSnake']} size={18} circular />
+                  Rắn dự bị: {ROLE_NAMES[finalCards['centerSnake']]}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -1069,7 +1075,7 @@ function ResultSceneBackground({ src }) {
 
 /* ─── Night log entry ──────────────────────────────────────────────────────── */
 
-const CENTER_LABEL = { center0: 'Giữa 1', center1: 'Giữa 2', center2: 'Giữa 3', centerWolf: 'Alpha' };
+const CENTER_LABEL = { center0: 'Giữa 1', center1: 'Giữa 2', center2: 'Giữa 3', centerWolf: 'Alpha', centerSnake: 'Rắn dự bị' };
 
 function describeCopiedAction(copiedRole, action, result, playerMap, targetName, target1Name, target2Name) {
   switch (copiedRole) {

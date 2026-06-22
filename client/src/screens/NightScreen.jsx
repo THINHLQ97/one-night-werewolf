@@ -33,7 +33,7 @@ const ROLE_NAMES = {
   hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, spammedSide = null, snakeTeamLog = [] }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, hasToxicManager = false, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, spammedSide = null, snakeTeamLog = [] }) {
   const { currentRole, isMyTurn, actionData, result, requestSeq = 0 } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -629,6 +629,7 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         onSelect={handleSelect}
         isNight={true}
         hasAlphaWolf={hasAlphaWolf}
+        hasToxicManager={hasToxicManager}
         shieldedPlayer={shieldedPlayer}
         voiceSpeaking={voiceSpeaking || {}}
         cardAnimations={cardAnimations}
