@@ -298,9 +298,17 @@ export default function GameTable({
         }
       `}</style>
 
-      {/* Players in circle */}
-      {players.map((p, i) => {
-        const angle = (i / players.length) * 2 * Math.PI - Math.PI / 2;
+      {/* Players in circle — rotate so MY seat is always at the bottom (6 o'clock).
+         Sweeping the angle as (myIdx - i)/N puts the server's left neighbor
+         (idx-1) on screen-LEFT of me and the server's right neighbor (idx+1)
+         on screen-RIGHT, so visual L/R matches role-action L/R. Spectators
+         (myIdx === -1) keep the original top-anchored layout. */}
+      {(() => {
+        const myIdx = players.findIndex(p => p.id === myId);
+        return players.map((p, i) => {
+          const angle = myIdx === -1
+            ? (i / players.length) * 2 * Math.PI - Math.PI / 2
+            : ((myIdx - i) / players.length) * 2 * Math.PI + Math.PI / 2;
         const halfNode = nodeWidth / 2;
         const x = centerX + playerRadius * Math.cos(angle) - halfNode;
         const y = centerY + playerRadius * Math.sin(angle) - halfNode;
@@ -485,7 +493,8 @@ export default function GameTable({
             </button>
           </div>
         );
-      })}
+        });
+      })()}
     </div>
   );
 }
