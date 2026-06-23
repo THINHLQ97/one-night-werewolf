@@ -394,7 +394,7 @@ export default function GameTable({
 
                 {/* Snake teammate indicator */}
                 {isSnake && !isWolf && !isRevealed && (
-                  <span className="absolute -top-1 -right-1 text-xs">🐍</span>
+                  <span className="absolute -top-1 -left-1 text-xs">🐍</span>
                 )}
 
                 {/* Tracker (revealed to snake team after Tracker's turn) */}
