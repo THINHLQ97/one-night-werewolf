@@ -327,7 +327,7 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
                 {publicRooms.length > 0 && (
                   <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1" style={{ overscrollBehavior: 'contain' }}>
                     {publicRooms.map(r => {
-                      const isFull = r.playerCount >= 10;
+                      const isFull = r.playerCount >= 12;
                       return (
                         <button
                           key={r.code}
@@ -356,7 +356,7 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <Icon name="users" size={12} className="text-white/40" />
                             <span className={`text-xs font-semibold ${isFull ? 'text-wolf-400' : 'text-white/60'}`}>
-                              {r.playerCount}/10
+                              {r.playerCount}/12
                             </span>
                             {r.botCount > 0 && (
                               <span className="text-[10px] text-white/30 ml-1">({r.botCount} bot)</span>
@@ -378,12 +378,12 @@ export default function HomeScreen({ onJoin, error, setError, gameMode, onGameMo
                 <button type="button" className="btn-ghost px-3 py-1" onClick={() => setBotCount(c => Math.max(2, c - 1))}>-</button>
                 <input
                   type="range"
-                  min={2} max={9}
+                  min={2} max={11}
                   value={botCount}
                   onChange={e => setBotCount(parseInt(e.target.value))}
                   className="flex-1 accent-moon-400"
                 />
-                <button type="button" className="btn-ghost px-3 py-1" onClick={() => setBotCount(c => Math.min(9, c + 1))}>+</button>
+                <button type="button" className="btn-ghost px-3 py-1" onClick={() => setBotCount(c => Math.min(11, c + 1))}>+</button>
               </div>
               <p className="text-white/30 text-xs mt-1 text-center">Tổng: {botCount + 1} người chơi (bạn + {botCount} bot)</p>
             </div>

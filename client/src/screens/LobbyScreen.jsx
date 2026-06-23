@@ -436,7 +436,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
       {/* Players */}
       <div className="card mb-4">
         <h3 className="text-moon-400 font-semibold mb-3 flex items-center gap-1.5">
-          <Icon name="users" size={16} /> Người chơi ({players.length}/10)
+          <Icon name="users" size={16} /> Người chơi ({players.length}/12)
         </h3>
         <div className="flex flex-wrap gap-2">
           {players.map(p => (
@@ -463,7 +463,7 @@ export default function LobbyScreen({ roomCode, players, hostId, isHost, setting
             <button
               className="text-blue-400/60 text-xs hover:text-blue-300 transition-colors"
               onClick={() => socket.emit('add_bot', {}, (res) => { if (res?.error) console.warn(res.error); })}
-              disabled={players.length >= 10}
+              disabled={players.length >= 12}
             >
               + Thêm Bot
             </button>

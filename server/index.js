@@ -2219,7 +2219,7 @@ io.on('connection', socket => {
   // ── Create simulation room ──
   socket.on('create_simulation', async ({ name, token, authToken, botCount, selectedRoles, gameMode }, cb) => {
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
-    const count = Math.max(2, Math.min(9, parseInt(botCount) || 4));
+    const count = Math.max(2, Math.min(11, parseInt(botCount) || 4));
     const authUser = authToken ? await authenticateToken(authToken) : null;
     const room = createRoom(socket.id, name.trim(), token, authUser?.id || null);
     if (authUser) socket.userId = authUser.id;
@@ -2259,7 +2259,7 @@ io.on('connection', socket => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id) return cb?.({ error: 'Không có quyền' });
     if (room.state !== 'waiting') return cb?.({ error: 'Game đã bắt đầu' });
-    if (room.players.length >= 10) return cb?.({ error: 'Phòng đã đầy' });
+    if (room.players.length >= 12) return cb?.({ error: 'Phòng đã đầy' });
 
     const botIndex = room.players.filter(p => p.isBot).length;
     addBotPlayers(room, 1, generateBotId, () => generateBotName(botIndex));
@@ -2307,7 +2307,7 @@ io.on('connection', socket => {
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb({ error: 'Không tìm thấy phòng' });
     if (room.state !== 'waiting') return cb({ error: 'Game đã bắt đầu' });
-    if (room.players.length >= 10) return cb({ error: 'Phòng đã đầy (tối đa 10 người)' });
+    if (room.players.length >= 12) return cb({ error: 'Phòng đã đầy (tối đa 12 người)' });
     if (!name?.trim()) return cb({ error: 'Tên không được để trống' });
     const authUser = authToken ? await authenticateToken(authToken) : null;
     const added = addPlayer(room, socket.id, name.trim(), token, false, authUser?.id || null);
