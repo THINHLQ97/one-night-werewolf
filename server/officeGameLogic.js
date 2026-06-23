@@ -472,4 +472,5 @@ module.exports = {
   computeOfficeResults,
   getSpammerNeighbors,
   getNeighborIds,
+  getOriginalSnakePlayers,
 };

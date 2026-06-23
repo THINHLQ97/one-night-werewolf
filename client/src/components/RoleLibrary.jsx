@@ -396,7 +396,7 @@ const ROLES = [
   },
   {
     id: 'toxic_manager', name: 'Toxic Manager', nameVi: 'Trưởng Phòng Toxic', emoji: '😤',
-    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.1, expansion: 'office',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 2, expansion: 'office',
     lore: 'Kẻ chuyên "gài bẫy" dắt mũi cấp dưới, biến người vô tội thành tấm khiên đỡ đạn cho sai phạm của mình.',
     nightAction: 'Thức dậy cùng Rắn. Đặt lá Rắn bổ sung lên 1 người không phải Rắn (đẩy bài cũ vào giữa). Người đó biến thành Phe Rắn.',
     winCondition: 'Thắng cùng Phe Rắn.',
@@ -404,7 +404,7 @@ const ROLES = [
   },
   {
     id: 'stalker', name: 'Stalker', nameVi: 'Kẻ Rình Rập', emoji: '👀',
-    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.2, expansion: 'office',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 3, expansion: 'office',
     lore: 'Thánh hóng hớt, chuyên đi ngang liếc màn hình chat Slack/Zalo của đồng nghiệp để đi mách lẻo với sếp.',
     nightAction: 'Thức dậy cùng Rắn. Xem bài của 1 người khác.',
     winCondition: 'Thắng cùng Phe Rắn.',
@@ -412,7 +412,7 @@ const ROLES = [
   },
   {
     id: 'snoop', name: 'Snoop', nameVi: 'Kẻ Nhòm Ngó', emoji: '🔍',
-    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 1.3, expansion: 'office',
+    team: 'snake', teamLabel: 'Phe Rắn', nightOrder: 4, expansion: 'office',
     lore: 'Kẻ chuyên đi lục lọi các thư mục nháp, dự án lưu trữ hoặc tài liệu chưa công bố trên Driver của công ty để xem ban lãnh đạo đang bỏ trống vị trí nào, từ đó biết đường phối hợp với phe Rắn để thao túng thông tin.',
     nightAction: 'Thức dậy cùng Rắn. Xem bí mật 1 trong 3 lá bài ở giữa bàn.',
     winCondition: 'Thắng cùng Phe Rắn.',
@@ -428,7 +428,7 @@ const ROLES = [
   },
   {
     id: 'netizen', name: 'Netizen', nameVi: 'Cộng Đồng Mạng', emoji: '📣',
-    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: 2, expansion: 'office',
+    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: 7, expansion: 'office',
     lore: 'Thế lực hậu thuẫn, sẵn sàng tràn vào fanpage thả phẫn nộ, viết bài bóc phốt để tạo áp lực truyền thông giúp Ishikoi đòi tiền.',
     nightAction: 'Mở mắt — App sẽ chỉ rõ ai là Ishikoi.',
     winCondition: 'Thắng nếu Ishikoi bị vote sa thải.\nNếu KHÔNG có Ishikoi trong game → Netizen tự gánh điều kiện thắng y hệt Ishikoi (bị vote = thắng).',
@@ -436,7 +436,7 @@ const ROLES = [
   },
   {
     id: 'tracker', name: 'Tracker', nameVi: 'Máy Chấm Công', emoji: '🕒',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 3, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 6, expansion: 'office',
     lore: 'Cỗ máy "thao túng tâm lý" tối cao, nỗi ám ảnh kinh hoàng của những kẻ chuyên đi muộn về sớm.',
     nightAction: 'Thức dậy và biết có 0, 1, hay 2 Rắn đang ngồi cạnh bạn (không biết hướng cụ thể).',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -444,7 +444,7 @@ const ROLES = [
   },
   {
     id: 'spammer', name: 'Spammer', nameVi: 'Đồng Nghiệp Kém Duyên', emoji: '📨',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 4, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 5, expansion: 'office',
     lore: 'Nhân tố chuyên spam tin nhắn hoặc sang tận bàn "Ping" liên tục bắt trả lời, bất kể người khác đang bận.',
     nightAction: 'Chọn 1 trong 2 hàng xóm để "làm phiền". Người đó biết có Spammer ở bên trái/phải mình (nhưng không thấy lá bài).',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -452,7 +452,7 @@ const ROLES = [
   },
   {
     id: 'ceo', name: 'CEO', nameVi: 'CEO Duy Ca', emoji: '👔',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 5, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 8, expansion: 'office',
     lore: 'Vị sếp tối cao của công ty, "vi hành" xuyên màn đêm để đánh giá chính xác các mối quan hệ ngầm của nhân sự.',
     nightAction: 'Xem bài 1 người HOẶC 2 trong 3 lá bài ở giữa.',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -460,7 +460,7 @@ const ROLES = [
   },
   {
     id: 'poacher', name: 'Poacher', nameVi: 'Kẻ Trộm KPI', emoji: '💼',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 6, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 9, expansion: 'office',
     lore: 'Chiến thần nhảy việc, chuyên lựa lúc dự án sắp thành công để nhảy vào cướp công rồi chuồn lẹ sang bộ phận khác.',
     nightAction: 'Hoán đổi bài của bạn với 1 người khác và xem bài mới. Bạn chuyển ngay sang phe của bài đó.',
     winCondition: 'Thắng theo phe của bài MỚI. Lấy được Rắn → bạn là Rắn.',
@@ -468,7 +468,7 @@ const ROLES = [
   },
   {
     id: 'hr', name: 'HR', nameVi: 'Chuyên Viên Nhân Sự', emoji: '📋',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 7, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 12, expansion: 'office',
     lore: 'Người nắm giữ sơ đồ tổ chức, thích thuyên chuyển, xáo trộn vị trí các phòng ban theo "chỉ thị của vũ trụ".',
     nightAction: 'Hoán đổi bài của 2 người khác (không xem nội dung).',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -476,7 +476,7 @@ const ROLES = [
   },
   {
     id: 'dumper', name: 'Dumper', nameVi: 'Kẻ Đẩy Việc', emoji: '📦',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 7.5, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 11, expansion: 'office',
     lore: 'Chuyên gia né việc cấp cao. Chuyên lén lút lục lọi đống hồ sơ tồn đọng, rút ra một cái rồi âm thầm "bàn giao đột xuất" (úp bô) sang cho một đồng nghiệp khác gánh hộ để bản thân rảnh tay ngồi chơi.',
     nightAction: 'Xem 1 bài ở giữa, rồi BẮT BUỘC tráo lá đó với bài của 1 người bất kỳ (kể cả mình). Lá người đó đẩy vào giữa — Dumper không xem được.',
     winCondition: 'Thuộc Phe Nhân Viên (mặc định). Nếu tự đổi bài chính mình ra giữa → Dumper ăn điểm theo phe của lá bài mới (vai mới mình đang giữ).',
@@ -484,7 +484,7 @@ const ROLES = [
   },
   {
     id: 'paranoid', name: 'Paranoid', nameVi: 'Kẻ Lo Âu', emoji: '😰',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 8, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 13, expansion: 'office',
     lore: 'Nhân viên bị khủng hoảng hiện sinh, cả ngày đi làm chỉ sợ mình bị điều chuyển hoặc bị cho "bay màu" bất ngờ.',
     nightAction: 'Thức dậy gần cuối. Xem bài hiện tại của chính mình.',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -492,7 +492,7 @@ const ROLES = [
   },
   {
     id: 'legal', name: 'Legal', nameVi: 'Chuyên Viên Pháp Chế', emoji: '⚖️',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 9, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 10, expansion: 'office',
     lore: 'Thanh tra nội bộ, luôn thượng tôn pháp luật, sẵn sàng lật tẩy mọi hành vi gian lận ngầm của các nhóm lợi ích.',
     nightAction: 'Lật ngửa 1 bài người khác. Nếu là Rắn hoặc Ishikoi → úp lại (chỉ bạn biết). Nếu là Nhân Viên → công khai cho cả phòng thấy.',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',

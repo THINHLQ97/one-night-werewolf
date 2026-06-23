@@ -7,6 +7,7 @@ import { sfxCardFlip, sfxReveal } from '../audio';
 import VoiceChatControls from '../components/VoiceChatControls';
 import ChatPanel from '../components/ChatPanel';
 import AlienTerminal from '../components/AlienTerminal';
+import OfficeChronicle from '../components/OfficeChronicle';
 import SnakeTeamLogPanel, { useIsSnakeTeammate } from '../components/SnakeTeamLogPanel';
 
 const ROLE_NAMES = {
@@ -34,7 +35,7 @@ const ROLE_NAMES = {
   hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
 };
 
-export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, hasToxicManager = false, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, spammedSide = null, snakeTeamLog = [] }) {
+export default function NightScreen({ myRole, myId, nightState, players, onAction, nightKnowledge, hasAlphaWolf, hasToxicManager = false, roomCode, isHost, voiceSpeaking, chatMessages, appAnnouncements = [], gameMode, hasOracleVision = false, onReopenVision, spammedSide = null, snakeTeamLog = [], officeChronicle = [] }) {
   const { currentRole, isMyTurn, actionData, result, requestSeq = 0 } = nightState;
   const [submitted, setSubmitted] = useState(false);
   const [submittedKey, setSubmittedKey] = useState(null);
@@ -389,7 +390,9 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         break;
     }
 
-    // For doppelganger step 2+, wrap in doppelganger envelope
+    // For doppelganger step 2+, wrap in doppelganger envelope.
+    // Outsourcing routes server-side via outsourcingData existence — DON'T overwrite
+    // action.step here (it may carry the inner role's own internal step, e.g. Dumper 1/2).
     if (isDoppelAction) {
       action.step = step;
     }
@@ -510,17 +513,49 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
           <VoiceChatControls roomCode={roomCode} isHost={isHost} players={players} myId={myId} />
           <ChatPanel roomCode={roomCode} myId={myId} players={players} messages={chatMessages} />
         </div>
-        {myRole && !roleHidden && (
-          <div className="flex items-center justify-center gap-2">
-            <RoleIcon roleId={myRole.roleId} size={22} circular />
-            <span className="text-white/50 text-sm">{myRole.name}</span>
-          </div>
-        )}
+        {myRole && !roleHidden && (() => {
+          // If Outsourcing copied a center role, show the copied role instead
+          const outsourcingCopied = nightKnowledge?.outsourcingCopiedRole;
+          const displayRoleId = (myRole.roleId === 'outsourcing' && outsourcingCopied) ? outsourcingCopied : myRole.roleId;
+          const displayName = (myRole.roleId === 'outsourcing' && outsourcingCopied) ? (ROLE_NAMES[outsourcingCopied] || outsourcingCopied) : myRole.name;
+          return (
+            <div className="flex items-center justify-center gap-2">
+              <RoleIcon roleId={displayRoleId} size={22} circular />
+              <span className="text-white/50 text-sm">
+                {displayName}
+                {myRole.roleId === 'outsourcing' && outsourcingCopied && (
+                  <span className="text-rose-400/70 text-xs ml-1">(🤝 hóa thân)</span>
+                )}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Alien Command Terminal — visible to ALL players */}
       {gameMode === 'alien' && (
         <AlienTerminal messages={appAnnouncements} maxLines={5} onTypingChange={setEchoTyping} />
+      )}
+
+      {/* Office Chronicle — Echo-style log visible to ALL office players */}
+      {gameMode === 'office' && (
+        <div className="mb-3">
+          <OfficeChronicle entries={officeChronicle} maxLines={8} />
+        </div>
+      )}
+
+      {/* Snake-team intel feed — visible only to snake team */}
+      {gameMode === 'office' && snakeTeamLog.length > 0 && (
+        <div className="mx-auto max-w-md w-full mb-3 rounded-xl border px-3 py-2"
+          style={{ background: 'rgba(244,114,182,0.08)', borderColor: 'rgba(244,114,182,0.3)' }}
+        >
+          <p className="text-rose-300 text-[11px] font-bold mb-1.5 flex items-center gap-1.5">🐍 Mật báo phe Rắn</p>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {snakeTeamLog.slice(-6).map((e, i) => (
+              <p key={i} className="text-rose-100/85 text-[11px] leading-snug">{e.description}</p>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Current role narration */}
@@ -549,6 +584,8 @@ export default function NightScreen({ myRole, myId, nightState, players, onActio
         knownWerewolves={roleHidden ? [] : knownWerewolves}
         knownMasons={roleHidden ? [] : (knownMasons || [])}
         knownAliens={roleHidden ? [] : knownAliens}
+        knownSnakes={roleHidden ? [] : (nightKnowledge?.knownSnakes || [])}
+        knownTracker={roleHidden ? null : nightKnowledge?.knownTracker}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable={isMyTurn && !submitted && !(gameMode === 'alien' && echoTyping) ? actionMode : null}

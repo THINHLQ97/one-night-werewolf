@@ -11,7 +11,7 @@ const { OFFICE_ROLES, isSnakeRole: isOfficeSnakeRole, isIshikoiRole } = require(
 const { createRoom, getRoom, getRoomByPlayerId, addPlayer, addBotPlayers, removePlayer, saveDisconnectedPlayer, findDisconnectedPlayer, clearDisconnectedPlayer, listPublicRooms, hasHumanPlayers, getAllRooms, deleteRoom } = require('./rooms');
 const { startGame, getNightActionData, processNightAction, computeResults, getEliminatedHunters, computeDeductionConflicts } = require('./gameLogic');
 const { startAlienGame, generateNightInstructions, generateAlienInstructionPostOracle, getAlienNightActionData, processAlienNightAction, computeAlienResults, shouldRippleOccur, generateRippleAction, generateRascalInstruction, generateExposerInstruction, generatePsychicInstruction, generateMorticianInstruction } = require('./alienGameLogic');
-const { startOfficeGame, getOfficeNightActionData, processOfficeNightAction, computeOfficeResults, getNeighborIds: getOfficeNeighborIds } = require('./officeGameLogic');
+const { startOfficeGame, getOfficeNightActionData, processOfficeNightAction, computeOfficeResults, getNeighborIds: getOfficeNeighborIds, getOriginalSnakePlayers } = require('./officeGameLogic');
 const { generateBotId, generateBotName, decideBotNightAction, decideBotNightActionStep2, decideBotDoppelgangerStep2, decideBotVote, decideBotBodyguardProtect, decideBotHunterShoot } = require('./botAI');
 const { handleGoogleLogin, handleGuestLogin, authenticateToken, GOOGLE_CLIENT_ID } = require('./auth');
 const db = require('./db');
@@ -593,6 +593,100 @@ const OUTSOURCING_IMMEDIATE_ROLES = ['toxic_manager', 'stalker', 'snoop', 'ceo',
 const OFFICE_AUTO_RESOLVE = ['tracker', 'paranoid', 'netizen'];
 const OFFICE_NO_ACTION = ['snake'];
 
+// Roles whose actions the Snake team should be informed about
+// (Snake group already knows about each other; Tracker is revealed because it interacts neighbors)
+const OFFICE_SNAKE_OBSERVES = new Set([
+  'toxic_manager', 'stalker', 'snoop',     // own teammates
+  'tracker',                                // physical touch reveals identity
+]);
+
+// Roles whose action gets narrated to ALL players via the office chronicle
+// (Echo From Void analog — every wake-up gets a line)
+const OFFICE_CHRONICLE_ROLES = new Set([
+  'outsourcing', 'snake', 'toxic_manager', 'stalker', 'snoop',
+  'spammer', 'tracker', 'netizen', 'ceo', 'poacher', 'legal',
+  'dumper', 'hr', 'paranoid',
+]);
+
+function broadcastOfficeChronicle(room, entry) {
+  // entry: { role, actorId, actorName, message, phase, time }
+  if (!room.officeChronicle) room.officeChronicle = [];
+  const e = { ...entry, time: Date.now() };
+  room.officeChronicle.push(e);
+  io.to(room.code).emit('office_chronicle', e);
+}
+
+function broadcastSnakeTeamAction(room, payload) {
+  // payload: { actorId, actorName, role, message, target?, seen? }
+  const snakeIds = getOriginalSnakePlayers(room).map(p => p.id);
+  for (const sid of snakeIds) {
+    if (sid === payload.actorId) continue;
+    io.to(sid).emit('snake_team_action', payload);
+  }
+}
+
+const OFFICE_ROLE_VI = {
+  outsourcing: 'Nhân Viên Thời Vụ', snake: 'Phe Rắn',
+  toxic_manager: 'Trưởng Phòng Toxic', stalker: 'Kẻ Rình Rập', snoop: 'Kẻ Nhòm Ngó',
+  ishikoi: 'Ishikoi', netizen: 'Cộng Đồng Mạng',
+  tracker: 'Máy Chấm Công', spammer: 'Đồng Nghiệp Kém Duyên',
+  ceo: 'CEO Duy Ca', poacher: 'Kẻ Trộm KPI', legal: 'Chuyên Viên Pháp Chế',
+  dumper: 'Kẻ Đẩy Việc', hr: 'Chuyên Viên Nhân Sự', paranoid: 'Kẻ Lo Âu',
+};
+
+// Echo-from-the-void style narration for office actions
+function narrateOfficeAction(role, actorName, action, result) {
+  const r = OFFICE_ROLE_VI[role] || role;
+  switch (role) {
+    case 'outsourcing':
+      if (result?.copiedRole) return `${actorName} (${r}) đã đọc trộm một bản hồ sơ và "biến hình" thành ${OFFICE_ROLE_VI[result.copiedRole] || result.copiedRole}.`;
+      return `${actorName} (${r}) đang đảo qua đống tài liệu nháp.`;
+    case 'snake':
+      return `Phe Rắn vừa liếc mắt nhận diện nhau trong bóng tối phòng họp.`;
+    case 'toxic_manager':
+      return `${actorName} (${r}) lén nhét hồ sơ Rắn cho một cấp dưới — biến họ thành đồng phạm.`;
+    case 'stalker':
+      return `${actorName} (${r}) ngó trộm màn hình của một đồng nghiệp.`;
+    case 'snoop':
+      return `${actorName} (${r}) lục lọi một thư mục mật trên Drive chung.`;
+    case 'spammer':
+      return `${actorName} (${r}) gõ phím lạch cạch — một hàng xóm bị ping liên hồi.`;
+    case 'tracker':
+      return `${actorName} (${r}) khẽ đập dấu vân tay — cảm nhận hơi thở Rắn quanh chỗ ngồi.`;
+    case 'netizen':
+      return `${actorName} (${r}) lướt fanpage tìm dấu hiệu của Ishikoi.`;
+    case 'ceo':
+      return `${actorName} (${r}) bước "vi hành" ngắm nghía một nhân sự.`;
+    case 'poacher':
+      return `${actorName} (${r}) chôm bài KPI của một đồng nghiệp — đổi vai cho mình.`;
+    case 'hr':
+      return `${actorName} (${r}) lén thuyên chuyển vị trí hai nhân sự trong sơ đồ.`;
+    case 'dumper':
+      if (result?.step === 1 || result?.seen) return `${actorName} (${r}) đang nhặt một hồ sơ từ đống tồn đọng…`;
+      if (result?.swapped) return `${actorName} (${r}) "úp bô" hồ sơ cho một đồng nghiệp.`;
+      return `${actorName} (${r}) đang đẩy việc.`;
+    case 'legal':
+      if (result?.revealed) return `${actorName} (${r}) lật ngửa hồ sơ — pháp chế công khai một vai trò Staff.`;
+      if (result?.targetPlayer) return `${actorName} (${r}) lật một hồ sơ rồi lặng lẽ úp lại — có vấn đề gì đó.`;
+      return `${actorName} (${r}) đang lật hồ sơ.`;
+    case 'paranoid':
+      return `${actorName} (${r}) hồi hộp kiểm tra lại bài của chính mình.`;
+    default:
+      return `${actorName} (${r}) thức dậy giữa đêm.`;
+  }
+}
+
+function emitOfficeNarration(room, role, actorId, actorName, action, result) {
+  if (!OFFICE_CHRONICLE_ROLES.has(role)) return;
+  const message = narrateOfficeAction(role, actorName, action, result);
+  broadcastOfficeChronicle(room, { role, actorId, actorName, message });
+
+  // Snake team gets a more detailed view for observed roles
+  if (OFFICE_SNAKE_OBSERVES.has(role)) {
+    broadcastSnakeTeamAction(room, { role, actorId, actorName, action, result, message });
+  }
+}
+
 function decideBotOfficeAction(room, botId, role) {
   const players = room.players;
   const others = players.filter(p => p.id !== botId);
@@ -822,6 +916,7 @@ async function runOfficeNightPhase(room) {
             const action = decideBotOfficeAction(room, bot.id, role);
             const result = processOfficeNightAction(room, bot.id, role, action);
             room.nightLog.push({ role, playerId: bot.id, playerName: bot.name, action: { ...action }, result: { ...result } });
+            emitOfficeNarration(room, role, bot.id, bot.name, action, result);
             emitSnakeTeamAction(room, bot.id, role, action, result);
 
             // Dumper step 2 — must swap after peek
@@ -829,6 +924,7 @@ async function runOfficeNightPhase(room) {
               const action2 = decideBotOfficeAction(room, bot.id, 'dumper');
               const result2 = processOfficeNightAction(room, bot.id, 'dumper', action2);
               room.nightLog.push({ role: 'dumper', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2 } });
+              emitOfficeNarration(room, 'dumper', bot.id, bot.name, action2, result2);
             }
 
             // Outsourcing follow-up: if copied role has immediate action, run step 2
@@ -836,6 +932,7 @@ async function runOfficeNightPhase(room) {
               const action2 = decideBotOfficeAction(room, bot.id, result.copiedRole);
               const result2 = processOfficeNightAction(room, bot.id, result.copiedRole, action2);
               room.nightLog.push({ role: 'outsourcing', playerId: bot.id, playerName: bot.name, action: { ...action2 }, result: { ...result2, copiedRole: result.copiedRole } });
+              emitOfficeNarration(room, result.copiedRole, bot.id, bot.name, action2, result2);
               emitSnakeTeamAction(room, bot.id, result.copiedRole, action2, result2, true);
               if (result.copiedRole === 'legal' && result2.revealed && result2.targetPlayer) {
                 io.to(room.code).emit('night_public_reveal', { playerId: result2.targetPlayer, role: result2.role });
@@ -2385,12 +2482,16 @@ io.on('connection', socket => {
     if (room.settings.gameMode === 'office') {
       // Outsourcing multi-step (mirror of Doppelganger)
       if (role === 'outsourcing') {
-        const step = action.step || 1;
-        if (step === 1) {
+        // Route by data existence — once a center card is copied, every subsequent
+        // outsourcing action belongs to the copied role (which may itself be multi-step).
+        // We can't share action.step with the inner role (e.g. Dumper has its own step 1/2).
+        const alreadyCopied = !!room.outsourcingData?.[socket.id]?.copiedRole;
+        if (!alreadyCopied) {
           const result = processOfficeNightAction(room, socket.id, 'outsourcing', action);
           if (!result.copiedRole) return;
           room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: { ...action }, result: { ...result } });
           socket.emit('night_action_result', { role: 'outsourcing', result });
+          emitOfficeNarration(room, 'outsourcing', socket.id, playerName, action, result);
 
           if (OUTSOURCING_IMMEDIATE_ROLES.includes(result.copiedRole)) {
             const actionData = buildOfficeActionData(room, result.copiedRole, socket.id);
@@ -2399,6 +2500,8 @@ io.on('connection', socket => {
               const subResult = processOfficeNightAction(room, socket.id, result.copiedRole, {});
               room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: {}, result: { ...subResult, copiedRole: result.copiedRole } });
               socket.emit('night_action_result', { role: 'outsourcing', result: { ...subResult, copiedRole: result.copiedRole } });
+              emitOfficeNarration(room, result.copiedRole, socket.id, playerName, {}, subResult);
+              emitSnakeTeamAction(room, socket.id, result.copiedRole, {}, subResult, true);
             } else {
               socket.emit('night_action_request', { role: 'outsourcing', step: 2, copiedRole: result.copiedRole, ...actionData });
               return;
@@ -2410,6 +2513,7 @@ io.on('connection', socket => {
           const result = processOfficeNightAction(room, socket.id, copiedRole, action);
           room.nightLog.push({ role: 'outsourcing', playerId: socket.id, playerName, action: { ...action }, result: { ...result, copiedRole } });
           socket.emit('night_action_result', { role: 'outsourcing', result: { ...result, copiedRole } });
+          emitOfficeNarration(room, copiedRole, socket.id, playerName, action, result);
           emitSnakeTeamAction(room, socket.id, copiedRole, action, result, true);
           if (copiedRole === 'legal' && result.revealed && result.targetPlayer) {
             io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });
@@ -2448,6 +2552,7 @@ io.on('connection', socket => {
       if (Object.keys(result).length > 0) {
         socket.emit('night_action_result', { role, result });
       }
+      emitOfficeNarration(room, role, socket.id, playerName, action, result);
       emitSnakeTeamAction(room, socket.id, role, action, result);
       if (role === 'legal' && result.revealed && result.targetPlayer) {
         io.to(room.code).emit('night_public_reveal', { playerId: result.targetPlayer, role: result.role });

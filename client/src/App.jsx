@@ -49,6 +49,9 @@ export default function App() {
     shieldedPlayer: null,
     doppelgangerCopiedRole: null,
     outsourcingCopiedRole: null,
+    knownSnakes: [],
+    knownSnakeRoles: {},
+    knownTracker: null,
     auraTouched: [],
     auraSeen: false,
   });
@@ -65,6 +68,7 @@ export default function App() {
   const [rippleActive, setRippleActive] = useState(false); // true once Ripple event has occurred — persists until game ends
   const [spammedSide, setSpammedSide] = useState(null); // 'left' | 'right' | null — Spammer effect on me
   const [snakeTeamLog, setSnakeTeamLog] = useState([]); // [{actorName, role, description, timestamp, viaOutsourcing}]
+  const [officeChronicle, setOfficeChronicle] = useState([]); // Echo-style narrations for office mode
 
   const screenRef = useRef(screen);
   const roomCodeRef = useRef(roomCode);
@@ -180,7 +184,9 @@ export default function App() {
       setHasAlphaWolf(data?.hasAlphaWolf || false);
       setHasToxicManager(data?.hasToxicManager || false);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], knownSnakes: [], knownSnakeRoles: {}, knownTracker: null, swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
+      setSnakeTeamLog([]);
+      setOfficeChronicle([]);
       // Reset Ripple state from previous game so its background/BGM don't bleed into the new round
       setRippleActive(false);
       setSpammedSide(null);
@@ -235,6 +241,19 @@ export default function App() {
 
     socket.on('spammer_pinged', ({ side }) => {
       setSpammedSide(side);
+    });
+
+    socket.on('office_snake_action', (payload) => {
+      // Snake-team intel: log the event + reveal Tracker identity to snakes
+      setSnakeTeamLog(prev => [...prev, payload].slice(-30));
+      if (payload.role === 'tracker' && payload.actorId) {
+        setNightKnowledge(prev => ({ ...prev, knownTracker: payload.actorId }));
+      }
+    });
+
+    socket.on('office_chronicle', (entry) => {
+      // Echo From Void analog — narration of every wake-up for office mode
+      setOfficeChronicle(prev => [...prev, entry].slice(-30));
     });
 
     socket.on('office_snake_action', (payload) => {
@@ -359,6 +378,14 @@ export default function App() {
         setNightKnowledge(prev => ({
           ...prev,
           knownMasons: actionData.masons.map(m => m.id),
+        }));
+      }
+      // Office: snake phase delivers the snake-team list
+      if (reqEffective === 'snake' && actionData.snakes) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownSnakes: actionData.snakes.map(s => s.id),
+          knownSnakeRoles: actionData.snakes.reduce((m, s) => { m[s.id] = s.role; return m; }, {}),
         }));
       }
       // Alien mode: store known alien teammates
@@ -686,7 +713,9 @@ export default function App() {
       setMyRole(null);
       setResults(null);
       setTokenClaims(null);
-      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
+      setNightKnowledge({ revealedPlayers: {}, revealedCenter: {}, knownWerewolves: [], knownMasons: [], knownSnakes: [], knownSnakeRoles: {}, knownTracker: null, swappedPairs: [], myCurrentRole: null, shieldedPlayer: null, doppelgangerCopiedRole: null, outsourcingCopiedRole: null, auraTouched: [], auraSeen: false });
+      setSnakeTeamLog([]);
+      setOfficeChronicle([]);
       setSnakeTeamLog([]);
       setChatMessages([]);
       setScreen('lobby');
@@ -877,6 +906,7 @@ export default function App() {
         onReopenVision={() => setOracleVisionOpen(true)}
         spammedSide={spammedSide}
         snakeTeamLog={snakeTeamLog}
+        officeChronicle={officeChronicle}
       />
       {oracleEvent?.active && (
         <OracleSpecialEvent

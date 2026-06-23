@@ -40,6 +40,8 @@ export default function GameTable({
   knownWerewolves = [],
   knownMasons = [],
   knownAliens = [],
+  knownSnakes = [],
+  knownTracker = null,
   swappedPairs = [],
   myCurrentRole = null,
   selectable = null,
@@ -308,6 +310,8 @@ export default function GameTable({
         const isWolf = knownWerewolves.includes(p.id);
         const isMason = knownMasons.includes(p.id);
         const isAlien = knownAliens.includes(p.id);
+        const isSnake = knownSnakes.includes(p.id);
+        const isTracker = knownTracker === p.id;
         const isSelected = selected.includes(p.id);
         const isUnvotable = unvotable.includes(p.id);
         const isClickable = (selectable === 'player' || selectable === 'both') && p.id !== myId && !isUnvotable;
@@ -330,6 +334,8 @@ export default function GameTable({
                 ${isWolf ? 'player-wolf' : ''}
                 ${isMason ? 'player-mason' : ''}
                 ${isAlien ? 'player-alien' : ''}
+                ${isSnake ? 'player-snake' : ''}
+                ${isTracker ? 'player-tracker' : ''}
                 ${isSelected ? 'player-selected' : ''}
                 ${isClickable ? 'player-clickable' : ''}
                 ${isEliminated ? 'player-eliminated' : ''}
@@ -384,6 +390,16 @@ export default function GameTable({
                 {/* Mason indicator */}
                 {isMason && !isRevealed && (
                   <span className="absolute -top-1 -left-1 text-xs">🤝</span>
+                )}
+
+                {/* Snake teammate indicator */}
+                {isSnake && !isWolf && !isRevealed && (
+                  <span className="absolute -top-1 -right-1 text-xs">🐍</span>
+                )}
+
+                {/* Tracker (revealed to snake team after Tracker's turn) */}
+                {isTracker && !isRevealed && (
+                  <span className="absolute -top-1 -left-1 text-xs">🕒</span>
                 )}
 
                 {/* Shield indicator — styled like Alpha Wolf token */}

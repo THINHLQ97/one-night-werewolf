@@ -109,20 +109,9 @@ const OFFICE_END_SCENE_NARRATIONS = {
   vote_legal: 'Chuyên Viên Pháp Chế bị đẩy ra ngoài — nhưng cô ấy bước đi với hồ sơ vụ kiện trong cặp. Công ty sẽ gặp lại cô ở toà — sớm thôi.',
 };
 
-function getOfficeNarration(sceneKey, results, players) {
+function getOfficeNarration(sceneKey /*, results, players */) {
   if (!sceneKey) return null;
-  const base = OFFICE_END_SCENE_NARRATIONS[sceneKey];
-  if (!base) return null;
-  // If CEO is in the game but didn't get eliminated, append his fury narration —
-  // unless the vote outcome itself was about the CEO.
-  const finalCards = results.finalCards || {};
-  const eliminated = results.eliminated || [];
-  const ceoInGame = players.some(p => finalCards[p.id] === 'ceo');
-  const ceoEliminated = eliminated.some(id => finalCards[id] === 'ceo');
-  if (ceoInGame && !ceoEliminated && sceneKey !== 'vote_ceo' && sceneKey !== 'multi_vote') {
-    return `${base} CEO không bị sa thải — ông trở về phòng họp, gầm gừ về những "nhân viên vô dụng" đã đẩy nhầm người. Đợt cắt giảm tiếp theo sẽ không khoan nhượng.`;
-  }
-  return base;
+  return OFFICE_END_SCENE_NARRATIONS[sceneKey] || null;
 }
 
 function getOfficeEndSceneKey(results, players) {

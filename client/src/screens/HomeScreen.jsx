@@ -37,7 +37,6 @@ const OFFICE_QUOTES = [
   { en: 'A wrong Reply-All can end a career.', author: 'HR Anonymous', vi: 'Một cú Reply All sai người có thể chấm dứt cả sự nghiệp.' },
   { en: "Toxic doesn't yell. It hides inside 'as per my last email.'", author: 'Office Folklore', vi: "Toxic không cần hét. Nó nằm trong câu 'as per my last email'." },
   { en: 'In the layoff race, leaving early may not be losing — and staying is no guarantee of winning.', author: 'Office Folklore', vi: 'Trong cuộc đua sa thải, đi sớm chưa chắc thua — ở lại chưa chắc thắng.' },
-  { en: "Ishikoi don't fear being fired. They fear missing the deadline to file suit.", author: 'Legal Department', vi: 'Ishikoi không sợ bị đuổi việc. Họ sợ chưa kịp ký đơn kiện.' },
   { en: 'The internet remembers everything — including the message you just deleted from Slack.', author: 'Netizen Proverb', vi: 'Cộng đồng mạng nhớ mọi thứ — kể cả tin nhắn bạn vừa xoá khỏi Slack.' },
   { en: 'In that meeting, the silent ones are not the innocent ones.', author: 'Office Folklore', vi: 'Trong cuộc họp ấy, người im lặng không phải là người vô tội.' },
   { en: "Each card in the middle is a resignation letter, waiting for the right person to sign.", author: 'Office Folklore', vi: 'Mỗi lá bài giữa bàn là một lá đơn nghỉ việc, đợi đúng người ký.' },
