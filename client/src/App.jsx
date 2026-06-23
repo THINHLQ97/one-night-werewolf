@@ -241,6 +241,7 @@ export default function App() {
 
     socket.on('spammer_pinged', ({ side }) => {
       setSpammedSide(side);
+      setNightKnowledge(prev => ({ ...prev, spammedSide: side }));
     });
 
     socket.on('office_snake_action', (payload) => {
@@ -462,6 +463,16 @@ export default function App() {
           ...prev,
           blobMembers: actionData.members,
         }));
+      }
+      // Office auto-resolved roles: persist result into nightKnowledge
+      if (reqEffective === 'paranoid' && actionData.currentRole) {
+        setNightKnowledge(prev => ({ ...prev, myCurrentRole: actionData.currentRole }));
+      }
+      if (reqEffective === 'tracker' && actionData.snakeNeighborCount != null) {
+        setNightKnowledge(prev => ({ ...prev, trackerSnakeCount: actionData.snakeNeighborCount }));
+      }
+      if (reqEffective === 'netizen' && actionData.ishikois) {
+        setNightKnowledge(prev => ({ ...prev, knownIshikois: actionData.ishikois }));
       }
     });
 

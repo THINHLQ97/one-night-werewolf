@@ -35,6 +35,15 @@ const ROLE_SHORT = {
   apprenticeseer: 'Apprentice Seer', paranormalinvestigator: 'P.I.', witch: 'Witch',
   villageidiot: 'Village Idiot', revealer: 'Revealer', bodyguard: 'Bodyguard',
   prince: 'Prince', cursed: 'Cursed', auraseer: 'Aura Seer',
+  // Alien
+  alien: 'Alien', syntheticalien: 'Synthetic Alien', cow: 'Cow', groob: 'Groob', zerb: 'Zerb',
+  oracle: 'Oracle', rascal: 'Rascal', exposer: 'Exposer', psychic: 'Psychic',
+  mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
+  // Office
+  outsourcing: 'Outsourcing', snake: 'Snake', toxic_manager: 'Toxic Manager',
+  stalker: 'Stalker', snoop: 'Snoop', ishikoi: 'Ishikoi', netizen: 'Netizen',
+  tracker: 'Tracker', spammer: 'Spammer', ceo: 'CEO', poacher: 'Poacher',
+  hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
 };
 const CENTER = ['Center 1', 'Center 2', 'Center 3'];
 function centerName(slot) {
@@ -400,6 +409,19 @@ function KnowledgeSummary({ knowledge, players }) {
   if (knowledge.blobMembers?.length > 0) {
     items.push(`🟢 Blob: ${knowledge.blobMembers.map(m => m.name).join(', ')}`);
   }
+  if (knowledge.knownSnakes?.length > 0) {
+    const snakeRoles = knowledge.knownSnakeRoles || {};
+    const formatted = knowledge.knownSnakes.map(id => {
+      const name = nameMap[id] || '?';
+      const sr = ROLE_SHORT[snakeRoles[id]];
+      return sr ? `${name} (${sr})` : name;
+    }).join(', ');
+    items.push(`🐍 Phe Rắn: ${formatted}`);
+  }
+  if (knowledge.outsourcingCopiedRole) items.push(`🤝 Hóa Thân → ${ROLE_SHORT[knowledge.outsourcingCopiedRole] || knowledge.outsourcingCopiedRole}`);
+  if (knowledge.trackerSnakeCount != null) items.push(`🕒 ${knowledge.trackerSnakeCount} Rắn ngồi cạnh`);
+  if (knowledge.knownIshikois?.length > 0) items.push(`📣 Ishikoi: ${knowledge.knownIshikois.map(i => i.name).join(', ')}`);
+  if (knowledge.spammedSide) items.push(`📨 Spammer ping từ phía ${knowledge.spammedSide === 'left' ? 'TRÁI' : 'PHẢI'}`);
   Object.entries(revealedPlayers).forEach(([id, role]) => items.push(`${nameMap[id]}: ${ROLE_SHORT[role] || role}`));
   Object.entries(revealedCenter).forEach(([slot, role]) => items.push(`${centerName(slot)}: ${ROLE_SHORT[role] || role}`));
   swappedPairs.forEach(([a, b]) => {
