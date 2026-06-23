@@ -678,13 +678,60 @@ function narrateOfficeAction(role, actorName, action, result) {
 
 function emitOfficeNarration(room, role, actorId, actorName, action, result) {
   if (!OFFICE_CHRONICLE_ROLES.has(role)) return;
+  // Public Tin Đồn Văn Phòng panel must NOT name actors — it's the office
+  // equivalent of the narrator script, calling roles awake without
+  // identifying who is sitting in which seat. Per-actor detail stays
+  // private to the Snake team channel below.
   const message = narrateOfficeAction(role, actorName, action, result);
-  broadcastOfficeChronicle(room, { role, actorId, actorName, message });
 
-  // Snake team gets a more detailed view for observed roles
   if (OFFICE_SNAKE_OBSERVES.has(role)) {
     broadcastSnakeTeamAction(room, { role, actorId, actorName, action, result, message });
   }
+}
+
+// Phase-start announcements for the public chronicle — neutral, role-only,
+// no actor names. Modeled on the werewolf narrator script: "X is waking up..."
+function officePhaseCallout(role) {
+  switch (role) {
+    case 'outsourcing':
+      return 'Outsourcing đang dậy và lựa chọn một vị trí để "thử việc" đêm nay. Nếu nhận được vai có hành động đêm, hắn thực hiện ngay; nếu là Paranoid hoặc vai bị động, hắn chờ đến lượt được gọi.';
+    case 'snake':
+      return 'Phe Rắn đang dậy — họ liếc mắt nhận diện nhau trong bóng tối phòng họp và lặng lẽ lên kế hoạch chia rẽ văn phòng.';
+    case 'toxic_manager':
+      return 'Trưởng Phòng Toxic đang dậy — hắn lén nhét hồ sơ Rắn cho một cấp dưới, biến họ thành đồng phạm.';
+    case 'stalker':
+      return 'Kẻ Rình Rập đang dậy — hắn ngó trộm màn hình của một đồng nghiệp để biết thân phận.';
+    case 'snoop':
+      return 'Kẻ Nhòm Ngó đang dậy — hắn lục một thư mục mật trên Drive chung.';
+    case 'spammer':
+      return 'Đồng Nghiệp Kém Duyên đang dậy — hắn gõ phím lạch cạch, một phía của văn phòng sẽ bị ping liên hồi.';
+    case 'tracker':
+      return 'Máy Chấm Công đang dậy — nó khẽ đập dấu vân tay, cảm nhận hơi thở Rắn quanh chỗ ngồi.';
+    case 'netizen':
+      return 'Cộng Đồng Mạng đang dậy — họ lướt fanpage tìm dấu hiệu của Ishikoi.';
+    case 'ceo':
+      return 'CEO Duy Ca đang dậy — ngài bước "vi hành" ngắm nghía một nhân sự.';
+    case 'poacher':
+      return 'Kẻ Trộm KPI đang dậy — hắn chôm bài KPI của một đồng nghiệp và đổi vai cho mình.';
+    case 'hr':
+      return 'Chuyên Viên Nhân Sự đang dậy — họ lặng lẽ thuyên chuyển hai nhân sự trong sơ đồ ghế.';
+    case 'dumper':
+      return 'Kẻ Đẩy Việc đang dậy — hắn nhặt một hồ sơ từ đống tồn đọng rồi tìm người để "úp bô".';
+    case 'legal':
+      return 'Chuyên Viên Pháp Chế đang dậy — họ chuẩn bị lật ngửa hồ sơ một nhân sự cho cả công ty thấy.';
+    case 'paranoid':
+      return 'Kẻ Lo Âu đang dậy — hắn hồi hộp kiểm tra lại bài của chính mình.';
+    case 'ishikoi':
+      return 'Ishikoi đang dậy — họ chuẩn bị bằng chứng để khởi kiện công ty.';
+    default:
+      return null;
+  }
+}
+
+function emitOfficePhaseCallout(room, role) {
+  const message = officePhaseCallout(role);
+  if (!message) return;
+  broadcastOfficeChronicle(room, { role, message, phase: 'start' });
 }
 
 function decideBotOfficeAction(room, botId, role) {
@@ -863,6 +910,9 @@ async function runOfficeNightPhase(room) {
       instruction: roleData.nightInstruction,
       closeInstruction: roleData.nightClose,
     });
+
+    // Public chronicle: announce role wake-up (no actor names — narrator-style)
+    emitOfficePhaseCallout(room, role);
 
     const actingPlayers = getOfficeActingPlayers(room, role);
 
