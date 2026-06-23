@@ -874,13 +874,23 @@ function describeSnakeTeamEvent(room, actorName, role, action, result, viaOutsou
       const seen = seenRole ? ` → ${roleLabel(seenRole)}` : '';
       return `${prefix}🔍 ${actorName} (Snoop) xem ${slotLabel}${seen}.`;
     }
+    case 'tracker': {
+      // Tracker's identity leaks to the Snake team because they feel the touch.
+      const count = typeof result?.snakeNeighborCount === 'number' ? result.snakeNeighborCount : null;
+      const tail = count !== null ? ` — cảm nhận ${count} Snake ngồi cạnh.` : '.';
+      return `${prefix}🕒 ${actorName} là Tracker${tail}`;
+    }
     default:
       return `${prefix}${actorName} hành động (${roleLabel(role)}).`;
   }
 }
 
+// Snake team learns about: own Snake-aligned actions PLUS Tracker
+// (physical touch reveals Tracker's seat to whoever is touched).
+const OFFICE_SNAKE_REPORTED = new Set([...OFFICE_SNAKE_GROUP, 'tracker']);
+
 function emitSnakeTeamAction(room, actorId, role, action, result, viaOutsourcing = false) {
-  if (!OFFICE_SNAKE_GROUP.includes(role)) return;
+  if (!OFFICE_SNAKE_REPORTED.has(role)) return;
   const teammates = getCurrentSnakeTeammates(room);
   if (teammates.length === 0) return;
   const actor = room.players.find(p => p.id === actorId);
