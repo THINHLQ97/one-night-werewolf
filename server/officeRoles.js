@@ -55,7 +55,7 @@ const OFFICE_ROLES = {
   },
   netizen: {
     id: 'netizen', name: 'Netizen', nameVi: 'Cộng Đồng Mạng', team: 'ishikoi',
-    nightOrder: 7, hasNightAction: true, maxCount: 1, emoji: '📣', expansion: 'office',
+    nightOrder: 6, hasNightAction: true, maxCount: 1, emoji: '📣', expansion: 'office',
     description: 'Mở mắt, App chỉ rõ ai là Ishikoi. Thắng nếu Ishikoi bị vote. Nếu không có Ishikoi, tự gánh điều kiện thắng y hệt Ishikoi.',
     nightInstruction: 'Cộng Đồng Mạng, hãy mở mắt. App sẽ chỉ rõ ai là Ishikoi.',
     nightClose: 'Cộng Đồng Mạng, hãy nhắm mắt lại.',
@@ -64,14 +64,14 @@ const OFFICE_ROLES = {
   // ─── STAFF FACTION ────────────────────────────────────────────────────────
   tracker: {
     id: 'tracker', name: 'Tracker', nameVi: 'Máy Chấm Công', team: 'staff',
-    nightOrder: 6, hasNightAction: true, maxCount: 1, emoji: '🕒', expansion: 'office',
+    nightOrder: 5, hasNightAction: true, maxCount: 1, emoji: '🕒', expansion: 'office',
     description: 'Thức dậy và biết có 0/1/2 con Rắn đang ngồi cạnh bạn (không biết hướng).',
     nightInstruction: 'Máy Chấm Công, hãy mở mắt. Bạn cảm nhận được số Rắn ngồi cạnh.',
     nightClose: 'Máy Chấm Công, hãy nhắm mắt lại.',
   },
   spammer: {
     id: 'spammer', name: 'Spammer', nameVi: 'Đồng Nghiệp Kém Duyên', team: 'staff',
-    nightOrder: 5, hasNightAction: true, maxCount: 1, emoji: '📨', expansion: 'office',
+    nightOrder: 7, hasNightAction: true, maxCount: 1, emoji: '📨', expansion: 'office',
     description: 'Chọn 1 trong 2 người ngồi cạnh để "làm phiền". Họ sẽ nhận thông báo có Spammer ở phía bạn (trái/phải).',
     nightInstruction: 'Spammer, hãy mở mắt và chọn 1 hàng xóm để gây phiền.',
     nightClose: 'Spammer, hãy nhắm mắt lại.',

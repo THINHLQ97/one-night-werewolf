@@ -975,6 +975,7 @@ export default function App() {
         myId={socket.id}
         isHost={isHost}
         onNewGame={() => socket.emit('new_game')}
+        gameMode={settings.gameMode || gameMode}
       />
       <RankUpPopup rankUp={rankUpData} onClose={() => setRankUpData(null)} />
       <DemotedPopup newRank={demotedData} onClose={() => setDemotedData(null)} />

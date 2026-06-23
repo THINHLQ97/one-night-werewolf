@@ -428,7 +428,7 @@ const ROLES = [
   },
   {
     id: 'netizen', name: 'Netizen', nameVi: 'Cộng Đồng Mạng', emoji: '📣',
-    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: 7, expansion: 'office',
+    team: 'ishikoi', teamLabel: 'Phe Ishikoi', nightOrder: 6, expansion: 'office',
     lore: 'Thế lực hậu thuẫn, sẵn sàng tràn vào fanpage thả phẫn nộ, viết bài bóc phốt để tạo áp lực truyền thông giúp Ishikoi đòi tiền.',
     nightAction: 'Mở mắt — App sẽ chỉ rõ ai là Ishikoi.',
     winCondition: 'Thắng nếu Ishikoi bị vote sa thải.\nNếu KHÔNG có Ishikoi trong game → Netizen tự gánh điều kiện thắng y hệt Ishikoi (bị vote = thắng).',
@@ -436,7 +436,7 @@ const ROLES = [
   },
   {
     id: 'tracker', name: 'Tracker', nameVi: 'Máy Chấm Công', emoji: '🕒',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 6, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 5, expansion: 'office',
     lore: 'Cỗ máy "thao túng tâm lý" tối cao, nỗi ám ảnh kinh hoàng của những kẻ chuyên đi muộn về sớm.',
     nightAction: 'Thức dậy và biết có 0, 1, hay 2 Rắn đang ngồi cạnh bạn (không biết hướng cụ thể).',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',
@@ -444,7 +444,7 @@ const ROLES = [
   },
   {
     id: 'spammer', name: 'Spammer', nameVi: 'Đồng Nghiệp Kém Duyên', emoji: '📨',
-    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 5, expansion: 'office',
+    team: 'staff', teamLabel: 'Phe Nhân Viên', nightOrder: 7, expansion: 'office',
     lore: 'Nhân tố chuyên spam tin nhắn hoặc sang tận bàn "Ping" liên tục bắt trả lời, bất kể người khác đang bận.',
     nightAction: 'Chọn 1 trong 2 hàng xóm để "làm phiền". Người đó biết có Spammer ở bên trái/phải mình (nhưng không thấy lá bài).',
     winCondition: 'Thắng nếu Phe Nhân Viên loại được Rắn.',

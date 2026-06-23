@@ -662,7 +662,7 @@ function getEndSceneKey(results, players) {
   return VILLAGE_ROLE_KEYS[primaryRole] || 'vote_unknown_villager';
 }
 
-export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
+export default function ResultsScreen({ results, myId, isHost, onNewGame, gameMode }) {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [showContent, setShowContent] = useState(false);
 
@@ -1018,7 +1018,7 @@ export default function ResultsScreen({ results, myId, isHost, onNewGame }) {
           <p className="text-center text-white/40 text-sm py-4">Chờ host bắt đầu game mới...</p>
         )}
 
-        <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} gameMode={results?.alienAppState ? 'alien' : null} />
+        <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} gameMode={gameMode || (results?.alienAppState ? 'alien' : null)} />
       </div>
     </>
   );

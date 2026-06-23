@@ -183,7 +183,7 @@ export default function RoleRevealScreen({ myRole, roomCode, isHost, players, vo
         </div>
       </div>
 
-      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} gameMode={['alien','syntheticalien','groob','zerb','cow','oracle','rascal','exposer','psychic','mortician','leader','blob'].includes(myRole?.roleId) ? 'alien' : null} />
+      <RoleLibrary isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} highlightRole={myRole?.roleId} gameMode={gameMode || (['alien','syntheticalien','groob','zerb','cow','oracle','rascal','exposer','psychic','mortician','leader','blob'].includes(myRole?.roleId) ? 'alien' : null)} />
     </div>
   );
 }
