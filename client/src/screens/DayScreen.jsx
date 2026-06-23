@@ -59,7 +59,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
 
   const votedCount = Object.keys(votes).length + (bodyguardProtect ? 1 : 0);
 
-  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, knownAliens = [], knownGroobZerb = [], knownCow = null, outsourcingCopiedRole = null } = nightKnowledge || {};
+  const { revealedPlayers = {}, revealedCenter = {}, knownWerewolves = [], knownMasons = [], swappedPairs = [], myCurrentRole, knownAliens = [], knownGroobZerb = [], knownCow = null, outsourcingCopiedRole = null, knownSnakes = [] } = nightKnowledge || {};
 
   const isSnakeTeammate = useIsSnakeTeammate(gameMode, myRole, outsourcingCopiedRole);
 
@@ -190,6 +190,7 @@ export default function DayScreen({ dayState, myId, isHost, onVote, onBodyguardP
         knownWerewolves={roleHidden ? [] : knownWerewolves}
         knownMasons={roleHidden ? [] : knownMasons}
         knownAliens={roleHidden ? [] : knownAliens}
+        knownSnakes={roleHidden ? [] : knownSnakes}
         swappedPairs={roleHidden ? [] : swappedPairs}
         myCurrentRole={roleHidden ? null : (myCurrentRole || myRole?.roleId)}
         selectable={votingPhase && !facingAway.includes(myId) ? 'player' : 'none'}

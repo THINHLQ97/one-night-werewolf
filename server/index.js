@@ -842,16 +842,25 @@ function getCurrentSnakeTeammates(room) {
   });
 }
 
+// English-only slot labels for the Snake Team log (no Vietnamese mixing).
+const OFFICE_SLOT_LABELS_EN = {
+  center0: 'Center 1',
+  center1: 'Center 2',
+  center2: 'Center 3',
+  centerSnake: 'Snake Spare',
+};
+
 function describeSnakeTeamEvent(room, actorName, role, action, result, viaOutsourcing) {
-  const nameOf = (id) => room.players.find(p => p.id === id)?.name || OFFICE_SLOT_LABELS[id] || id;
-  const roleLabel = (r) => OFFICE_ROLES[r]?.nameVi || r;
+  const nameOf = (id) => room.players.find(p => p.id === id)?.name || OFFICE_SLOT_LABELS_EN[id] || id;
+  // Always English role names — keep the log fully in English to avoid mixed-language entries.
+  const roleLabel = (r) => OFFICE_ROLES[r]?.name || r;
   const prefix = viaOutsourcing ? '🤝→' : '';
   switch (role) {
     case 'snake':
-      return `${prefix}🐍 ${actorName} thức cùng đàn Rắn.`;
+      return `${prefix}🐍 ${actorName} thức cùng đàn Snake.`;
     case 'toxic_manager': {
       const t = action?.targetPlayer ? nameOf(action.targetPlayer) : '?';
-      return `${prefix}😤 ${actorName} (Toxic Manager) đẩy lá Rắn lên ${t}.`;
+      return `${prefix}😤 ${actorName} (Toxic Manager) đẩy lá Snake lên ${t}.`;
     }
     case 'stalker': {
       const t = action?.targetPlayer ? nameOf(action.targetPlayer) : '?';
@@ -860,7 +869,7 @@ function describeSnakeTeamEvent(room, actorName, role, action, result, viaOutsou
     }
     case 'snoop': {
       const slot = action?.centerSlot || result?.seen?.slots?.[0]?.slot;
-      const slotLabel = OFFICE_SLOT_LABELS[slot] || slot || '?';
+      const slotLabel = OFFICE_SLOT_LABELS_EN[slot] || slot || '?';
       const seenRole = result?.seen?.slots?.[0]?.role;
       const seen = seenRole ? ` → ${roleLabel(seenRole)}` : '';
       return `${prefix}🔍 ${actorName} (Snoop) xem ${slotLabel}${seen}.`;
@@ -877,12 +886,17 @@ function emitSnakeTeamAction(room, actorId, role, action, result, viaOutsourcing
   const actor = room.players.find(p => p.id === actorId);
   if (!actor) return;
   const description = describeSnakeTeamEvent(room, actor.name, role, action, result, viaOutsourcing);
+  // Toxic Manager forces a non-Snake into the Snake team — surface that ID so
+  // existing teammates can glow the convert in the morning (per rule:
+  // the original snake circle keeps the Toxic Manager's victim highlighted).
+  const addedSnakeId = (role === 'toxic_manager' && action?.targetPlayer) ? action.targetPlayer : null;
   const payload = {
     actorId,
     actorName: actor.name,
     role,
     viaOutsourcing,
     description,
+    addedSnakeId,
     timestamp: Date.now(),
   };
   teammates.forEach(p => {

@@ -249,6 +249,16 @@ export default function App() {
       if (payload.role === 'tracker' && payload.actorId) {
         setNightKnowledge(prev => ({ ...prev, knownTracker: payload.actorId }));
       }
+      // Toxic Manager turned someone into a Snake — keep them glowing on
+      // the Snake team's table for the rest of the round.
+      if (payload.addedSnakeId) {
+        setNightKnowledge(prev => ({
+          ...prev,
+          knownSnakes: prev.knownSnakes?.includes(payload.addedSnakeId)
+            ? prev.knownSnakes
+            : [...(prev.knownSnakes || []), payload.addedSnakeId],
+        }));
+      }
     });
 
     socket.on('office_chronicle', (entry) => {
