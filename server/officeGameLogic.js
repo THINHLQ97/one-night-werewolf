@@ -303,7 +303,9 @@ function processOfficeNightAction(room, playerId, role, action) {
         return { seen: { type: 'player', id: action.targetPlayer, role: currentCards[action.targetPlayer] } };
       }
       if (action.centerSlots && Array.isArray(action.centerSlots) && action.centerSlots.length === 2) {
-        if (!action.centerSlots.every(s => BASE_CENTER_SLOTS.includes(s))) return {};
+        // CEO can peek ANY center, including centerSnake when Toxic Manager is in play
+        const valid = getValidCenterSlots(room);
+        if (!action.centerSlots.every(s => valid.includes(s))) return {};
         return {
           seen: { type: 'center', slots: action.centerSlots.map(s => ({ slot: s, role: currentCards[s] })) },
         };
