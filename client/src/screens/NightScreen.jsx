@@ -1456,6 +1456,10 @@ function ActionResultInline({ role, result, step }) {
     alien: 'Alien', syntheticalien: 'Synthetic Alien', cow: 'Cow', groob: 'Groob', zerb: 'Zerb',
     oracle: 'Oracle', rascal: 'Rascal', exposer: 'Exposer', psychic: 'Psychic',
     mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
+    outsourcing: 'Outsourcing', snake: 'Snake', toxic_manager: 'Toxic Manager',
+    stalker: 'Stalker', snoop: 'Snoop', ishikoi: 'Ishikoi', netizen: 'Netizen',
+    tracker: 'Tracker', spammer: 'Spammer', ceo: 'CEO', poacher: 'Poacher',
+    hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
   function cLabel(slot) {
@@ -1622,6 +1626,55 @@ function ActionResultInline({ role, result, step }) {
   if (displayRole === 'mortician') {
     if (result.seen) return <p className="text-white/70 text-sm mt-1">Bài hàng xóm: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role] || result.seen.role}</strong></p>;
   }
+  // ── Office roles ──
+  if (displayRole === 'stalker' && result.seen) {
+    return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role] || result.seen.role}</strong></p>;
+  }
+  if (displayRole === 'snoop' && result.seen?.slots) {
+    return (
+      <div className="text-white/70 text-sm mt-1">
+        {result.seen.slots.map((s, i) => (
+          <p key={i}>{cLabel(s.slot)}: <strong className="text-moon-300">{ROLE_SHORT[s.role] || s.role}</strong></p>
+        ))}
+      </div>
+    );
+  }
+  if (displayRole === 'ceo' && result.seen) {
+    if (result.seen.type === 'player') {
+      return <p className="text-white/70 text-sm mt-1">Bài: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role] || result.seen.role}</strong></p>;
+    }
+    if (result.seen.type === 'center' && result.seen.slots) {
+      return (
+        <div className="text-white/70 text-sm mt-1">
+          {result.seen.slots.map((s, i) => (
+            <p key={i}>{cLabel(s.slot)}: <strong className="text-moon-300">{ROLE_SHORT[s.role] || s.role}</strong></p>
+          ))}
+        </div>
+      );
+    }
+  }
+  if (displayRole === 'poacher' && result.newRole) {
+    return <p className="text-white/70 text-sm mt-1">Bài mới: <strong className="text-moon-300">{ROLE_SHORT[result.newRole] || result.newRole}</strong></p>;
+  }
+  if (displayRole === 'dumper') {
+    if (result.seen && result.step === 1) {
+      return <p className="text-white/70 text-sm mt-1">{cLabel(result.seen.slot)}: <strong className="text-moon-300">{ROLE_SHORT[result.seen.role] || result.seen.role}</strong></p>;
+    }
+    if (result.swapped) {
+      return <p className="text-white/70 text-sm mt-1">Đã đẩy việc</p>;
+    }
+  }
+  if (displayRole === 'paranoid' && result.currentRole) {
+    return <p className="text-white/70 text-sm mt-1">Bài hiện tại: <strong className="text-moon-300">{ROLE_SHORT[result.currentRole] || result.currentRole}</strong></p>;
+  }
+  if (displayRole === 'legal') {
+    if (result.revealed) {
+      return <p className="text-white/70 text-sm mt-1">Đã lật: <strong className="text-moon-300">{ROLE_SHORT[result.role] || result.role}</strong> (công khai!)</p>;
+    }
+    if (result.targetPlayer && result.revealed === false) {
+      return <p className="text-wolf-400/70 text-sm mt-1">Bài là Rắn/Ishikoi — úp lại bí mật</p>;
+    }
+  }
   return null;
 }
 
@@ -1741,6 +1794,43 @@ function buildCardAnimations(effectiveRole, currentRole, result, selected, step)
     return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
   }
 
+  // ── Office roles ──
+
+  // Stalker — view player
+  if (displayRole === 'stalker' && result.seen) {
+    return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Snoop — view center
+  if (displayRole === 'snoop' && result.seen?.slots) {
+    return result.seen.slots.map(s => ({ targetId: s.slot, role: s.role, type: 'flip' }));
+  }
+
+  // CEO — view player or 2 center cards
+  if (displayRole === 'ceo' && result.seen) {
+    if (result.seen.type === 'player') {
+      return [{ targetId: result.seen.id, role: result.seen.role, type: 'flip' }];
+    }
+    if (result.seen.type === 'center' && result.seen.slots) {
+      return result.seen.slots.map(s => ({ targetId: s.slot, role: s.role, type: 'flip' }));
+    }
+  }
+
+  // Poacher — swap and view new card
+  if (displayRole === 'poacher' && result.newRole && selected?.[0]) {
+    return [{ targetId: selected[0], role: result.newRole, type: 'flip' }];
+  }
+
+  // Dumper step 1 — view center card
+  if (displayRole === 'dumper' && result.seen && result.step === 1) {
+    return [{ targetId: result.seen.slot, role: result.seen.role, type: 'flip' }];
+  }
+
+  // Legal — reveal player card
+  if (displayRole === 'legal' && result.revealed && result.targetPlayer) {
+    return [{ targetId: result.targetPlayer, role: result.role, type: 'expose' }];
+  }
+
   return [];
 }
 
@@ -1759,6 +1849,10 @@ function KnowledgeSummary({ knowledge, players }) {
     alien: 'Alien', syntheticalien: 'Synthetic Alien', cow: 'Cow', groob: 'Groob', zerb: 'Zerb',
     oracle: 'Oracle', rascal: 'Rascal', exposer: 'Exposer', psychic: 'Psychic',
     mortician: 'Mortician', leader: 'Leader', blob: 'Blob',
+    outsourcing: 'Outsourcing', snake: 'Snake', toxic_manager: 'Toxic Manager',
+    stalker: 'Stalker', snoop: 'Snoop', ishikoi: 'Ishikoi', netizen: 'Netizen',
+    tracker: 'Tracker', spammer: 'Spammer', ceo: 'CEO', poacher: 'Poacher',
+    hr: 'HR', dumper: 'Dumper', paranoid: 'Paranoid', legal: 'Legal',
   };
   const CENTER = ['Center 1', 'Center 2', 'Center 3'];
   function cName(slot) {
