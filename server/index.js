@@ -602,6 +602,8 @@ const OFFICE_SNAKE_OBSERVES = new Set([
 
 // Roles whose action gets narrated to ALL players via the office chronicle
 // (Echo From Void analog — every wake-up gets a line)
+// Ishikoi is intentionally NOT here — they have no night action,
+// so the chronicle does not call them awake.
 const OFFICE_CHRONICLE_ROLES = new Set([
   'outsourcing', 'snake', 'toxic_manager', 'stalker', 'snoop',
   'spammer', 'tracker', 'netizen', 'ceo', 'poacher', 'legal',
@@ -689,40 +691,39 @@ function emitOfficeNarration(room, role, actorId, actorName, action, result) {
   }
 }
 
-// Phase-start announcements for the public chronicle — neutral, role-only,
-// no actor names. Modeled on the werewolf narrator script: "X is waking up..."
+// Phase-start announcements for the public chronicle — English role names,
+// direct present-tense description of what the role is DOING tonight.
+// No actor names. Ishikoi has no night action so it is intentionally absent.
 function officePhaseCallout(role) {
   switch (role) {
     case 'outsourcing':
-      return 'Outsourcing đang dậy và lựa chọn một vị trí để "thử việc" đêm nay. Nếu nhận được vai có hành động đêm, hắn thực hiện ngay; nếu là Paranoid hoặc vai bị động, hắn chờ đến lượt được gọi.';
+      return 'Outsourcing đang chọn một lá ở giữa văn phòng — đêm nay hắn "thử việc" với vai đó. Nếu lá được chọn có hành động đêm, Outsourcing thực hiện luôn; nếu là Paranoid hoặc vai bị động, hắn chờ đến lượt được gọi.';
     case 'snake':
-      return 'Phe Rắn đang dậy — họ liếc mắt nhận diện nhau trong bóng tối phòng họp và lặng lẽ lên kế hoạch chia rẽ văn phòng.';
+      return 'Snakes đang lén nhìn nhau trong bóng tối, nhận diện đồng bọn và bàn cách chia cắt văn phòng.';
     case 'toxic_manager':
-      return 'Trưởng Phòng Toxic đang dậy — hắn lén nhét hồ sơ Rắn cho một cấp dưới, biến họ thành đồng phạm.';
+      return 'Toxic Manager đang chọn một cấp dưới để dúi cho lá Snake — biến người đó thành đồng phạm bất đắc dĩ.';
     case 'stalker':
-      return 'Kẻ Rình Rập đang dậy — hắn ngó trộm màn hình của một đồng nghiệp để biết thân phận.';
+      return 'Stalker đang ngó trộm màn hình của một đồng nghiệp để biết chính xác họ đang đóng vai gì.';
     case 'snoop':
-      return 'Kẻ Nhòm Ngó đang dậy — hắn lục một thư mục mật trên Drive chung.';
+      return 'Snoop đang lục một thư mục mật trên Drive chung — đọc lén một lá bài ở giữa văn phòng.';
     case 'spammer':
-      return 'Đồng Nghiệp Kém Duyên đang dậy — hắn gõ phím lạch cạch, một phía của văn phòng sẽ bị ping liên hồi.';
+      return 'Spammer đang gõ phím lạch cạch, gửi link TikTok và làm phiền một đồng nghiệp kế bên của mình.';
     case 'tracker':
-      return 'Máy Chấm Công đang dậy — nó khẽ đập dấu vân tay, cảm nhận hơi thở Rắn quanh chỗ ngồi.';
+      return 'Tracker hoạt động và nhận biết được xung quanh nó đang có Snake nào đang lén lút chấm công đêm nay không.';
     case 'netizen':
-      return 'Cộng Đồng Mạng đang dậy — họ lướt fanpage tìm dấu hiệu của Ishikoi.';
+      return 'Netizen đang lướt fanpage tìm dấu hiệu của Ishikoi giữa văn phòng — soi xem ai sắp đâm đơn kiện công ty.';
     case 'ceo':
-      return 'CEO Duy Ca đang dậy — ngài bước "vi hành" ngắm nghía một nhân sự.';
+      return 'CEO đang "vi hành" — chọn một nhân sự để quan sát trực tiếp và đọc đúng vai trò thật của họ.';
     case 'poacher':
-      return 'Kẻ Trộm KPI đang dậy — hắn chôm bài KPI của một đồng nghiệp và đổi vai cho mình.';
+      return 'Poacher đang chôm KPI của một đồng nghiệp — đổi vai trò của họ với mình, rồi xem vai mới mình vừa cướp được.';
     case 'hr':
-      return 'Chuyên Viên Nhân Sự đang dậy — họ lặng lẽ thuyên chuyển hai nhân sự trong sơ đồ ghế.';
+      return 'HR đang lặng lẽ thuyên chuyển hai nhân sự trong sơ đồ ghế — vai trò của hai người này bị hoán đổi cho nhau.';
     case 'dumper':
-      return 'Kẻ Đẩy Việc đang dậy — hắn nhặt một hồ sơ từ đống tồn đọng rồi tìm người để "úp bô".';
+      return 'Dumper nhặt một hồ sơ từ đống tồn đọng giữa văn phòng, rồi "úp bô" nó lên một đồng nghiệp xui xẻo.';
     case 'legal':
-      return 'Chuyên Viên Pháp Chế đang dậy — họ chuẩn bị lật ngửa hồ sơ một nhân sự cho cả công ty thấy.';
+      return 'Legal đang lật ngửa hồ sơ của một nhân sự — công khai vai trò Staff của người đó cho cả công ty cùng thấy.';
     case 'paranoid':
-      return 'Kẻ Lo Âu đang dậy — hắn hồi hộp kiểm tra lại bài của chính mình.';
-    case 'ishikoi':
-      return 'Ishikoi đang dậy — họ chuẩn bị bằng chứng để khởi kiện công ty.';
+      return 'Paranoid đang run rẩy mở lại bài của chính mình — hắn cần chắc chắn rằng đêm nay mình vẫn là mình.';
     default:
       return null;
   }
