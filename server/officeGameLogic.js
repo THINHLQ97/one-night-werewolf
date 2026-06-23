@@ -24,9 +24,12 @@ function getValidCenterSlots(room) {
   return room.hasToxicManager ? ALL_CENTER_SLOTS : BASE_CENTER_SLOTS;
 }
 
-// Center slots Outsourcing can copy — only the 3 standard centers, NOT centerSnake
-function getOutsourcingCenterSlots() {
-  return BASE_CENTER_SLOTS;
+// Center slots Outsourcing can copy. Includes centerSnake when Toxic Manager
+// is in play, so the UI's 4-slot row is fully selectable (otherwise clicks
+// on the extra slot would silently bounce off and the action would never
+// complete).
+function getOutsourcingCenterSlots(room) {
+  return room && room.hasToxicManager ? ALL_CENTER_SLOTS : BASE_CENTER_SLOTS;
 }
 
 function isValidPlayerId(room, id) {
@@ -140,7 +143,7 @@ function getOfficeNightActionData(room, role) {
 
   switch (role) {
     case 'outsourcing': {
-      return { centerSlots: getOutsourcingCenterSlots(), step: 1 };
+      return { centerSlots: getOutsourcingCenterSlots(room), step: 1 };
     }
 
     case 'snake': {
@@ -228,7 +231,7 @@ function processOfficeNightAction(room, playerId, role, action) {
 
   switch (role) {
     case 'outsourcing': {
-      if (!action.centerSlot || !getOutsourcingCenterSlots().includes(action.centerSlot)) return {};
+      if (!action.centerSlot || !getOutsourcingCenterSlots(room).includes(action.centerSlot)) return {};
       const copiedRole = currentCards[action.centerSlot];
       room.outsourcingData[playerId] = { copiedRole, copiedFromSlot: action.centerSlot };
       currentCards[playerId] = copiedRole;
