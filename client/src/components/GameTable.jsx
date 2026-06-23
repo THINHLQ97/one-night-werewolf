@@ -475,6 +475,13 @@ export default function GameTable({
               {isRevealed && (
                 <span className="text-[8px] text-moon-400 leading-tight">{ROLE_NAME_SHORT[isRevealed]}</span>
               )}
+
+              {/* Tracker identity tag — sky-blue, shown to Snake team after Tracker phase */}
+              {isTracker && !isRevealed && (
+                <span className="text-[9px] leading-tight font-semibold" style={{ color: 'rgb(125, 211, 252)' }}>
+                  Tracker (gốc)
+                </span>
+              )}
             </button>
           </div>
         );
